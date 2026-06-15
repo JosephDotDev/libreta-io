@@ -17,7 +17,11 @@ function taskStatusCol(tbl){ return (tbl.columns||[]).find(c=>c.type==='status')
    hidden flag. */
 function taskBoards(){
   const prefs=_taskPrefs(); const out=[];
-  DB.getTbls().forEach(t=>{ if(taskStatusCol(t)) out.push({id:t.id,name:t.name||'Board',tbl:t}); });
+  // The "default database" is plumbing: every page silently joins it to share
+  // sortable properties, so it isn't a real task board — skip it (otherwise every
+  // page in the workspace shows up here as a task).
+  const defaultDbId=(typeof getCfg==='function'&&getCfg().defaultDbId)||null;
+  DB.getTbls().forEach(t=>{ if(t.id!==defaultDbId && taskStatusCol(t)) out.push({id:t.id,name:t.name||'Board',tbl:t}); });
   out.forEach((s,i)=>{ s.color=prefs.colors[s.id]||PALETTE_COLORS[i%PALETTE_COLORS.length]; s.hidden=!!prefs.hidden[s.id]; });
   return out;
 }
