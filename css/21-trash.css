@@ -1,0 +1,12 @@
+/* ── Trash panel (reuses .vh-panel / .vh-* layout from 17-versions.css) ── */
+.sb-trash-count{color:var(--mu);font-size:11px}
+#sb-trash-btn .sb-foot-ico{font-size:13px}
+
+.trash-hdr-act{display:flex;align-items:center;gap:8px}
+
+.trash-item .trash-actions{display:flex;gap:8px;margin-top:9px}
+.trash-btn{flex:1;background:var(--sur2);border:1px solid var(--bd2);color:var(--tx);font-family:var(--fm);font-size:11px;letter-spacing:.03em;padding:6px 10px;border-radius:6px;cursor:pointer;transition:background .12s,border-color .12s,color .12s}
+.trash-btn:hover{background:var(--bd);border-color:var(--mu)}
+.trash-btn.danger{flex:0 0 auto}
+.trash-btn.danger:hover{background:rgba(196,84,84,.14);border-color:rgba(196,84,84,.5);color:var(--re)}
+.trash-hdr-act .trash-btn.danger{padding:4px 11px}

@@ -1,0 +1,98 @@
+/* ── HOME CARDS VIEW ── */
+.rec-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:4px}
+.rec-card{background:var(--sur);border:1px solid var(--bd);border-radius:8px;padding:14px;cursor:pointer;transition:border-color .15s,transform .1s;overflow:hidden}
+.rec-card:hover{border-color:var(--mu);transform:translateY(-2px)}
+.rec-card-cover{width:calc(100% + 28px);height:52px;object-fit:cover;display:block;margin:-14px -14px 10px}
+.rec-card-title{font-family:var(--fs);font-size:15px;font-weight:600;color:var(--card-title);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rec-card-meta{font-size:10px;color:var(--mu)}
+/* ── REDESIGNED HOME (document-like) ── */
+.home-c.w-full{max-width:none}
+/* Banner breaks out of .home-c's 40px/48px padding so it spans the column edges
+   and meets the top instead of floating with a gap (item 6). Only in effect when
+   a cover is set — the wrap is display:none otherwise. */
+#home-cover-wrap{overflow:hidden;margin:-40px -48px 30px}
+.home-head{position:relative}
+/* Home is a customizable surface — keep its action toolbar visible (it has no title-row to hover) */
+.home-head .ed-actions-row{position:relative;opacity:.6;padding-bottom:14px;align-items:center}
+.home-head:hover .ed-actions-row,.home-head .ed-actions-row:focus-within{opacity:1}
+.home-title-input{width:100%;font-family:var(--fs);font-size:44px;font-weight:300;background:none;border:none;outline:none;color:var(--tx);padding:0;letter-spacing:.02em;line-height:1.15;margin-bottom:24px}
+.home-title-input::placeholder{color:var(--mu)}
+.home-width-seg{display:inline-flex;gap:0;margin-left:auto;border:1px solid var(--bd);border-radius:5px;overflow:hidden}
+.home-width-seg button{background:none;border:none;color:var(--mu);font-family:var(--fm);font-size:12px;padding:5px 11px;cursor:pointer;transition:background .1s,color .1s}
+.home-width-seg button.on{background:var(--acs);color:var(--ac)}
+.home-width-seg button:hover:not(.on){color:var(--tx)}
+.home-row{display:flex;gap:28px;align-items:flex-start;margin-bottom:30px}
+.home-row .home-sec{flex:1 1 0;min-width:0;margin-bottom:0}
+.home-sec{margin-bottom:30px;border-radius:8px;transition:box-shadow .12s}
+.home-sec.home-drop{box-shadow:0 0 0 1px var(--bd2)}
+.home-sec.home-drop[data-dropzone=left]{box-shadow:inset 4px 0 0 var(--ac)}
+.home-sec.home-drop[data-dropzone=right]{box-shadow:inset -4px 0 0 var(--ac)}
+.home-sec.home-drop[data-dropzone=top]{box-shadow:inset 0 4px 0 var(--ac)}
+.home-sec.home-drop[data-dropzone=bottom]{box-shadow:inset 0 -4px 0 var(--ac)}
+.home-sec-grip{cursor:grab;color:var(--mu);opacity:0;font-size:13px;letter-spacing:-2px;padding:0 6px 0 0;flex-shrink:0;transition:opacity .12s}
+.home-sec-hdr:hover .home-sec-grip{opacity:.5}
+.home-sec-grip:hover{opacity:1!important;color:var(--tx)}
+.home-sec-grip:active{cursor:grabbing}
+.home-row .home-carousel{overflow-x:auto}
+.home-sec-hdr{display:flex;align-items:center;gap:4px;padding:5px 0 9px;border-bottom:1px solid var(--bd);margin-bottom:14px}
+.home-sec-head-l{display:flex;align-items:center;gap:9px;cursor:pointer;user-select:none;flex:1;min-width:0}
+.home-sec-chev{font-size:13px;color:var(--mu);transition:transform .15s;display:inline-block}
+.home-sec-chev.collapsed{transform:rotate(-90deg)}
+.home-sec-title{font-size:16px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--tx)}
+.home-sec-head-l:hover .home-sec-title{color:var(--tx)}
+.home-sec-ctrls{display:flex;gap:2px;opacity:0;transition:opacity .15s}
+.home-sec-hdr:hover .home-sec-ctrls{opacity:1}
+.home-sec-ctrls button{background:none;border:none;color:var(--mu);cursor:pointer;width:30px;height:30px;border-radius:5px;font-size:15px;display:inline-flex;align-items:center;justify-content:center;transition:background .1s,color .1s}
+.home-sec-ctrls button:hover:not(:disabled){background:var(--bd);color:var(--tx)}
+.home-sec-ctrls button:disabled{opacity:.25;cursor:default}
+.home-sec-ctrls svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.5}
+.home-empty{color:var(--mu);font-size:14px;padding:16px 2px;font-style:italic}
+/* horizontal carousel of page cards */
+.home-carousel{display:flex;gap:14px;overflow-x:auto;padding:4px 2px 14px;scroll-snap-type:x proximity}
+.home-card{flex:0 0 230px;scroll-snap-align:start;background:var(--sur);border:1px solid var(--bd);border-radius:11px;overflow:hidden;cursor:pointer;position:relative;transition:border-color .15s,transform .1s}
+.home-card:hover{border-color:var(--mu);transform:translateY(-2px)}
+.home-card-cover{height:120px;background-size:cover;background-position:center;background-color:var(--sur2)}
+.home-card-nocover{display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--sur2),var(--bd))}
+.home-card-star{position:absolute;top:9px;right:9px;background:rgba(12,11,8,.55);border:none;color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:17px;line-height:1;backdrop-filter:blur(4px);opacity:0;transition:opacity .12s,color .1s}
+.home-card:hover .home-card-star{opacity:1}
+.home-card-star.on{opacity:1;color:var(--go)}
+.home-card-star:hover{color:var(--go)}
+.home-card-body{padding:12px 14px 14px}
+.home-card-title{font-family:var(--fs);font-size:18px;font-weight:600;color:var(--card-title);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:4px}
+.home-card-date{font-size:12px;color:var(--mu)}
+.home-card-chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:9px}
+/* free-form notes section */
+.home-notes-ct{max-width:none;padding:0}
+/* hidden-section restore bar */
+.home-hidden{display:flex;align-items:center;gap:9px;flex-wrap:wrap;padding:10px 0 30px;border-top:1px solid var(--bd);margin-top:8px}
+.home-hidden-lbl{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--mu)}
+.home-hidden-chip{background:none;border:1px dashed var(--bd2);border-radius:20px;color:var(--mu);cursor:pointer;font-family:var(--fm);font-size:13px;padding:5px 13px;transition:border-color .1s,color .1s}
+.home-hidden-chip:hover{border-color:var(--ac);color:var(--ac)}
+/* favorite stars on doc cards/rows + editor */
+.dc{position:relative}
+.dc-star{position:absolute;top:10px;right:10px;background:rgba(12,11,8,.5);border:none;color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:17px;line-height:1;backdrop-filter:blur(4px);opacity:0;z-index:2;transition:opacity .12s,color .1s}
+.dc:hover .dc-star{opacity:1}
+.dc-star.on{opacity:1;color:var(--go)}
+.dc-star:hover{color:var(--go)}
+.doc-row-star{background:none;border:none;color:var(--mu);cursor:pointer;font-size:18px;flex-shrink:0;opacity:0;transition:opacity .12s,color .1s;padding:2px 5px}
+.doc-row:hover .doc-row-star{opacity:1}
+.doc-row-star.on{opacity:1;color:var(--go)}
+.doc-row-star:hover{color:var(--go)}
+.fav-action.on{color:var(--go)}
+/* ── SEC-H ROW (recent toggle) ── */
+.sec-h-row{display:flex;align-items:center;justify-content:space-between;padding-bottom:10px;border-bottom:1px solid var(--bd);margin-bottom:12px}
+.view-toggle{display:flex;gap:4px}
+.vt-btn{background:none;border:1px solid var(--bd);border-radius:3px;color:var(--mu);cursor:pointer;padding:2px 8px;font-size:10px;font-family:var(--fm);letter-spacing:.04em;transition:border-color .1s,color .1s,background .1s}
+.vt-btn:hover{border-color:var(--mu);color:var(--tx)}
+.vt-btn.on{background:var(--acs);border-color:var(--ac);color:var(--ac)}
+/* ── OV PANEL RESIZE ── */
+.ov-panel{position:relative}
+.ov-rh{position:absolute;left:0;top:0;bottom:0;width:6px;cursor:col-resize;z-index:10;transition:background .15s;border-radius:0}
+.ov-rh:hover,.ov-rh.ov-dragging{background:var(--ac);opacity:.5}
+.ov-collapse-btn{background:none;border:none;color:var(--mu);cursor:pointer;padding:2px 7px;border-radius:3px;font-size:15px;line-height:1;flex-shrink:0;margin-top:3px;transition:color .1s,background .1s}
+.ov-collapse-btn:hover{color:var(--tx);background:var(--bd)}
+.ov-panel.collapsed .ov-panel-hdr,.ov-panel.collapsed .ov-panel-props,.ov-panel.collapsed .ov-panel-body{opacity:0;pointer-events:none}
+.ov-panel.collapsed .ov-rh{width:24px;background:var(--sur2);border-right:1px solid var(--bd2);cursor:pointer}
+.ov-panel.collapsed .ov-rh::after{content:'›';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:16px;color:var(--mu);pointer-events:none}
+.ov-panel.collapsed .ov-rh:hover{opacity:1;background:var(--bd)}
+.ov-panel.collapsed .ov-rh:hover::after{color:var(--tx)}

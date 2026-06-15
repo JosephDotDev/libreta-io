@@ -1,0 +1,13 @@
+# OS / editor cruft
+.DS_Store
+*.log
+
+# Claude Code workspace + notes (never deploy)
+.claude/
+
+# Frozen pre-split snapshot + old builds (kept locally, not deployed)
+index_3.html
+Outdated Versions/
+
+# Generated deploy folder (run ./build.sh to recreate)
+dist/

@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Libreta</title>
+  <meta name="description" content="A local-first, Notion-like content planner.">
+  <meta name="theme-color" content="#0C0B08">
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" href="favicon.svg?v=6" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="favicon.svg?v=6">
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Libreta">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&family=Newsreader:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&family=Inter:wght@300;400;500;600;700&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap" rel="stylesheet">
+<!-- Pixel/terminal fonts for the Pixel-art & CRT visual filters (loaded lazily-ish; only used when those filters are on) -->
+<link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&family=VT323&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/01-tokens.css?v=8">
+<link rel="stylesheet" href="css/02-layout.css?v=9">
+<link rel="stylesheet" href="css/03-home-docs.css?v=7">
+<link rel="stylesheet" href="css/04-editor.css?v=14">
+<link rel="stylesheet" href="css/05-menus.css?v=6">
+<link rel="stylesheet" href="css/06-calendar-tables.css?v=8">
+<link rel="stylesheet" href="css/07-chrome.css?v=7">
+<link rel="stylesheet" href="css/08-database.css?v=12">
+<link rel="stylesheet" href="css/09-prop-editor.css?v=7">
+<link rel="stylesheet" href="css/10-scale.css?v=7">
+<link rel="stylesheet" href="css/11-overview.css?v=6">
+<link rel="stylesheet" href="css/12-editor-extras.css?v=9">
+<link rel="stylesheet" href="css/13-home-redesign.css?v=8">
+<link rel="stylesheet" href="css/14-sidebar-misc.css?v=6">
+<link rel="stylesheet" href="css/15-rich-blocks.css?v=7">
+<link rel="stylesheet" href="css/16-components.css?v=7">
+<link rel="stylesheet" href="css/17-versions.css?v=6">
+<link rel="stylesheet" href="css/18-sidebar-tree.css?v=7">
+<link rel="stylesheet" href="css/19-page-settings.css?v=10">
+<link rel="stylesheet" href="css/20-cloud.css?v=14">
+<link rel="stylesheet" href="css/21-trash.css?v=1">
+<link rel="stylesheet" href="css/22-filters.css?v=1">
+</head>
+<body>
+
+<!-- ═══ SIDEBAR ═══════════════════════════════════════════════ -->
+<aside class="sb">
+  <div class="sb-brand">
+    <div class="sb-logo"><span class="logo-full">Libre<span class="dot">ta</span></span><span class="logo-mark">L<span class="dot">.</span></span></div>
+    <div class="sb-sub">personal workspace</div>
+  </div>
+  <div class="sb-search-wrap">
+    <span class="sb-search-ico">&#9906;</span>
+    <input id="sb-search-input" class="sb-search-input" type="text" placeholder="Search pages…" autocomplete="off" spellcheck="false"
+      oninput="onSearchInput(this.value)" onkeydown="onSearchKey(event)">
+    <button class="sb-search-x" id="sb-search-x" onclick="clearSearch()" title="Clear">&#10005;</button>
+  </div>
+  <div class="sb-mid">
+    <div class="sb-search-results" id="sb-search-results" style="display:none"></div>
+    <nav class="nav-g">
+      <div class="nav-lbl">workspace</div>
+      <button class="nav-it active" data-nav="home" onclick="nav('home')" title="Home">
+        <svg class="ni" viewBox="0 0 16 16"><path d="M2 6.5L8 2l6 4.5V14a1 1 0 01-1 1H3a1 1 0 01-1-1V6.5z"/></svg><span class="nav-it-lbl">Home</span></button>
+      <button class="nav-it" data-nav="documents" onclick="nav('documents')" title="Documents">
+        <svg class="ni" viewBox="0 0 16 16"><path d="M9 1H3a1 1 0 00-1 1v12a1 1 0 001 1h10a1 1 0 001-1V6L9 1z"/><path d="M9 1v5h5"/></svg><span class="nav-it-lbl">Documents</span></button>
+      <button class="nav-it" data-nav="calendar" onclick="nav('calendar')" title="Calendar">
+        <svg class="ni" viewBox="0 0 16 16"><rect x="1" y="3" width="14" height="12" rx="1"/><line x1="1" y1="7" x2="15" y2="7"/><line x1="5" y1="1" x2="5" y2="5"/><line x1="11" y1="1" x2="11" y2="5"/></svg><span class="nav-it-lbl">Calendar</span></button>
+    </nav>
+    <div class="nav-g sb-list-g" id="sb-favorites" style="display:none">
+      <div class="nav-lbl sb-list-hdr" onclick="toggleSbGroup('favorites')"><span class="sb-list-chev">&#9662;</span>Favorites</div>
+      <div class="sb-list" id="sb-fav-list"></div>
+    </div>
+    <!-- PAGES TREE (customizable hierarchy) -->
+    <div class="nav-g sb-list-g" id="sb-pages">
+      <div class="nav-lbl sb-list-hdr sb-tree-hdr">
+        <span class="sb-tree-hdr-l" onclick="toggleSbGroup('pages')"><span class="sb-list-chev">&#9662;</span>Pages</span>
+        <button class="sb-add-btn" onclick="addTopPage(event)" data-tip="New page">+</button>
+      </div>
+      <div class="sb-list sb-tree" id="sb-tree" ondragover="sbTreeRootOver(event)" ondrop="sbTreeRootDrop(event)"></div>
+    </div>
+    <div class="nav-g sb-list-g" id="sb-hidden" style="display:none">
+      <div class="nav-lbl sb-list-hdr" onclick="toggleSbGroup('hidden')"><span class="sb-list-chev">&#9662;</span>Hidden</div>
+      <div class="sb-list" id="sb-hidden-list"></div>
+    </div>
+    <div class="nav-g sb-list-g" id="sb-recents" style="display:none">
+      <div class="nav-lbl sb-list-hdr" onclick="toggleSbGroup('recents')"><span class="sb-list-chev">&#9662;</span>Recents</div>
+      <div class="sb-list" id="sb-rec-list"></div>
+    </div>
+  </div>
+  <div class="sb-foot">
+    <button class="sb-foot-btn" id="sb-trash-btn" onclick="openTrashPanel()" data-tip="Trash"><span class="sb-foot-ico">&#128465;</span><span class="sb-foot-lbl">Trash<span id="sb-trash-count" class="sb-trash-count"></span></span></button>
+    <button class="sb-foot-btn" onclick="openCfg()" data-tip="Settings"><span class="sb-foot-ico">&#9881;</span><span class="sb-foot-lbl">Settings</span></button>
+    <button class="sb-foot-btn" id="sb-toggle" onclick="toggleSidebar()" title="Collapse sidebar"><span class="sb-foot-ico" id="sb-toggle-ico">&#171;</span><span class="sb-foot-lbl">Collapse</span></button>
+  </div>
+</aside>
+<div id="sb-backdrop" class="sb-backdrop" onclick="closeMobileSidebar()"></div>
+
+<!-- ═══ MAIN ═══════════════════════════════════════════════════ -->
+<main class="main">
+  <header class="topbar">
+    <div class="tp-left">
+      <button class="nav-btn nav-menu-btn" id="nav-menu" onclick="toggleMobileSidebar()" title="Menu" aria-label="Open menu">&#9776;</button>
+      <button class="nav-btn" id="nav-back" onclick="navBack()" title="Back" disabled>&#8249;</button>
+      <button class="nav-btn" id="nav-fwd" onclick="navForward()" title="Forward" disabled>&#8250;</button>
+      <span class="breadcrumbs" id="breadcrumbs"></span>
+      <span id="page-title" style="display:none">Home</span>
+    </div>
+    <div class="tp-act" id="tp-act">
+      <button class="tp-fav" id="tp-fav-btn" onclick="toggleFavorite(S.docId)" title="Favorite" data-tip="Favorite">&#9734;</button>
+      <button class="tp-pgset" id="pgset-btn" onclick="togglePageSettings(event)" data-tip="Page options — typeface, properties, history"><span class="tp-pgset-dots">&#8943;</span></button>
+    </div>
+  </header>
+
+  <!-- HOME -->
+  <div id="view-home" class="view">
+    <div class="pg-sc"><div class="home-c" id="home-c">
+      <div id="home-cover-wrap" style="display:none"></div>
+      <div class="home-head">
+        <div class="ed-actions-row" id="home-actions">
+          <button class="meta-action-btn" id="home-cover-add-btn" onclick="addBlankCover()">&#128444; Add cover</button>
+          <button class="meta-action-btn" id="home-cover-link-btn" onclick="coverFromUrlPrompt(event)" style="display:none">&#128279; Link cover</button>
+          <button class="meta-action-btn" id="home-icon-add-btn" onclick="openIconPicker(event,this)">&#128512; Add icon</button>
+          <button class="meta-action-btn" id="home-title-toggle" onclick="toggleHomeTitle()">&#128465; Remove title</button>
+          <span class="home-width-seg">
+            <button id="home-w-focused" onclick="setHomeWidth('focused')">Centered</button>
+            <button id="home-w-full" onclick="setHomeWidth('full')">Full width</button>
+          </span>
+        </div>
+        <div id="home-icon-area"></div>
+        <div class="hero-ey" id="greeting" style="margin-bottom:6px"></div>
+        <input id="home-title-input" class="home-title-input" placeholder="Untitled" oninput="onHomeTitleInput()">
+      </div>
+      <div id="home-sections"></div>
+      <div id="home-hidden-bar"></div>
+    </div></div>
+  </div>
+
+  <!-- DOCUMENTS LIST -->
+  <div id="view-documents" class="view hidden">
+    <div class="dl-hdr">
+      <span class="dl-title">Documents</span>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
+        <select id="doc-sort" class="tbl-fi" style="width:auto" onchange="setDocSort(this.value)">
+          <option value="updatedAt-desc">Last edited</option>
+          <option value="createdAt-desc">Recently created</option>
+          <option value="title-asc">Title A–Z</option>
+          <option value="title-desc">Title Z–A</option>
+          <option value="wordCount-desc">Most words</option>
+        </select>
+        <div class="view-toggle">
+          <button class="vt-btn" id="docv-cards" onclick="setDocView('cards')">&#8862; Cards</button>
+          <button class="vt-btn" id="docv-rows" onclick="setDocView('rows')">&#8801; Rows</button>
+          <button class="vt-btn" id="docv-tree" onclick="setDocView('tree')">&#9776; Tree</button>
+        </div>
+        <button class="btn btn-o btn-sm" id="doc-filter-btn" onclick="openFilterPop(event,'documents')">&#9783; Filter</button>
+        <button class="btn btn-a" onclick="newDoc()">+ New Document</button>
+      </div>
+    </div>
+    <div style="padding:0 40px"><div id="doc-filter-chips" class="filter-chips"></div></div>
+    <div class="dl-body"><div id="doc-grid" class="dl-grid"></div></div>
+  </div>
+
+  <!-- EDITOR -->
+  <div id="view-editor" class="view hidden">
+    <div class="ed-shell">
+      <div class="blocks-sc" id="blocks-sc" onclick="onBlocksAreaClick(event)" onscroll="onEditorScroll(event)">
+        <!-- Cover image area (populated by renderCover) -->
+        <div id="ed-cover-wrap" style="display:none"></div>
+        <div class="ed-title-row">
+          <!-- Hover actions: appear when hovering the title area -->
+          <div class="ed-actions-row">
+            <button class="meta-action-btn" id="cover-add-btn" onclick="addBlankCover()">&#128444; Add cover</button>
+            <button class="meta-action-btn" id="cover-link-btn" onclick="coverFromUrlPrompt(event)" style="display:none">&#128279; Link cover</button>
+            <button class="meta-action-btn" id="icon-add-btn" onclick="openIconPicker(event,this)">&#128512; Add icon</button>
+          </div>
+          <!-- Icon (left of title) + title -->
+          <div class="ed-title-main">
+            <div id="ed-icon-area"></div>
+            <textarea id="ed-title" class="ed-title" rows="1" placeholder="Untitled" spellcheck="false" oninput="onTitleInput()" onkeydown="onTitleKey(event)"></textarea>
+          </div>
+        </div>
+        <div id="fmt-bar" class="fmt-bar"></div>
+        <!-- Properties: stays pinned (thin row) as the rest of the header scrolls away -->
+        <div class="props-bar"><div class="props-row" id="props-row"></div></div>
+        <div class="blocks-ct" id="blocks-ct"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CALENDAR -->
+  <div id="view-calendar" class="view hidden">
+    <div class="cal-wrap">
+      <div class="cal-bar">
+        <button class="cal-nb" onclick="calShift(-1)">←</button>
+        <span class="cal-mo" id="cal-label"></span>
+        <button class="cal-nb" onclick="calShift(1)">→</button>
+        <button class="cal-tod" onclick="calToday()">Today</button>
+        <button class="cal-tod" id="cal-det-btn" onclick="toggleCalDetails()" style="margin-left:4px">Details</button>
+        <button class="btn btn-a btn-sm" style="margin-left:8px" onclick="newDoc()">+ New Doc</button>
+      </div>
+      <div class="cal-legend" id="cal-legend"></div>
+      <div class="cal-sc"><div class="cal-gw"><div class="cal-grid" id="cal-grid"></div></div></div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ═══ FLOATING UI ════════════════════════════════════════════ -->
+<!-- Slash command menu -->
+<div id="slash-menu" class="slash-m">
+  <div class="sm-hdr">Block type — type to filter</div>
+  <div id="sm-its" class="sm-its"></div>
+</div>
+<!-- Block context menu -->
+<div id="bk-menu" class="bk-menu"></div>
+<!-- Property modals -->
+<div id="pm-sel" class="pm"></div>
+<div id="pm-dp"  class="dp"></div>
+<div id="pm-ptp" class="ptp"></div>
+<!-- Table select dropdown -->
+<div id="tbl-dd" style="position:fixed;z-index:700;background:var(--sur);border:1px solid var(--bd2);border-radius:6px;box-shadow:0 6px 20px rgba(0,0,0,.5);min-width:150px;overflow:hidden;display:none"></div>
+<div id="idb-colpop" class="idb-colpop"></div>
+<div id="idb-filterpop" class="idb-colpop idb-filterpop"></div>
+<div id="idb-rowmenu" class="idb-rowmenu"></div>
+<div id="idb-pop" class="idb-pop"></div>
+<!-- Document peek (side-peek / centered preview for quick edits) -->
+<div id="doc-peek" class="doc-peek">
+  <div class="doc-peek-backdrop" onclick="closeDocPeek()"></div>
+  <div class="doc-peek-panel">
+    <div class="doc-peek-bar">
+      <button class="doc-peek-btn" onclick="peekOpenFull()" title="Open as full page"><span class="idb-mi">⤢</span> Open full</button>
+      <span style="flex:1"></span>
+      <button class="doc-peek-btn" onclick="closeDocPeek()" title="Close">Close ✕</button>
+    </div>
+    <div class="doc-peek-scroll" onclick="onBlocksAreaClick(event)">
+      <input id="peek-title" class="doc-peek-title" placeholder="Untitled" oninput="peekTitleInput()">
+      <div id="peek-props" class="doc-peek-props"></div>
+      <div class="blocks-ct" id="peek-blocks"></div>
+    </div>
+  </div>
+</div>
+<!-- Overlay (click to close menus) -->
+<div id="ovl" class="ovl" onclick="closeAll()"></div>
+<!-- CRT scanline/flicker overlay (shown only by the "CRT" visual filter) -->
+<div id="crt-overlay" aria-hidden="true"></div>
+<!-- SVG colour-banding filter used by the Pixel-art visual filter on imagery -->
+<svg width="0" height="0" style="position:absolute;pointer-events:none" aria-hidden="true"><filter id="vf-posterize" color-interpolation-filters="sRGB">
+  <feComponentTransfer>
+    <feFuncR type="discrete" tableValues="0 .2 .4 .6 .8 1"/>
+    <feFuncG type="discrete" tableValues="0 .2 .4 .6 .8 1"/>
+    <feFuncB type="discrete" tableValues="0 .2 .4 .6 .8 1"/>
+  </feComponentTransfer>
+</filter></svg>
+<!-- Icon Picker -->
+<div id="icon-picker" class="icon-picker"></div>
+<!-- Hidden file inputs -->
+<input type="file" id="cover-file-input" accept="image/*" style="display:none" onchange="onCoverFileChange(this)">
+<input type="file" id="icon-file-input" accept="image/png,image/svg+xml,image/jpeg,image/webp" style="display:none" onchange="onIconFileChange(this)">
+<input type="file" id="blk-img-input" accept="image/*" style="display:none" onchange="onBlkImgChange(this)">
+<input type="file" id="blk-file-input" style="display:none" onchange="onBlkFileChange(this)">
+<input type="file" id="prop-file-input" style="display:none" onchange="onPropFileChange(this)">
+<input type="file" id="idb-img-input" accept="image/*" style="display:none" onchange="onIdbImgChange(this)">
+<input type="file" id="import-file-input" accept="application/json,.json" style="display:none" onchange="onImportFile(this)">
+
+
+<script src="js/core/state.js?v=7"></script>
+<script src="js/core/security.js?v=1"></script>
+<script src="js/core/storage.js?v=6"></script>
+<script src="js/core/router.js?v=10"></script>
+<script src="js/ui/feedback.js?v=6"></script>
+<script src="js/core/history.js?v=8"></script>
+<script src="js/editor/editor-open.js?v=9"></script>
+<script src="js/editor/blocks-render.js?v=6"></script>
+<script src="js/editor/block-model.js?v=6"></script>
+<script src="js/editor/keyboard.js?v=8"></script>
+<script src="js/editor/block-ops.js?v=6"></script>
+<script src="js/editor/drag.js?v=7"></script>
+<script src="js/editor/slash-menu.js?v=8"></script>
+<script src="js/editor/block-menu.js?v=7"></script>
+<script src="js/editor/multiselect.js?v=1"></script>
+<script src="js/blocks/carousel.js?v=6"></script>
+<script src="js/blocks/grid-table.js?v=6"></script>
+<script src="js/blocks/youtube.js?v=6"></script>
+<script src="js/blocks/callout-page-mention.js?v=10"></script>
+<script src="js/props/properties.js?v=9"></script>
+<script src="js/core/save.js?v=7"></script>
+<script src="js/editor/undo.js?v=7"></script>
+<script src="js/ui/overlay.js?v=6"></script>
+<script src="js/media/compress.js?v=6"></script>
+<script src="js/editor/cover.js?v=8"></script>
+<script src="js/editor/page-icon.js?v=6"></script>
+<script src="js/blocks/image-block.js?v=6"></script>
+<script src="js/blocks/file-block.js?v=6"></script>
+<script src="js/props/quick-edit.js?v=6"></script>
+<script src="js/props/filtering.js?v=6"></script>
+<script src="js/views/home.js?v=12"></script>
+<script src="js/views/calendar.js?v=9"></script>
+<script src="js/views/databases-page.js?v=8"></script>
+<script src="js/core/utils.js?v=6"></script>
+<script src="js/core/config.js?v=17"></script>
+<script src="js/db/core.js?v=7"></script>
+<script src="js/db/toolbar.js?v=8"></script>
+<script src="js/db/block.js?v=8"></script>
+<script src="js/db/table-view.js?v=8"></script>
+<script src="js/ui/lightbox.js?v=6"></script>
+<script src="js/db/cells-media.js?v=6"></script>
+<script src="js/db/row-doc.js?v=8"></script>
+<script src="js/db/board-view.js?v=6"></script>
+<script src="js/db/calendar-view.js?v=8"></script>
+<script src="js/db/timeline-view.js?v=6"></script>
+<script src="js/db/filters.js?v=6"></script>
+<script src="js/db/page-db.js?v=7"></script>
+<script src="js/db/doc-props.js?v=9"></script>
+<script src="js/props/prop-editor.js?v=7"></script>
+<script src="js/props/options.js?v=7"></script>
+<script src="js/ui/confirm.js?v=6"></script>
+<script src="js/views/all-docs.js?v=7"></script>
+<script src="js/views/overview.js?v=6"></script>
+<script src="js/ui/tilt.js?v=6"></script>
+<script src="js/ui/sidebar.js?v=8"></script>
+<script src="js/ui/sidebar-tree.js?v=10"></script>
+<script src="js/ui/search.js?v=6"></script>
+<script src="js/core/versions.js?v=6"></script>
+<script src="js/media/blob-gc.js?v=8"></script>
+<script src="js/core/trash.js?v=4"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/cloud/config.js?v=6"></script>
+<script src="js/cloud/sync.js?v=24"></script>
+<script src="js/core/init.js?v=8"></script>
+
+
+<!-- CONFIG PANEL -->
+<div id="cfg-ovl" class="cfg-ovl" onclick="closeCfg()"></div>
+<div id="cfg-panel" class="cfg-panel">
+  <div class="cfg-hdr">
+    <span class="cfg-title">System Settings</span>
+    <button class="cfg-x" onclick="closeCfg()">&#10005;</button>
+  </div>
+  <div class="cfg-body">
+    <div class="cfg-sec" id="cfg-account-sec" style="display:none">
+      <div class="cfg-sl">Account</div>
+      <div id="cfg-account"></div>
+    </div>
+    <div class="cfg-sec">
+      <div class="cfg-sl">Theme</div>
+      <div class="cfg-chip-row" id="cfg-themes"></div>
+    </div>
+    <div class="cfg-sec">
+      <div class="cfg-sl">Custom Colors</div>
+      <div class="cfg-cr"><span class="cfg-cl">Accent</span><input type="text" class="cfg-hex" id="cfg-ac-hex" maxlength="7" placeholder="#000000" spellcheck="false" onchange="setCfgColorHex('ac',this.value)" onkeydown="if(event.key==='Enter')setCfgColorHex('ac',this.value)"><input type="color" class="cfg-ci" id="cfg-ac" oninput="setCfgColor('ac',this.value)"></div>
+      <div class="cfg-cr"><span class="cfg-cl">Background</span><input type="text" class="cfg-hex" id="cfg-bg-hex" maxlength="7" placeholder="#000000" spellcheck="false" onchange="setCfgColorHex('bg',this.value)" onkeydown="if(event.key==='Enter')setCfgColorHex('bg',this.value)"><input type="color" class="cfg-ci" id="cfg-bg" oninput="setCfgColor('bg',this.value)"></div>
+      <div class="cfg-cr"><span class="cfg-cl">Surface</span><input type="text" class="cfg-hex" id="cfg-sur-hex" maxlength="7" placeholder="#000000" spellcheck="false" onchange="setCfgColorHex('sur',this.value)" onkeydown="if(event.key==='Enter')setCfgColorHex('sur',this.value)"><input type="color" class="cfg-ci" id="cfg-sur" oninput="setCfgColor('sur',this.value)"></div>
+      <div class="cfg-cr"><span class="cfg-cl">Text</span><input type="text" class="cfg-hex" id="cfg-tx-hex" maxlength="7" placeholder="#000000" spellcheck="false" onchange="setCfgColorHex('tx',this.value)" onkeydown="if(event.key==='Enter')setCfgColorHex('tx',this.value)"><input type="color" class="cfg-ci" id="cfg-tx" oninput="setCfgColor('tx',this.value)"></div>
+    </div>
+    <div class="cfg-sec">
+      <div class="cfg-sl">Open page previews in</div>
+      <div class="cfg-opt-row">
+        <button class="cfg-opt" data-om="peek" onclick="setCfgDef('openMode','peek')">Side peek</button>
+        <button class="cfg-opt" data-om="center" onclick="setCfgDef('openMode','center')">Center preview</button>
+        <button class="cfg-opt" data-om="full" onclick="setCfgDef('openMode','full')">Full page</button>
+      </div>
+    </div>
+    <div class="cfg-sec">
+      <div class="cfg-sl">Property tags on cards</div>
+      <div class="cfg-opt-row">
+        <button class="cfg-opt" data-tags="on" onclick="setListTags('on')">Show</button>
+        <button class="cfg-opt" data-tags="off" onclick="setListTags('off')">Hide</button>
+      </div>
+      <div style="font-size:10px;color:var(--mu);margin-top:8px;line-height:1.6">Shows property chips (status, tags, dates) on Home and Documents cards.</div>
+    </div>
+    <div class="cfg-sec">
+      <div class="cfg-sl">Sidebar shortcuts</div>
+      <div class="cfg-opt-row" id="cfg-nav-toggles">
+        <button class="cfg-opt" data-navtoggle="home"      onclick="toggleNavItem('home')">Home</button>
+        <button class="cfg-opt" data-navtoggle="documents" onclick="toggleNavItem('documents')">Documents</button>
+        <button class="cfg-opt" data-navtoggle="calendar"  onclick="toggleNavItem('calendar')">Calendar</button>
+      </div>
+      <div style="font-size:10px;color:var(--mu);margin-top:8px;line-height:1.6">Highlighted shortcuts show in the sidebar. Hidden pages stay reachable from breadcrumbs and direct links.</div>
+    </div>
+    <div class="cfg-sec">
+      <div class="cfg-sl">UI Scale</div>
+      <div class="zoom-btn-row" id="zoom-btns">
+        <button class="zoom-btn" data-zoom="0.85" onclick="setCfgDef('zoom','0.85')">85%</button>
+        <button class="zoom-btn" data-zoom="1.0"  onclick="setCfgDef('zoom','1.0')">100%</button>
+        <button class="zoom-btn" data-zoom="1.1"  onclick="setCfgDef('zoom','1.1')">110%</button>
+        <button class="zoom-btn" data-zoom="1.2"  onclick="setCfgDef('zoom','1.2')">120%</button>
+        <button class="zoom-btn" data-zoom="1.35" onclick="setCfgDef('zoom','1.35')">135%</button>
+        <button class="zoom-btn" data-zoom="1.5"  onclick="setCfgDef('zoom','1.5')">150%</button>
+      </div>
+    </div>
+    <div class="cfg-sec">
+      <div class="cfg-sl">Visual filter</div>
+      <div class="cfg-opt-row" id="cfg-filters">
+        <button class="cfg-opt" data-filter="none"  onclick="setVisualFilter('none')">None</button>
+        <button class="cfg-opt" data-filter="pixel" onclick="setVisualFilter('pixel')">🟦 Pixel art</button>
+        <button class="cfg-opt" data-filter="crt"   onclick="setVisualFilter('crt')">📺 CRT</button>
+        <button class="cfg-opt" data-filter="bw"    onclick="setVisualFilter('bw')">◐ B&amp;W</button>
+      </div>
+      <div style="font-size:10px;color:var(--mu);margin-top:8px;line-height:1.6">A whole-app display effect, just for fun. Purely visual — your content is unchanged.</div>
+    </div>
+    <div class="cfg-sec">
+      <div class="cfg-sl">Data &amp; Backup</div>
+      <div class="cfg-opt-row">
+        <button class="cfg-opt" onclick="exportData()">&#8595; Export backup</button>
+        <button class="cfg-opt" onclick="triggerImport()">&#8593; Import backup</button>
+      </div>
+      <div style="font-size:10px;color:var(--mu);margin-top:8px;line-height:1.6">Backups include documents, tables, settings and all images/files as a single portable JSON file.</div>
+      <div id="storage-status" style="font-size:10px;line-height:1.7;margin-top:12px;padding-top:10px;border-top:1px solid var(--bd)"></div>
+      <button class="cfg-opt" id="cfg-empty-trash" onclick="confirmEmptyTrash()" style="margin-top:12px">&#128465; Empty Trash now</button>
+      <div style="font-size:10px;color:var(--mu);margin-top:6px;line-height:1.6">Permanently deletes everything in Trash and reclaims its storage.</div>
+    </div>
+    <div class="cfg-sec" style="border-top:1px solid var(--bd);padding-top:16px;margin-top:4px">
+      <div class="cfg-sl">Danger Zone</div>
+      <button class="cfg-opt" onclick="resetCfg()" style="color:var(--re);border-color:rgba(196,84,84,.4)">Reset to defaults</button>
+      <button class="cfg-opt" id="cfg-delete-data" onclick="confirmDeleteAllData()" style="color:var(--re);border-color:rgba(196,84,84,.4);margin-top:8px">Delete all my data</button>
+      <div style="font-size:10px;color:var(--mu);margin-top:6px;line-height:1.6">Permanently erases every page, database, image and setting — on this device and in the cloud — then signs you out. This cannot be undone.</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- UNIFIED PROPERTY EDITOR -->
+<div id="prop-editor" class="prop-editor">
+  <div class="pe-hdr">
+    <input id="pe-name" class="pe-name" placeholder="Property name" oninput="liveUpdatePropName(this.value)">
+    <button class="pe-close" onclick="closePropEditor()">&#10005;</button>
+  </div>
+  <div id="pe-types" class="pe-types"></div>
+  <div id="pe-body"  class="pe-body"></div>
+  <div class="pe-ft">
+    <button class="pe-dx" onclick="removePropFromEditor()">Delete property</button>
+  </div>
+</div>
+<!-- COLOR PALETTE POPUP -->
+<div id="color-pal" class="color-pal"></div>
+
+
+<!-- CONFIRM DIALOG -->
+<div id="cfm" class="cfm-ovl" onclick="if(event.target===this)closeConfirm()">
+  <div class="cfm-box">
+    <div class="cfm-ico" id="cfm-ico">&#x26A0;</div>
+    <div class="cfm-title" id="cfm-title">Are you sure?</div>
+    <div class="cfm-msg" id="cfm-msg"></div>
+    <div class="cfm-btns">
+      <button class="cfm-cancel" onclick="closeConfirm()">Cancel</button>
+      <button class="cfm-ok" id="cfm-ok">Delete</button>
+    </div>
+  </div>
+</div>
+<div id="col-chooser" class="pm col-chooser"></div>
+<!-- LINK / MENTION URL INPUT -->
+<div id="link-pop" class="link-pop"></div>
+<!-- INLINE FORMAT TOOLBAR (appears on text selection) -->
+<div id="sel-toolbar" class="sel-toolbar">
+  <button data-cmd="bold" onmousedown="event.preventDefault()" onclick="fmtCmd('bold')" title="Bold (⌘B)"><b>B</b></button>
+  <button data-cmd="italic" onmousedown="event.preventDefault()" onclick="fmtCmd('italic')" title="Italic (⌘I)"><i>I</i></button>
+  <button data-cmd="underline" onmousedown="event.preventDefault()" onclick="fmtCmd('underline')" title="Underline (⌘U)"><u>U</u></button>
+  <button data-cmd="strikeThrough" onmousedown="event.preventDefault()" onclick="fmtCmd('strikeThrough')" title="Strikethrough"><s>S</s></button>
+  <button onmousedown="event.preventDefault()" onclick="fmtInlineCode()" title="Inline code">&lt;&gt;</button>
+  <button class="sel-color-btn" onmousedown="event.preventDefault()" onclick="fmtColorOpen(event)" title="Text color & highlight"><span class="sel-color-a">A</span></button>
+  <button onmousedown="event.preventDefault()" onclick="fmtCmd('removeFormat')" title="Clear formatting">&#10006;</button>
+</div>
+<div id="fmt-color-pop" class="fmt-color-pop"></div>
+<!-- PROPERTY FILTER POPOVER -->
+<div id="filter-pop" class="pm"></div>
+
+<!-- PAGE SETTINGS POPOVER (ribbon) -->
+<div id="page-set-pop" class="page-set-pop"></div>
+
+<!-- VERSION HISTORY -->
+<div id="vh-ovl" class="vh-ovl" onclick="closeVersionPanel()"></div>
+<div id="vh-panel" class="vh-panel">
+  <div class="vh-hdr">
+    <span class="vh-title">Version history</span>
+    <button class="vh-x" onclick="closeVersionPanel()">&#10005;</button>
+  </div>
+  <div class="vh-list" id="vh-list"></div>
+  <div class="vh-foot">Snapshots are captured automatically as you edit. Restoring is reversible and never deletes sub-pages.</div>
+</div>
+
+<!-- TRASH PANEL -->
+<div id="trash-ovl" class="vh-ovl" onclick="closeTrashPanel()"></div>
+<div id="trash-panel" class="vh-panel">
+  <div class="vh-hdr">
+    <span class="vh-title">Trash</span>
+    <div class="trash-hdr-act">
+      <button class="trash-btn danger" id="trash-empty-btn" onclick="confirmEmptyTrash()" style="display:none">Empty</button>
+      <button class="vh-x" onclick="closeTrashPanel()">&#10005;</button>
+    </div>
+  </div>
+  <div class="vh-list" id="trash-list"></div>
+  <div class="vh-foot">Deleted pages rest here for 30 days, then they’re removed for good and their storage is reclaimed.</div>
+</div>
+
+<!-- Vercel Web Analytics (static-site snippet — needs Analytics enabled in the Vercel dashboard) -->
+<script defer src="/_vercel/insights/script.js"></script>
+</body>
+</html>
