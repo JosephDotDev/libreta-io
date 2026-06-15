@@ -8,6 +8,9 @@ function mkDbBlockHtml(blk){
   else if(view==='timeline'){ toolbar=idbTimelineBar(blk,tbl); body=idbTimelineView(blk,tbl); }
   else { toolbar=idbToolbar(blk,tbl,'table'); body=idbTableView(blk,tbl); }
   const viewSel=`<select class="idb-viewsel" onchange="idbSetView('${blk.id}',this.value)" title="Change view">${Object.keys(IDB_VIEWS).map(v=>`<option value="${v}"${v===view?' selected':''}>${IDB_VIEWS[v]}</option>`).join('')}</select>`;
+  // Point this block at a different existing database (inline blocks only — the
+  // full-page database has its own switcher).
+  const useExisting=blk.id==='__pagedb__'?'':`<button class="idb-tb-ic idb-useexisting" onclick="idbUseExistingMenu(event,'${blk.id}')" data-tip="Show an existing database">⇆</button>`;
   // Table/Board: collapse name + modifier buttons + view picker onto a single
   // header row. Calendar/Timeline keep their own bar (date nav lives there).
   const inline=(view==='table'||view==='board');
@@ -15,7 +18,7 @@ function mkDbBlockHtml(blk){
     <div class="idb-hd">
       <input class="idb-title" value="${escAttr(tbl.name)}" onblur="idbRename('${blk.id}',this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">
       ${inline?(toolbar||''):''}
-      <span class="idb-hd-r">${viewSel}</span>
+      <span class="idb-hd-r">${useExisting}${viewSel}</span>
     </div>${inline?'':(toolbar||'')}${body}</div>`;
 }
 const IDB_TYPE_ICON={text:'T',number:'#',select:'\u25c9',multiselect:'\u2263',status:'\u25d0',date:'\u2637',checkbox:'\u2611',image:'\u25a3',cover:'\u25a6',url:'\u2197',link:'\ud83d\udd17',document:'\u2197'};
