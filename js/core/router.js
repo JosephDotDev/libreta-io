@@ -10,7 +10,7 @@ function nav(view,id){
   viewEl.classList.remove('hidden');
   document.querySelectorAll('.nav-it').forEach(n=>n.classList.remove('active'));
   const ni=document.querySelector(`[data-nav="${view}"]`);if(ni)ni.classList.add('active');
-  const lbls={home:'Home',documents:'Documents',editor:'Editor',calendar:'Calendar'};
+  const lbls={home:'Home',documents:'Documents',editor:'Editor',calendar:'Calendar',tasks:'Tasks'};
   document.getElementById('page-title').textContent=lbls[view]||view;
   S.view=view;
   document.body.setAttribute('data-view',view); // drives ribbon page-settings button visibility
@@ -18,6 +18,7 @@ function nav(view,id){
   if(view==='documents') renderDocList();
   if(view==='editor')    openEditor(id);
   if(view==='calendar')  renderCal();
+  if(view==='tasks')     renderTasks();
   if(!_navSuppress) navHistoryPush(view,id);
   renderBreadcrumbs(view,id);
   renderSidebarLists();
@@ -39,6 +40,7 @@ function rerenderView(){
   else if(view==='home')      renderHome();
   else if(view==='documents') renderDocList();
   else if(view==='calendar')  renderCal();
+  else if(view==='tasks')     renderTasks();
   else return; // unknown view — nothing to refresh
   if(typeof renderBreadcrumbs==='function') renderBreadcrumbs(view,S.docId);
   if(typeof renderSidebarLists==='function') renderSidebarLists();
@@ -57,6 +59,7 @@ function routeFor(view,id){
     case 'documents': return '#/docs';
     case 'editor':    return id?('#/doc/'+id):'#/docs';
     case 'calendar':  return '#/calendar';
+    case 'tasks':     return '#/tasks';
     default:          return '#/home';
   }
 }
@@ -74,6 +77,7 @@ function parseRoute(){
   if((m=h.match(/^#\/doc\/(.+)$/))) return {view:'editor',id:m[1]};
   if(h==='#/docs')      return {view:'documents'};
   if(h==='#/calendar')  return {view:'calendar'};
+  if(h==='#/tasks')     return {view:'tasks'};
   // Legacy routes for the removed Databases/Overview pages → fall back to home.
   return {view:'home'};
 }

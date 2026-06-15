@@ -87,17 +87,17 @@
 
 #cloud-menu{
   position:fixed; right:20px; top:46px; z-index:9001;
-  background:#1b1812; border:1px solid #2a2620; border-radius:11px;
+  background:var(--sur); border:1px solid var(--bd2); border-radius:11px;
   padding:6px; min-width:190px;
   box-shadow:0 8px 28px rgba(0,0,0,.45);
 }
-#cloud-menu .cm-email{ color:#8a8276; font-size:11px; padding:6px 10px 4px; word-break:break-all; }
-#cloud-menu .cm-diag{ color:#6f6960; font-size:10.5px; padding:1px 10px; font-family:var(--fm); }
-#cloud-menu .cm-diag b{ color:#9a9286; font-weight:600; }
-#cloud-menu .cm-diag:last-of-type{ padding-bottom:8px; border-bottom:1px solid #2a2620; margin-bottom:4px; }
+#cloud-menu .cm-email{ color:var(--mu); font-size:11px; padding:6px 10px 4px; word-break:break-all; }
+#cloud-menu .cm-diag{ color:var(--mu); opacity:.85; font-size:10.5px; padding:1px 10px; font-family:var(--fm); }
+#cloud-menu .cm-diag b{ color:var(--tx); font-weight:600; }
+#cloud-menu .cm-diag:last-of-type{ padding-bottom:8px; border-bottom:1px solid var(--bd); margin-bottom:4px; }
 #cloud-menu .cm-it{
   display:block; width:100%; text-align:left;
-  background:none; border:none; color:#E4DDD0; font-size:13px;
+  background:none; border:none; color:var(--tx); font-size:13px;
   padding:9px 10px; border-radius:7px; cursor:pointer;
 }
-#cloud-menu .cm-it:hover{ background:#262019; }
+#cloud-menu .cm-it:hover{ background:var(--sur2); }
