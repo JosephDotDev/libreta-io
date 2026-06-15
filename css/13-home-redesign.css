@@ -12,9 +12,24 @@
    a cover is set — the wrap is display:none otherwise. */
 #home-cover-wrap{overflow:hidden;margin:-40px -48px 30px}
 .home-head{position:relative}
-/* Home is a customizable surface — keep its action toolbar visible (it has no title-row to hover) */
-.home-head .ed-actions-row{position:relative;opacity:.6;padding-bottom:14px;align-items:center}
-.home-head:hover .ed-actions-row,.home-head .ed-actions-row:focus-within{opacity:1}
+/* Top toolbar: a clear primary "New page" action + a single "Customize" disclosure.
+   Keeps the first-run home uncluttered instead of opening on a row of meta controls. */
+.home-toolbar{display:flex;align-items:center;gap:8px;padding:2px 0 12px}
+.home-new-btn{display:inline-flex;align-items:center;gap:7px;background:var(--ac);color:#1a1206;
+  border:none;border-radius:8px;font-family:var(--fn);font-weight:600;font-size:13.5px;padding:9px 16px;
+  cursor:pointer;box-shadow:0 6px 18px -8px rgba(196,125,50,.7);transition:background .14s,transform .1s,box-shadow .14s}
+.home-new-btn:hover{background:#d68b3e;box-shadow:0 9px 24px -8px rgba(196,125,50,.85)}
+.home-new-btn:active{transform:translateY(1px)}
+.home-new-btn .hnb-plus{font-size:16px;line-height:0;font-weight:700}
+.home-customize-toggle{display:inline-flex;align-items:center;gap:6px;background:none;border:1px solid var(--bd2);
+  color:var(--mu);border-radius:8px;font-family:var(--fm);font-size:12px;padding:8px 13px;cursor:pointer;
+  margin-left:auto;transition:color .14s,border-color .14s,background .14s}
+.home-customize-toggle:hover{color:var(--tx);border-color:var(--mu)}
+.home-customize-toggle.on{color:var(--ac);border-color:rgba(196,125,50,.4);background:var(--acs)}
+/* The cover/icon/title/width controls — collapsed by default, revealed by Customize. */
+.home-head .ed-actions-row{position:relative;opacity:1;align-items:center}
+#home-actions{display:none;padding:2px 0 14px}
+#home-actions.show{display:flex}
 .home-title-input{width:100%;font-family:var(--fs);font-size:44px;font-weight:300;background:none;border:none;outline:none;color:var(--tx);padding:0;letter-spacing:.02em;line-height:1.15;margin-bottom:24px}
 .home-title-input::placeholder{color:var(--mu)}
 .home-width-seg{display:inline-flex;gap:0;margin-left:auto;border:1px solid var(--bd);border-radius:5px;overflow:hidden}
@@ -47,6 +62,15 @@
 .home-sec-ctrls button:disabled{opacity:.25;cursor:default}
 .home-sec-ctrls svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.5}
 .home-empty{color:var(--mu);font-size:14px;padding:16px 2px;font-style:italic}
+/* Friendly first-run empty state with a direct "create a page" call to action. */
+.home-empty-cta{display:flex;align-items:center;gap:18px;font-style:normal;padding:26px 24px;
+  background:linear-gradient(var(--sur),var(--sur2));border:1px solid var(--bd);border-radius:12px}
+.home-empty-cta .he-ico{font-size:30px;flex-shrink:0}
+.home-empty-cta .he-tx{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0}
+.home-empty-cta .he-tx strong{font-family:var(--fs);font-size:19px;font-weight:600;color:var(--tx)}
+.home-empty-cta .he-tx span{font-size:13.5px;color:var(--mu)}
+.home-empty-cta .he-btn{flex-shrink:0;white-space:nowrap}
+@media(max-width:600px){.home-empty-cta{flex-direction:column;text-align:center;align-items:stretch}}
 /* horizontal carousel of page cards */
 .home-carousel{display:flex;gap:14px;overflow-x:auto;padding:4px 2px 14px;scroll-snap-type:x proximity}
 .home-card{flex:0 0 230px;scroll-snap-align:start;background:var(--sur);border:1px solid var(--bd);border-radius:11px;overflow:hidden;cursor:pointer;position:relative;transition:border-color .15s,transform .1s}

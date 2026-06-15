@@ -1,3 +1,6 @@
-# Personal app — keep it out of search engines.
+# The app itself is private — keep it out of search engines. The public
+# landing page (and favicon it needs) are the only crawlable surfaces.
 User-agent: *
+Allow: /landing.html
+Allow: /favicon.svg
 Disallow: /

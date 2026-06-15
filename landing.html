@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Libreta — a personal workspace, built around you</title>
+  <meta name="description" content="Libreta is a highly customizable personal workspace for individuals. Write in blocks, build databases, and make it entirely yours. Local-first, private, and refreshingly free of AI.">
+  <meta name="theme-color" content="#0C0B08">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="favicon.svg">
+  <!-- Open Graph / social -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Libreta — a personal workspace, built around you">
+  <meta property="og:description" content="A highly customizable workspace for individuals. Blocks, databases, and deep customization — local-first, private, and free of AI.">
+  <meta property="og:image" content="favicon.svg">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#0C0B08; --sur:#141210; --sur2:#1A1814; --bd:#252219; --bd2:#332E26;
+      --tx:#E4DDD0; --mu:#756E62; --ac:#C47D32; --acs:rgba(196,125,50,.12);
+      --go:#C9A84C; --gr:#4E9E72; --pu:#7E6FBE; --re:#C45454;
+      --fs:'Cormorant',Georgia,serif;
+      --fn:'DM Sans',system-ui,sans-serif;
+      --fm:'DM Mono',monospace;
+      --maxw:1120px;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth}
+    body{
+      font-family:var(--fn); background:var(--bg); color:var(--tx);
+      line-height:1.6; -webkit-font-smoothing:antialiased;
+      overflow-x:hidden;
+    }
+    a{color:inherit;text-decoration:none}
+    ::selection{background:var(--acs);color:#fff}
+
+    /* Warm radial glow behind the hero */
+    body::before{
+      content:''; position:fixed; inset:0; z-index:0; pointer-events:none;
+      background:
+        radial-gradient(900px 520px at 72% -8%, rgba(196,125,50,.16), transparent 60%),
+        radial-gradient(700px 480px at 8% 4%, rgba(126,111,190,.10), transparent 55%);
+    }
+    .wrap{max-width:var(--maxw); margin:0 auto; padding:0 24px; position:relative; z-index:1}
+
+    /* ── NAV ─────────────────────────────────────────── */
+    header.nav{position:sticky; top:0; z-index:50; backdrop-filter:blur(10px);
+      background:rgba(12,11,8,.72); border-bottom:1px solid transparent; transition:border-color .2s,background .2s}
+    header.nav.scrolled{border-color:var(--bd); background:rgba(12,11,8,.9)}
+    .nav-in{display:flex; align-items:center; justify-content:space-between; height:64px}
+    .brand{font-family:var(--fs); font-size:27px; font-weight:600; letter-spacing:.01em}
+    .brand i{font-style:normal; color:var(--ac)}
+    .nav-links{display:flex; align-items:center; gap:8px}
+    .nav-links a.txt{color:var(--mu); font-size:14px; padding:9px 14px; border-radius:7px; transition:color .15s}
+    .nav-links a.txt:hover{color:var(--tx)}
+
+    .btn{display:inline-flex; align-items:center; justify-content:center; gap:8px;
+      font-family:var(--fn); font-weight:500; font-size:14px; border:1px solid transparent;
+      padding:10px 18px; border-radius:9px; cursor:pointer; transition:transform .12s,background .15s,border-color .15s,box-shadow .15s; white-space:nowrap}
+    .btn:active{transform:translateY(1px)}
+    .btn-primary{background:var(--ac); color:#1a1206; box-shadow:0 6px 22px -8px rgba(196,125,50,.7)}
+    .btn-primary:hover{background:#d68b3e; box-shadow:0 10px 30px -8px rgba(196,125,50,.85)}
+    .btn-ghost{background:transparent; color:var(--tx); border-color:var(--bd2)}
+    .btn-ghost:hover{border-color:var(--mu); background:var(--sur)}
+    .btn-lg{padding:14px 26px; font-size:15.5px; border-radius:11px}
+
+    /* ── HERO ────────────────────────────────────────── */
+    .hero{padding:84px 0 40px; text-align:center}
+    .eyebrow{display:inline-flex; align-items:center; gap:10px; font-family:var(--fm);
+      font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--ac);
+      background:var(--acs); border:1px solid rgba(196,125,50,.25); padding:7px 15px; border-radius:100px; margin-bottom:28px}
+    .eyebrow .dot{width:6px; height:6px; border-radius:50%; background:var(--ac); box-shadow:0 0 10px var(--ac)}
+    h1.hero-h{font-family:var(--fs); font-weight:500; font-size:clamp(42px,6.4vw,76px);
+      line-height:1.04; letter-spacing:-.01em; margin:0 auto 22px; max-width:14ch}
+    h1.hero-h em{font-style:italic; color:var(--ac)}
+    .hero-sub{font-size:clamp(17px,2.1vw,20px); color:#b9b1a3; max-width:60ch; margin:0 auto 36px; font-weight:300}
+    .hero-cta{display:flex; gap:14px; justify-content:center; flex-wrap:wrap}
+    .hero-note{margin-top:18px; font-size:13px; color:var(--mu); font-family:var(--fm)}
+
+    /* ── APP MOCKUP (hero) ───────────────────────────── */
+    .mock-stage{margin:56px auto 0; max-width:1000px; position:relative}
+    .mock-stage::after{content:''; position:absolute; left:6%; right:6%; bottom:-30px; height:60px;
+      background:radial-gradient(50% 100% at 50% 0,rgba(0,0,0,.55),transparent); filter:blur(6px); z-index:-1}
+    .mk-window{background:var(--sur); border:1px solid var(--bd2); border-radius:16px; overflow:hidden;
+      box-shadow:0 40px 90px -30px rgba(0,0,0,.8), 0 0 0 1px rgba(255,255,255,.02) inset}
+    .mk-bar{display:flex; align-items:center; gap:8px; padding:13px 16px; border-bottom:1px solid var(--bd); background:var(--sur2)}
+    .mk-dot{width:11px; height:11px; border-radius:50%; background:var(--bd2)}
+    .mk-bar .mk-url{margin-left:14px; font-family:var(--fm); font-size:11.5px; color:var(--mu);
+      background:var(--bg); border:1px solid var(--bd); padding:5px 14px; border-radius:7px; flex:1; max-width:280px}
+    .mk-body{display:flex; min-height:430px; text-align:left}
+    /* sidebar */
+    .mk-side{width:210px; flex-shrink:0; background:var(--sur2); border-right:1px solid var(--bd); padding:16px 12px; display:flex; flex-direction:column; gap:5px}
+    .mk-logo{font-family:var(--fs); font-size:19px; font-weight:600; padding:2px 8px 12px}
+    .mk-logo i{color:var(--ac);font-style:normal}
+    .mk-search{font-family:var(--fm); font-size:11px; color:var(--mu); background:var(--bg); border:1px solid var(--bd); border-radius:7px; padding:7px 10px; margin-bottom:8px}
+    .mk-nav{display:flex; align-items:center; gap:9px; padding:7px 9px; border-radius:7px; font-size:13px; color:#c3bbac}
+    .mk-nav .ic{width:15px;text-align:center;opacity:.8}
+    .mk-nav.on{background:var(--acs); color:var(--tx)}
+    .mk-nav.sub{padding-left:24px; font-size:12.5px; color:var(--mu)}
+    /* page */
+    .mk-page{flex:1; min-width:0; overflow:hidden}
+    .mk-cover{height:96px; background:linear-gradient(115deg,#C47D32,#9c5f86 55%,#7E6FBE)}
+    .mk-page-in{padding:0 30px 26px; margin-top:-26px}
+    .mk-icon{width:54px; height:54px; border-radius:13px; background:var(--sur); border:1px solid var(--bd2);
+      display:flex; align-items:center; justify-content:center; font-size:30px; box-shadow:0 6px 18px -6px rgba(0,0,0,.6)}
+    .mk-title{font-family:var(--fs); font-size:34px; font-weight:600; margin:16px 0 6px}
+    .mk-props{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px}
+    .mk-chip{font-family:var(--fm); font-size:10.5px; padding:4px 10px; border-radius:100px; border:1px solid var(--bd2); color:var(--mu)}
+    .mk-chip.g{color:var(--gr); border-color:rgba(78,158,114,.4); background:rgba(78,158,114,.1)}
+    .mk-chip.o{color:var(--ac); border-color:rgba(196,125,50,.4); background:var(--acs)}
+    .mk-line{height:9px; border-radius:5px; background:var(--bd2); margin:11px 0; opacity:.65}
+    .mk-h{height:13px; width:42%; border-radius:5px; background:#534b3e; margin:22px 0 13px; opacity:.9}
+    .mk-callout{display:flex; gap:11px; background:var(--acs); border:1px solid rgba(196,125,50,.22); border-left:3px solid var(--ac); border-radius:9px; padding:13px 15px; margin:16px 0}
+    .mk-callout .em{font-size:18px}
+    .mk-callout .cl{flex:1; display:flex; flex-direction:column; gap:7px}
+    .mk-todo{display:flex; align-items:center; gap:11px; margin:10px 0}
+    .mk-box{width:16px; height:16px; border-radius:5px; border:1.5px solid var(--mu); flex-shrink:0}
+    .mk-box.on{background:var(--gr); border-color:var(--gr); position:relative}
+    .mk-box.on::after{content:'✓'; color:#0c0b08; font-size:11px; position:absolute; inset:0; display:flex; align-items:center; justify-content:center}
+
+    /* ── SECTIONS ────────────────────────────────────── */
+    section{padding:72px 0; position:relative}
+    .sec-head{text-align:center; max-width:60ch; margin:0 auto 52px}
+    .kicker{font-family:var(--fm); font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:var(--ac); margin-bottom:16px}
+    h2{font-family:var(--fs); font-weight:500; font-size:clamp(30px,4.4vw,46px); line-height:1.1; letter-spacing:-.01em; margin-bottom:16px}
+    h2 em{font-style:italic; color:var(--ac)}
+    .sec-head p{color:#b1a99b; font-size:17px; font-weight:300}
+
+    /* philosophy strip */
+    .philo{border-top:1px solid var(--bd); border-bottom:1px solid var(--bd); background:linear-gradient(var(--sur),var(--bg))}
+    .philo-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--bd)}
+    .philo-cell{background:var(--bg); padding:40px 30px; text-align:center}
+    .philo-cell .big{font-family:var(--fs); font-size:40px; color:var(--ac); margin-bottom:10px; font-weight:500}
+    .philo-cell h3{font-size:17px; font-weight:600; margin-bottom:7px}
+    .philo-cell p{color:var(--mu); font-size:14.5px; font-weight:300}
+
+    /* alternating feature rows */
+    .feat{display:grid; grid-template-columns:1fr 1fr; gap:60px; align-items:center; margin-bottom:96px}
+    .feat:last-child{margin-bottom:0}
+    .feat.rev .feat-copy{order:2}
+    .feat-copy h3{font-family:var(--fs); font-weight:500; font-size:30px; margin-bottom:14px; line-height:1.15}
+    .feat-copy p{color:#b1a99b; font-size:16px; font-weight:300; margin-bottom:18px}
+    .feat-list{list-style:none; display:flex; flex-direction:column; gap:11px}
+    .feat-list li{display:flex; gap:11px; align-items:flex-start; font-size:14.5px; color:#cbc3b5}
+    .feat-list li .tick{color:var(--ac); flex-shrink:0; margin-top:2px}
+    .feat-vis{background:var(--sur); border:1px solid var(--bd); border-radius:16px; padding:24px; min-height:280px;
+      display:flex; flex-direction:column; box-shadow:0 24px 60px -36px rgba(0,0,0,.8)}
+
+    /* view-tabs mockup */
+    .vtabs{display:flex; gap:6px; margin-bottom:18px; flex-wrap:wrap}
+    .vtab{font-family:var(--fm); font-size:11.5px; color:var(--mu); padding:6px 12px; border-radius:7px; border:1px solid var(--bd)}
+    .vtab.on{background:var(--acs); color:var(--ac); border-color:rgba(196,125,50,.35)}
+    /* mini table */
+    .mtab{border:1px solid var(--bd); border-radius:10px; overflow:hidden}
+    .mtr{display:grid; grid-template-columns:1.6fr 1fr 1fr; border-bottom:1px solid var(--bd)}
+    .mtr:last-child{border-bottom:none}
+    .mtr.head{background:var(--sur2)}
+    .mtd{padding:10px 13px; font-size:12.5px; color:#c3bbac; border-right:1px solid var(--bd); display:flex; align-items:center; gap:7px}
+    .mtd:last-child{border-right:none}
+    .mtr.head .mtd{font-family:var(--fm); font-size:10.5px; text-transform:uppercase; letter-spacing:.08em; color:var(--mu)}
+    .pill{font-family:var(--fm); font-size:10px; padding:2px 9px; border-radius:100px}
+    .pill.g{color:var(--gr); background:rgba(78,158,114,.14)}
+    .pill.o{color:var(--ac); background:var(--acs)}
+    .pill.p{color:var(--pu); background:rgba(126,111,190,.16)}
+    .pill.y{color:var(--go); background:rgba(201,168,76,.14)}
+
+    /* kanban mockup */
+    .kan{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; flex:1}
+    .kcol{background:var(--sur2); border:1px solid var(--bd); border-radius:10px; padding:10px; display:flex; flex-direction:column; gap:9px}
+    .kcol .kh{font-family:var(--fm); font-size:10.5px; text-transform:uppercase; letter-spacing:.08em; color:var(--mu); display:flex; justify-content:space-between}
+    .kcard{background:var(--sur); border:1px solid var(--bd2); border-radius:8px; padding:10px; font-size:12px; color:#cbc3b5; box-shadow:0 2px 8px -4px rgba(0,0,0,.5)}
+    .kcard .kt{margin-bottom:8px}
+    .ktag{height:5px; width:38px; border-radius:3px; display:inline-block}
+
+    /* customization mockup */
+    .swatches{display:flex; gap:9px; margin-bottom:18px; flex-wrap:wrap}
+    .sw{width:30px; height:30px; border-radius:9px; border:2px solid var(--bd2)}
+    .sw.on{border-color:var(--tx); transform:scale(1.06)}
+    .theme-rows{display:flex; flex-direction:column; gap:10px}
+    .trow{display:flex; align-items:center; justify-content:space-between; background:var(--sur2); border:1px solid var(--bd); border-radius:9px; padding:11px 14px; font-size:13px; color:#c3bbac}
+    .trow .toggle{width:34px; height:19px; border-radius:100px; background:var(--bd2); position:relative}
+    .trow .toggle.on{background:var(--ac)}
+    .trow .toggle::after{content:''; position:absolute; top:2px; left:2px; width:15px; height:15px; border-radius:50%; background:var(--tx); transition:.2s}
+    .trow .toggle.on::after{left:17px; background:#1a1206}
+    .fontpick{display:flex; gap:8px}
+    .fp{flex:1; text-align:center; border:1px solid var(--bd); border-radius:8px; padding:9px; font-size:18px; color:#cbc3b5}
+    .fp.on{border-color:var(--ac); color:var(--tx); background:var(--acs)}
+
+    /* ── FEATURE GRID ────────────────────────────────── */
+    .grid{display:grid; grid-template-columns:repeat(3,1fr); gap:16px}
+    .card{background:var(--sur); border:1px solid var(--bd); border-radius:14px; padding:26px; transition:border-color .18s,transform .18s,background .18s}
+    .card:hover{border-color:var(--bd2); transform:translateY(-3px); background:var(--sur2)}
+    .card .ci{width:42px; height:42px; border-radius:11px; background:var(--acs); border:1px solid rgba(196,125,50,.25);
+      display:flex; align-items:center; justify-content:center; font-size:20px; margin-bottom:16px}
+    .card h4{font-size:16.5px; font-weight:600; margin-bottom:8px}
+    .card p{color:var(--mu); font-size:14px; font-weight:300; line-height:1.55}
+
+    /* ── CTA BAND ────────────────────────────────────── */
+    .cta{text-align:center; border:1px solid var(--bd2); border-radius:22px; padding:64px 30px;
+      background:radial-gradient(120% 140% at 50% 0,rgba(196,125,50,.14),transparent 60%),var(--sur); margin:0 0 8px}
+    .cta h2{margin-bottom:14px}
+    .cta p{color:#b1a99b; font-size:17px; font-weight:300; margin-bottom:30px; max-width:48ch; margin-left:auto; margin-right:auto}
+
+    /* ── FOOTER ──────────────────────────────────────── */
+    footer{border-top:1px solid var(--bd); padding:40px 0 56px; margin-top:72px}
+    .foot-in{display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:18px}
+    .foot-in .brand{font-size:22px}
+    .foot-links{display:flex; gap:22px; font-size:13.5px; color:var(--mu)}
+    .foot-links a:hover{color:var(--tx)}
+    .foot-note{color:var(--mu); font-size:12.5px; font-family:var(--fm); margin-top:20px}
+
+    /* ── RESPONSIVE ──────────────────────────────────── */
+    @media(max-width:860px){
+      .feat{grid-template-columns:1fr; gap:30px; margin-bottom:64px}
+      .feat.rev .feat-copy{order:0}
+      .philo-grid{grid-template-columns:1fr}
+      .grid{grid-template-columns:1fr 1fr}
+      .mk-side{display:none}
+    }
+    @media(max-width:560px){
+      .hero{padding:56px 0 28px}
+      .nav-links a.txt{display:none}
+      .grid{grid-template-columns:1fr}
+      .mk-body{min-height:320px}
+      .cta{padding:48px 22px}
+    }
+    @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+  </style>
+</head>
+<body>
+  <!-- NAV -->
+  <header class="nav" id="nav">
+    <div class="wrap nav-in">
+      <a class="brand" href="#top">Libre<i>ta</i></a>
+      <nav class="nav-links">
+        <a class="txt" href="#features">Features</a>
+        <a class="txt" href="#customize">Make it yours</a>
+        <a class="txt" href="index.html?signin=1">Sign in</a>
+        <a class="btn btn-primary" href="index.html?signup=1">Get started</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="top">
+    <!-- HERO -->
+    <section class="hero">
+      <div class="wrap">
+        <span class="eyebrow"><span class="dot"></span>Personal workspace · No AI · Yours</span>
+        <h1 class="hero-h">A workspace that bends to <em>how you think.</em></h1>
+        <p class="hero-sub">Libreta is a personal notebook, planner, and database — endlessly customizable, built for one person instead of a whole team, and refreshingly free of AI. Your pages, your structure, your rules.</p>
+        <div class="hero-cta">
+          <a class="btn btn-primary btn-lg" href="index.html?signup=1">Start for free →</a>
+          <a class="btn btn-ghost btn-lg" href="#features">See what's inside</a>
+        </div>
+        <div class="hero-note">No credit card · Works offline · Syncs across your devices</div>
+
+        <!-- HERO APP MOCKUP -->
+        <div class="mock-stage">
+          <div class="mk-window">
+            <div class="mk-bar">
+              <span class="mk-dot"></span><span class="mk-dot"></span><span class="mk-dot"></span>
+              <span class="mk-url">libreta.io / my workspace</span>
+            </div>
+            <div class="mk-body">
+              <aside class="mk-side">
+                <div class="mk-logo">Libre<i>ta</i></div>
+                <div class="mk-search">⌕  Search…</div>
+                <div class="mk-nav on"><span class="ic">🏠</span>Home</div>
+                <div class="mk-nav"><span class="ic">📓</span>Journal</div>
+                <div class="mk-nav"><span class="ic">🎯</span>Goals 2026</div>
+                <div class="mk-nav sub"><span class="ic">›</span>Q3 plan</div>
+                <div class="mk-nav"><span class="ic">📚</span>Reading list</div>
+                <div class="mk-nav"><span class="ic">✈️</span>Trips</div>
+                <div class="mk-nav"><span class="ic">🍳</span>Recipes</div>
+              </aside>
+              <div class="mk-page">
+                <div class="mk-cover"></div>
+                <div class="mk-page-in">
+                  <div class="mk-icon">🎯</div>
+                  <div class="mk-title">Goals for 2026</div>
+                  <div class="mk-props">
+                    <span class="mk-chip o">● In progress</span>
+                    <span class="mk-chip g">Updated today</span>
+                    <span class="mk-chip">12 pages</span>
+                  </div>
+                  <div class="mk-callout">
+                    <span class="em">💡</span>
+                    <span class="cl"><span class="mk-line" style="width:90%;margin:0"></span><span class="mk-line" style="width:60%;margin:0"></span></span>
+                  </div>
+                  <div class="mk-h"></div>
+                  <div class="mk-todo"><span class="mk-box on"></span><span class="mk-line" style="width:48%;margin:0;opacity:.45"></span></div>
+                  <div class="mk-todo"><span class="mk-box on"></span><span class="mk-line" style="width:38%;margin:0;opacity:.45"></span></div>
+                  <div class="mk-todo"><span class="mk-box"></span><span class="mk-line" style="width:55%;margin:0"></span></div>
+                  <div class="mk-todo"><span class="mk-box"></span><span class="mk-line" style="width:44%;margin:0"></span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PHILOSOPHY -->
+    <section class="philo" style="padding:0">
+      <div class="philo-grid">
+        <div class="philo-cell">
+          <div class="big">No AI</div>
+          <h3>Your thoughts, not a model's</h3>
+          <p>No autocomplete looking over your shoulder. Just you and a blank page.</p>
+        </div>
+        <div class="philo-cell">
+          <div class="big">For one</div>
+          <h3>Built for individuals</h3>
+          <p>No seats, no comments, no shared-cursor noise. A calm space that's entirely yours.</p>
+        </div>
+        <div class="philo-cell">
+          <div class="big">Yours</div>
+          <h3>Local-first &amp; private</h3>
+          <p>Everything lives on your device first, then syncs. Works offline, on a plane, anywhere.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section id="features">
+      <div class="wrap">
+        <div class="sec-head">
+          <div class="kicker">Everything you need</div>
+          <h2>One canvas for <em>your whole life</em></h2>
+          <p>Notes, plans, trackers, collections — all built from the same flexible blocks and databases.</p>
+        </div>
+
+        <!-- Feature 1: blocks -->
+        <div class="feat">
+          <div class="feat-copy">
+            <h3>Write in blocks that become anything</h3>
+            <p>Every line is a block you can reshape — text, headings, to-dos, toggles, callouts, code, images, embeds, and nested sub-pages. Drag to reorder, stack side-by-side, or fold it all away.</p>
+            <ul class="feat-list">
+              <li><span class="tick">✦</span> Rich text, lists, quotes, code &amp; dividers</li>
+              <li><span class="tick">✦</span> Image covers, carousels, files &amp; video embeds</li>
+              <li><span class="tick">✦</span> Multi-column layouts and collapsible toggles</li>
+              <li><span class="tick">✦</span> Nested pages with breadcrumb navigation</li>
+            </ul>
+          </div>
+          <div class="feat-vis">
+            <div class="mk-callout" style="margin-top:0"><span class="em">💡</span><span class="cl"><span class="mk-line" style="width:88%;margin:0"></span><span class="mk-line" style="width:54%;margin:0"></span></span></div>
+            <div class="mk-h" style="width:50%"></div>
+            <div class="mk-todo"><span class="mk-box on"></span><span class="mk-line" style="width:50%;margin:0;opacity:.45"></span></div>
+            <div class="mk-todo"><span class="mk-box"></span><span class="mk-line" style="width:62%;margin:0"></span></div>
+            <div style="display:flex;gap:11px;margin-top:8px">
+              <div style="flex:1;background:var(--sur2);border:1px solid var(--bd);border-radius:9px;height:64px;display:flex;align-items:center;justify-content:center;font-size:22px">🖼</div>
+              <div style="flex:1;background:var(--sur2);border:1px solid var(--bd);border-radius:9px;height:64px;display:flex;align-items:center;justify-content:center;font-size:22px">▶</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Feature 2: databases -->
+        <div class="feat rev">
+          <div class="feat-copy">
+            <h3>Databases, shown your way</h3>
+            <p>Turn any collection into a database and flip between views without copying a thing. The same data as a table, a Kanban board, a calendar, or a timeline — filtered, sorted, and grouped however you like.</p>
+            <ul class="feat-list">
+              <li><span class="tick">✦</span> Table, Board, Calendar &amp; Timeline views</li>
+              <li><span class="tick">✦</span> Custom properties: status, select, date, text &amp; more</li>
+              <li><span class="tick">✦</span> Filter, sort, group &amp; colour-code at a glance</li>
+              <li><span class="tick">✦</span> Every row opens as a full page</li>
+            </ul>
+          </div>
+          <div class="feat-vis">
+            <div class="vtabs">
+              <span class="vtab on">▦ Table</span><span class="vtab">▥ Board</span><span class="vtab">▤ Calendar</span><span class="vtab">⊟ Timeline</span>
+            </div>
+            <div class="mtab">
+              <div class="mtr head"><div class="mtd">Name</div><div class="mtd">Status</div><div class="mtd">Tag</div></div>
+              <div class="mtr"><div class="mtd">📓 Morning pages</div><div class="mtd"><span class="pill g">Done</span></div><div class="mtd"><span class="pill o">Daily</span></div></div>
+              <div class="mtr"><div class="mtd">🎯 Run a 10k</div><div class="mtd"><span class="pill o">Active</span></div><div class="mtd"><span class="pill p">Health</span></div></div>
+              <div class="mtr"><div class="mtd">📚 Finish novel</div><div class="mtd"><span class="pill y">Soon</span></div><div class="mtd"><span class="pill p">Read</span></div></div>
+              <div class="mtr"><div class="mtd">✈️ Plan Lisbon</div><div class="mtd"><span class="pill o">Active</span></div><div class="mtd"><span class="pill g">Travel</span></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Feature 3: customization -->
+        <div class="feat" id="customize">
+          <div class="feat-copy">
+            <h3>Make it unmistakably yours</h3>
+            <p>This is where Libreta pulls ahead. Reshape the home page, pick themes and accent colours, swap typefaces per page, and even flip on playful visual filters. Your workspace should feel like <em>yours</em> — so it does.</p>
+            <ul class="feat-list">
+              <li><span class="tick">✦</span> Custom themes, accent colours &amp; hex picker</li>
+              <li><span class="tick">✦</span> Per-page typefaces and page width</li>
+              <li><span class="tick">✦</span> Drag-to-arrange, collapsible home sections</li>
+              <li><span class="tick">✦</span> Just-for-fun filters: Pixel art, CRT &amp; B&amp;W</li>
+            </ul>
+          </div>
+          <div class="feat-vis">
+            <div class="swatches">
+              <span class="sw on" style="background:#C47D32"></span>
+              <span class="sw" style="background:#4E9E72"></span>
+              <span class="sw" style="background:#7E6FBE"></span>
+              <span class="sw" style="background:#C45454"></span>
+              <span class="sw" style="background:#4E7EC4"></span>
+              <span class="sw" style="background:#C9A84C"></span>
+            </div>
+            <div class="fontpick" style="margin-bottom:14px">
+              <div class="fp on" style="font-family:var(--fs)">Aa</div>
+              <div class="fp" style="font-family:var(--fn)">Aa</div>
+              <div class="fp" style="font-family:var(--fm)">Aa</div>
+            </div>
+            <div class="theme-rows">
+              <div class="trow">Dark theme<span class="toggle on"></span></div>
+              <div class="trow">Full-width pages<span class="toggle"></span></div>
+              <div class="trow">CRT visual filter<span class="toggle"></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FEATURE GRID -->
+    <section style="padding-top:0">
+      <div class="wrap">
+        <div class="sec-head">
+          <div class="kicker">And the details that matter</div>
+          <h2>Thoughtful where it counts</h2>
+        </div>
+        <div class="grid">
+          <div class="card"><div class="ci">🕑</div><h4>Version history</h4><p>Automatic page snapshots you can preview and restore — your words are never one mistake away from gone.</p></div>
+          <div class="card"><div class="ci">☁️</div><h4>Cross-device sync</h4><p>Sign in once and your workspace follows you. Edit on a laptop, pick up on a phone, no setup.</p></div>
+          <div class="card"><div class="ci">✈️</div><h4>Works offline</h4><p>Local-first by design. Keep writing on a plane or a dead-zone train — it syncs when you're back.</p></div>
+          <div class="card"><div class="ci">🗂️</div><h4>Nested pages</h4><p>Build a hierarchy as deep as you like, with a drag-to-organize sidebar tree and breadcrumbs.</p></div>
+          <div class="card"><div class="ci">🔎</div><h4>Instant search</h4><p>⌘K finds any page by title or content in milliseconds, ranked so the right one is on top.</p></div>
+          <div class="card"><div class="ci">🔒</div><h4>Private &amp; portable</h4><p>Your data is yours — export and import the whole workspace whenever you want, no lock-in.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section style="padding-top:0">
+      <div class="wrap">
+        <div class="cta">
+          <div class="kicker">Ready when you are</div>
+          <h2>Start your <em>libreta</em> today</h2>
+          <p>Create your workspace in seconds. Free to start, yours to shape.</p>
+          <div class="hero-cta">
+            <a class="btn btn-primary btn-lg" href="index.html?signup=1">Get started — it's free</a>
+            <a class="btn btn-ghost btn-lg" href="index.html?signin=1">I already have an account</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <div class="foot-in">
+        <a class="brand" href="#top">Libre<i>ta</i></a>
+        <nav class="foot-links">
+          <a href="#features">Features</a>
+          <a href="#customize">Make it yours</a>
+          <a href="index.html?signin=1">Sign in</a>
+          <a href="index.html?signup=1">Get started</a>
+        </nav>
+      </div>
+      <div class="foot-note">Libreta · A personal workspace, built around you. <span id="yr"></span></div>
+    </div>
+  </footer>
+
+  <script>
+    // Add a border to the nav once the page scrolls.
+    var nav=document.getElementById('nav');
+    var onScroll=function(){ nav.classList.toggle('scrolled', window.scrollY>8); };
+    window.addEventListener('scroll', onScroll, {passive:true}); onScroll();
+    document.getElementById('yr').textContent='© '+new Date().getFullYear();
+  </script>
+</body>
+</html>

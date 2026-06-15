@@ -544,6 +544,9 @@ const Cloud = (()=>{
       const err=m=>{ $('#ag-err').className='ag-err'; $('#ag-err').textContent=m||''; };
       const ok=m=>{ $('#ag-err').className='ag-err ag-ok'; $('#ag-err').textContent=m||''; };
       if(recoveryExpired) err('That reset link has expired. Send a new one below.');
+      // Arriving from the landing page's "Get started" CTA (index.html?signup=1) opens
+      // straight into account creation; "Sign in" (?signin) keeps the default mode.
+      let _wantSignup=false; try{ _wantSignup=new URLSearchParams(location.search).has('signup'); }catch(e){}
 
       const STR=[['Too weak','#cf6b52'],['Weak','#cf6b52'],['Fair','#C47D32'],['Good','#C9A84C'],['Strong','#5e8c5a']];
       function refreshStrength(){
@@ -638,6 +641,7 @@ const Cloud = (()=>{
           resolve(session.user);
         }catch(e){ err('Something went wrong. Try again.'); $('#ag-submit').disabled=false; }
       };
+      if(_wantSignup) setMode('signup');
       $('#ag-email').focus();
     });
   }
