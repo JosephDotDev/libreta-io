@@ -1,6 +1,31 @@
 /* ═══════════════════════════════════════════════
    BLOCK MENU
 ═══════════════════════════════════════════════ */
+/* Block colour coding — a curated palette that reads well on both light and dark
+   themes. We store the chosen colour value on the block (blk.color = text,
+   blk.bg = background base) and apply it in mkBkEl, so it rides the snapshot and
+   syncs like any other block data. */
+const BLOCK_COLORS=[
+  {k:'gray',  c:'#9aa0a6'},
+  {k:'brown', c:'#a8795c'},
+  {k:'orange',c:'#d9730d'},
+  {k:'yellow',c:'#cb912f'},
+  {k:'green', c:'#4f9d69'},
+  {k:'blue',  c:'#4a86c5'},
+  {k:'purple',c:'#9a6dd7'},
+  {k:'pink',  c:'#c75f9c'},
+  {k:'red',   c:'#e0544e'},
+];
+function blockColorSection(id){
+  const txt=`<button class="bm-sw bm-sw-def" title="Default text" onclick="setBlkColor('${id}','');closeAll()">A</button>`
+    + BLOCK_COLORS.map(c=>`<button class="bm-sw" style="color:${c.c}" title="${c.k[0].toUpperCase()+c.k.slice(1)} text" onclick="setBlkColor('${id}','${c.c}');closeAll()">A</button>`).join('');
+  const bg=`<button class="bm-bgsw bm-bgsw-def" title="No background" onclick="setBlkBg('${id}','');closeAll()"></button>`
+    + BLOCK_COLORS.map(c=>`<button class="bm-bgsw" style="background:${c.c}" title="${c.k[0].toUpperCase()+c.k.slice(1)} background" onclick="setBlkBg('${id}','${c.c}');closeAll()"></button>`).join('');
+  return `<div class="bm-s"><div class="bm-lbl">Text color</div><div class="bm-colors">${txt}</div>
+    <div class="bm-lbl">Background</div><div class="bm-colors">${bg}</div></div>`;
+}
+function setBlkColor(id,color){ const b=findBlock(id); if(!b)return; if(color)b.color=color; else delete b.color; reRenderBlock(id); sched(); }
+function setBlkBg(id,bg){ const b=findBlock(id); if(!b)return; if(bg)b.bg=bg; else delete b.bg; reRenderBlock(id); sched(); }
 /* Block-type-specific controls — these used to be little toolbars above each block */
 function blockContextItems(blk){
   if(!blk) return '';
@@ -74,6 +99,7 @@ function openBkMenu(e,id){
       <div class="bm-it" onclick="copyBlkText('${id}');closeAll()">
         <svg viewBox="0 0 13 13"><path d="M8 1H3a1 1 0 00-1 1v8"/><rect x="4" y="4" width="8" height="8" rx="1"/></svg>Copy text</div>
     </div>
+    ${blockColorSection(id)}
     <div class="bm-s">
       <div class="bm-it danger" onclick="delBlk('${id}');closeAll()">
         <svg viewBox="0 0 13 13"><path d="M2 4h9M5 4V2h3v2M10 4l-.8 7H3.8L3 4" stroke-linecap="round" stroke-linejoin="round"/></svg>Delete</div>

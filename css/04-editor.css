@@ -46,6 +46,14 @@ body.bk-ptr-dragging .bk,body.bk-ptr-dragging .gb.drag{cursor:grabbing!important
 .gb.drag{cursor:grab;font-size:15px}
 .gb.drag:active{cursor:grabbing}
 .bk-wrap{flex:1;min-width:0;padding-right:36px}
+/* Block colour coding — text colour and a soft background tint (16% of the chosen
+   base colour, so it sits gently on any theme). Child-combinators keep the colour
+   on the block's OWN text, not on nested children (toggle bodies, columns). */
+.bk-row.bk-colored > .bk-wrap > .bk,
+.bk-row.bk-colored > .bk-wrap > .bk-callout > .bk,
+.bk-row.bk-colored > .bk-wrap > .bk-todo > .bk,
+.bk-row.bk-colored > .bk-wrap > .bk-toggle-head > .bk{ color:var(--bk-text) }
+.bk-row.bk-bged > .bk-wrap{ background:color-mix(in srgb, var(--bk-bg) 16%, transparent); border-radius:6px; padding-top:3px; padding-bottom:3px; padding-left:10px; margin-left:-10px }
 /* Base block */
 .bk{outline:none;width:100%;min-height:1.65em;padding:2px 0;line-height:1.75;font-family:var(--fs);font-size:18px;font-weight:300;caret-color:var(--ac);color:var(--tx);white-space:pre-wrap;word-wrap:break-word}
 /* Placeholder uses ::after so it never collides with list markers (which use ::before) */

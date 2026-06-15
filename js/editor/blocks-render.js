@@ -91,6 +91,10 @@ function mkBkEl(blk){
     el.addEventListener('paste',  e=>onBlockPaste(e,el));
     el.addEventListener('focus',  ()=>S.activeId=blk.id);
   }
+  // Block colour coding — text colour and/or a soft background tint, derived from
+  // the stored base colour via CSS in 06-blocks (color-mix on --bk-bg).
+  if(blk.color){ row.classList.add('bk-colored'); row.style.setProperty('--bk-text',blk.color); }
+  if(blk.bg){ row.classList.add('bk-bged'); row.style.setProperty('--bk-bg',blk.bg); }
   row.addEventListener('dragstart',e=>onDragStart(e,blk.id));
   row.addEventListener('dragover', e=>onDragOver(e,blk.id));
   row.addEventListener('dragleave',e=>{e.currentTarget.classList.remove('dz-left','dz-right','dz-top','dz-bottom','drag-over')});

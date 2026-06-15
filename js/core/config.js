@@ -55,7 +55,7 @@ function applyCfg(){
 function navHidden(){ return getCfg().navHidden||{}; }
 function applyNavVisibility(){
   const h=navHidden();
-  ['home','documents','calendar'].forEach(k=>{
+  ['home','documents','calendar','tasks'].forEach(k=>{
     const btn=document.querySelector(`.nav-it[data-nav="${k}"]`);
     if(btn) btn.style.display=h[k]?'none':'';
   });

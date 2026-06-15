@@ -1,3 +1,12 @@
+/* Keep muted/secondary menu text legible on ANY surface — including a heavily
+   customized --sur — by re-deriving --mu (used for labels, descriptions, icons)
+   from the readable text colour blended toward the surface, instead of a fixed
+   grey that can wash out against a saturated custom surface. Scoped to floating
+   menus so the rest of the app keeps its tuned greys. */
+.slash-m,.bk-menu,.pm,.dp,#idb-pop,#tbl-dd,#idb-rowmenu,#color-pal,#link-pop,#cloud-menu{
+  --mu: color-mix(in srgb, var(--tx) 62%, var(--sur));
+}
+
 /* ── SLASH MENU ──────────────────────────────── */
 .slash-m{position:fixed;z-index:500;background:var(--sur);border:1px solid var(--bd2);border-radius:8px;box-shadow:0 8px 28px rgba(0,0,0,.55);width:260px;display:none}
 .slash-m.open{display:block}
@@ -23,6 +32,13 @@
 .bm-sub.open{display:block}
 .bm-si{display:flex;align-items:center;gap:8px;padding:5px 12px;cursor:pointer;font-size:11px;color:var(--mu);transition:background .08s,color .08s}
 .bm-si:hover{background:var(--sur2);color:var(--tx)}
+/* Block colour swatches */
+.bm-colors{display:flex;flex-wrap:wrap;gap:5px;padding:3px 12px 7px}
+.bm-sw,.bm-bgsw{width:22px;height:22px;border:1px solid var(--bd);border-radius:5px;cursor:pointer;flex-shrink:0;transition:border-color .1s,transform .08s}
+.bm-sw:hover,.bm-bgsw:hover{border-color:var(--ac);transform:translateY(-1px)}
+.bm-sw{background:var(--bg);color:var(--tx);font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;font-family:var(--fs);line-height:1}
+.bm-bgsw-def,.bm-sw-def{position:relative;background:var(--bg)}
+.bm-bgsw-def::after{content:'';position:absolute;inset:4px;border-radius:50%;border:1px solid var(--mu);background:linear-gradient(135deg,transparent 45%,var(--mu) 45%,var(--mu) 55%,transparent 55%)}
 
 /* ── PROPERTY PICKERS ────────────────────────── */
 .pm{position:fixed;z-index:600;background:var(--sur);border:1px solid var(--bd2);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.5);width:220px;display:none}

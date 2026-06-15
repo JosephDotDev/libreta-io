@@ -21,9 +21,9 @@
 <link rel="stylesheet" href="css/01-tokens.css?v=8">
 <link rel="stylesheet" href="css/02-layout.css?v=9">
 <link rel="stylesheet" href="css/03-home-docs.css?v=7">
-<link rel="stylesheet" href="css/04-editor.css?v=14">
-<link rel="stylesheet" href="css/05-menus.css?v=6">
-<link rel="stylesheet" href="css/06-calendar-tables.css?v=8">
+<link rel="stylesheet" href="css/04-editor.css?v=15">
+<link rel="stylesheet" href="css/05-menus.css?v=7">
+<link rel="stylesheet" href="css/06-calendar-tables.css?v=9">
 <link rel="stylesheet" href="css/07-chrome.css?v=7">
 <link rel="stylesheet" href="css/08-database.css?v=12">
 <link rel="stylesheet" href="css/09-prop-editor.css?v=7">
@@ -37,7 +37,7 @@
 <link rel="stylesheet" href="css/17-versions.css?v=6">
 <link rel="stylesheet" href="css/18-sidebar-tree.css?v=7">
 <link rel="stylesheet" href="css/19-page-settings.css?v=10">
-<link rel="stylesheet" href="css/20-cloud.css?v=14">
+<link rel="stylesheet" href="css/20-cloud.css?v=15">
 <link rel="stylesheet" href="css/21-trash.css?v=1">
 <link rel="stylesheet" href="css/22-filters.css?v=1">
 </head>
@@ -65,6 +65,8 @@
         <svg class="ni" viewBox="0 0 16 16"><path d="M9 1H3a1 1 0 00-1 1v12a1 1 0 001 1h10a1 1 0 001-1V6L9 1z"/><path d="M9 1v5h5"/></svg><span class="nav-it-lbl">Documents</span></button>
       <button class="nav-it" data-nav="calendar" onclick="nav('calendar')" title="Calendar">
         <svg class="ni" viewBox="0 0 16 16"><rect x="1" y="3" width="14" height="12" rx="1"/><line x1="1" y1="7" x2="15" y2="7"/><line x1="5" y1="1" x2="5" y2="5"/><line x1="11" y1="1" x2="11" y2="5"/></svg><span class="nav-it-lbl">Calendar</span></button>
+      <button class="nav-it" data-nav="tasks" onclick="nav('tasks')" title="Tasks">
+        <svg class="ni" viewBox="0 0 16 16"><path d="M2 4l1.4 1.4L6 2.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 9.6L3.4 11 6 8.4" stroke-linecap="round" stroke-linejoin="round"/><line x1="8.5" y1="4" x2="14" y2="4"/><line x1="8.5" y1="9.8" x2="14" y2="9.8"/></svg><span class="nav-it-lbl">Tasks</span></button>
     </nav>
     <div class="nav-g sb-list-g" id="sb-favorites" style="display:none">
       <div class="nav-lbl sb-list-hdr" onclick="toggleSbGroup('favorites')"><span class="sb-list-chev">&#9662;</span>Favorites</div>
@@ -203,6 +205,14 @@
     </div>
   </div>
 
+  <div id="view-tasks" class="view hidden">
+    <div class="tk-wrap">
+      <div class="tk-bar"><span class="tk-title">Tasks</span></div>
+      <div class="tk-legend" id="tk-legend"></div>
+      <div class="tk-board" id="tk-board"></div>
+    </div>
+  </div>
+
 </main>
 
 <!-- ═══ FLOATING UI ════════════════════════════════════════════ -->
@@ -266,17 +276,17 @@
 <script src="js/core/state.js?v=7"></script>
 <script src="js/core/security.js?v=1"></script>
 <script src="js/core/storage.js?v=6"></script>
-<script src="js/core/router.js?v=10"></script>
+<script src="js/core/router.js?v=11"></script>
 <script src="js/ui/feedback.js?v=6"></script>
 <script src="js/core/history.js?v=8"></script>
 <script src="js/editor/editor-open.js?v=9"></script>
-<script src="js/editor/blocks-render.js?v=6"></script>
+<script src="js/editor/blocks-render.js?v=7"></script>
 <script src="js/editor/block-model.js?v=6"></script>
 <script src="js/editor/keyboard.js?v=8"></script>
 <script src="js/editor/block-ops.js?v=6"></script>
 <script src="js/editor/drag.js?v=7"></script>
 <script src="js/editor/slash-menu.js?v=8"></script>
-<script src="js/editor/block-menu.js?v=7"></script>
+<script src="js/editor/block-menu.js?v=8"></script>
 <script src="js/editor/multiselect.js?v=1"></script>
 <script src="js/blocks/carousel.js?v=6"></script>
 <script src="js/blocks/grid-table.js?v=6"></script>
@@ -295,9 +305,10 @@
 <script src="js/props/filtering.js?v=6"></script>
 <script src="js/views/home.js?v=12"></script>
 <script src="js/views/calendar.js?v=9"></script>
+<script src="js/views/tasks.js?v=1"></script>
 <script src="js/views/databases-page.js?v=8"></script>
 <script src="js/core/utils.js?v=6"></script>
-<script src="js/core/config.js?v=17"></script>
+<script src="js/core/config.js?v=18"></script>
 <script src="js/db/core.js?v=7"></script>
 <script src="js/db/toolbar.js?v=8"></script>
 <script src="js/db/block.js?v=8"></script>
@@ -374,6 +385,7 @@
         <button class="cfg-opt" data-navtoggle="home"      onclick="toggleNavItem('home')">Home</button>
         <button class="cfg-opt" data-navtoggle="documents" onclick="toggleNavItem('documents')">Documents</button>
         <button class="cfg-opt" data-navtoggle="calendar"  onclick="toggleNavItem('calendar')">Calendar</button>
+        <button class="cfg-opt" data-navtoggle="tasks"     onclick="toggleNavItem('tasks')">Tasks</button>
       </div>
       <div style="font-size:10px;color:var(--mu);margin-top:8px;line-height:1.6">Highlighted shortcuts show in the sidebar. Hidden pages stay reachable from breadcrumbs and direct links.</div>
     </div>
