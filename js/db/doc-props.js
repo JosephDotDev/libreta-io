@@ -186,7 +186,7 @@ function openLinkedDoc(tblId,rowId,colId){
   if(!docId){
     const doc=blankDoc();
     const fc=tbl.columns[0];
-    doc.title=(fc?row.cells[fc.id]:'')||'Untitled';
+    doc.title=(fc?row.cells[fc.id]:'')||'';   // empty → UI shows a soft "Untitled" placeholder
     doc.props.push({id:mkId('p'),name:'Source Table',type:'text',value:tbl.name});
     DB.saveDoc(doc); row.cells[colId]=doc.id; DB.saveTbl(tbl); docId=doc.id;
   }

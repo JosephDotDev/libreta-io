@@ -10,10 +10,20 @@ const SB_KEY='folio_sidebar';
 function sbState(){ try{const s=JSON.parse(localStorage.getItem(SB_KEY))||{}; s.order=s.order||{}; s.collapsed=s.collapsed||{}; s.hidden=s.hidden||{}; return s;}catch{return{order:{},collapsed:{},hidden:{}};} }
 function saveSbState(s){ try{localStorage.setItem(SB_KEY,JSON.stringify(s));}catch(e){} }
 
+/* A doc that is an entry in a *real* (user-created) database — i.e. a row of some
+   table other than the default "shared properties" DB. These are reached through
+   their database, so they shouldn't also sit loose in the sidebar pages tree. A
+   page that was explicitly nested under another page (meta.parent set) is exempt. */
+function sbIsForeignDbEntry(d){
+  if(!d||!d.dbId||!d.rowId) return false;
+  if(d.meta&&d.meta.parent) return false;
+  const defaultDbId=(typeof getCfg==='function'&&getCfg().defaultDbId)||null;
+  return d.dbId!==defaultDbId;
+}
 /* Visible children of a parent (null = top level), in the user's custom order. */
 function sbOrderedChildren(parentId){
   const st=sbState();
-  const kids=DB.getDocs().filter(d=> d.id!==HOME_ID && ((d.meta&&d.meta.parent)||null)===(parentId||null) && !st.hidden[d.id]);
+  const kids=DB.getDocs().filter(d=> d.id!==HOME_ID && ((d.meta&&d.meta.parent)||null)===(parentId||null) && !st.hidden[d.id] && !sbIsForeignDbEntry(d));
   const ord=st.order[parentId||'root']||[];
   kids.sort((a,b)=>{
     const ia=ord.indexOf(a.id), ib=ord.indexOf(b.id);

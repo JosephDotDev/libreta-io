@@ -47,7 +47,17 @@ function mergeWithPrev(id,el){
   const arr=loc.arr, idx=loc.idx;
   const prev=arr[idx-1];
   if(prev.type==='divider'){delBlk(prev.id);return}
-  const pEl=document.querySelector(`.bk[data-id="${prev.id}"]`); if(!pEl) return;
+  const pEl=document.querySelector(`.bk[data-id="${prev.id}"]`);
+  if(!pEl){
+    // Previous block has no editable text surface (image, file, database, page
+    // link, etc.) — there's nothing to merge text into. Hop this block above it
+    // instead of silently doing nothing, so Backspace at the start always acts.
+    const [cur]=arr.splice(idx,1); arr.splice(idx-1,0,cur);
+    rerender(); updNums(); sched();
+    const moved=document.querySelector(`.bk[data-id="${id}"]`);
+    if(moved){ moved.focus(); putCursorStart(moved); }
+    return;
+  }
   const mergedHTML=pEl.innerHTML+el.innerHTML;
   arr[idx-1].content=mergedHTML; pEl.innerHTML=mergedHTML;
   const prevTextLen=pEl.innerText.length-el.innerText.length;

@@ -59,8 +59,10 @@ function pickSlash(type){
     return;
   }
   if(type==='database'){
-    // Step 1: choose source (new or existing DB). Step 2 (idbSlashView): choose the view.
-    idbSlashSourceMenu(S.slashId);
+    // Only offer the format for a NEW database (Table / Board / Calendar). Pointing a
+    // block at an existing database is done from the database's own header, so the
+    // slash menu doesn't balloon with every table in the workspace.
+    idbSlashView(S.slashId,'__new__');
     return;
   }
   if(type==='db-board'||type==='db-calendar'){
