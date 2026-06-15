@@ -1,0 +1,13 @@
+{
+  "name": "Libreta",
+  "short_name": "Libreta",
+  "description": "A local-first, Notion-like content planner.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0C0B08",
+  "theme_color": "#0C0B08",
+  "icons": [
+    { "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

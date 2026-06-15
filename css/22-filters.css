@@ -1,0 +1,60 @@
+/* ═══════════════════════════════════════════════
+   VISUAL FILTERS  — whole-app display effects (just for fun)
+
+   Applied as a class on <body> (vf-pixel | vf-crt | vf-bw). The effect targets
+   the two persistent panes (.sb + .main) so transient popovers stay crisp and
+   correctly positioned, while the CRT scanlines ride on their own fixed overlay.
+═══════════════════════════════════════════════ */
+
+/* ── Black & White ───────────────────────────── */
+body.vf-bw .sb,
+body.vf-bw .main{ filter:grayscale(1) contrast(1.04); }
+
+/* ── Pixel art ──────────────────────────────────
+   Bitmap font, hard square edges, pixelated + posterized imagery. (True
+   pixelation of live text isn't possible in CSS, so this leans on a pixel font
+   + crisp edges + image treatment to sell the look.) */
+body.vf-pixel .sb *,
+body.vf-pixel .main *{ font-family:'Pixelify Sans',ui-monospace,monospace !important; letter-spacing:0 !important; }
+body.vf-pixel .sb *,
+body.vf-pixel .main *{ border-radius:0 !important; }
+body.vf-pixel .sb,
+body.vf-pixel .main{ image-rendering:pixelated; }
+body.vf-pixel .sb *,
+body.vf-pixel .main *{ image-rendering:pixelated; }
+body.vf-pixel img,
+body.vf-pixel .home-card-cover,
+body.vf-pixel .cover-img-el,
+body.vf-pixel .dc-cover-thumb,
+body.vf-pixel .bk-page-card-cover{ filter:url(#vf-posterize) contrast(1.1) saturate(1.15); }
+/* Crisp text rendering for the retro feel */
+body.vf-pixel .sb,
+body.vf-pixel .main{ -webkit-font-smoothing:none; font-smooth:never; }
+
+/* ── CRT ────────────────────────────────────────
+   Scanlines + vignette + gentle flicker on a fixed overlay, plus a faint
+   phosphor glow / saturation bump on the content. */
+#crt-overlay{ display:none; }
+body.vf-crt #crt-overlay{
+  display:block; position:fixed; inset:0; z-index:10000; pointer-events:none;
+  background:repeating-linear-gradient(to bottom,
+    rgba(0,0,0,.16) 0, rgba(0,0,0,.16) 1px, transparent 1px, transparent 3px);
+  mix-blend-mode:multiply;
+}
+body.vf-crt #crt-overlay::before{   /* vignette */
+  content:''; position:absolute; inset:0;
+  background:radial-gradient(ellipse at center, transparent 58%, rgba(0,0,0,.4) 100%);
+}
+body.vf-crt #crt-overlay::after{    /* faint rolling glow + flicker */
+  content:''; position:absolute; left:0; right:0; height:38%;
+  background:linear-gradient(rgba(255,255,255,.05), rgba(255,255,255,0));
+  animation:crt-roll 7s linear infinite, crt-flicker .9s steps(3) infinite;
+}
+@keyframes crt-roll{ 0%{top:-40%} 100%{top:100%} }
+@keyframes crt-flicker{ 0%{opacity:.55} 50%{opacity:.85} 100%{opacity:.65} }
+body.vf-crt .sb,
+body.vf-crt .main{ filter:saturate(1.3) contrast(1.06) brightness(1.03); text-shadow:0 0 1px rgba(255,255,255,.22); }
+
+@media (prefers-reduced-motion: reduce){
+  body.vf-crt #crt-overlay::after{ animation:none; opacity:.6; }
+}

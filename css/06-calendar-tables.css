@@ -1,0 +1,72 @@
+/* ── CALENDAR ────────────────────────────────── */
+.cal-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.cal-bar{display:flex;align-items:center;gap:10px;padding:14px 32px;border-bottom:1px solid var(--bd);flex-shrink:0}
+.cal-mo{font-family:var(--fs);font-size:22px;font-weight:300}
+.cal-nb{background:none;border:1px solid var(--bd);border-radius:4px;color:var(--mu);padding:5px 10px;font-size:13px;cursor:pointer;transition:border-color .1s}
+.cal-nb:hover{border-color:var(--mu);color:var(--tx)}
+.cal-tod{background:none;border:1px solid var(--bd);border-radius:4px;color:var(--mu);padding:5px 12px;font-size:11px;cursor:pointer;margin-left:auto;font-family:var(--fm);transition:border-color .1s}
+.cal-tod:hover{border-color:var(--mu);color:var(--tx)}
+/* Sub-calendar legend: colour swatch + show/hide toggle per source */
+.cal-legend{display:flex;align-items:center;flex-wrap:wrap;gap:8px 14px;padding:11px 32px;border-bottom:1px solid var(--bd);flex-shrink:0}
+.cal-leg{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--tx);user-select:none}
+.cal-leg.off{opacity:.4}
+.cal-leg-dot{position:relative;width:12px;height:12px;border-radius:50%;cursor:pointer;flex-shrink:0;border:none;padding:0;overflow:hidden;box-shadow:0 0 0 1px rgba(0,0,0,.15) inset}
+.cal-leg-dot input[type=color]{position:absolute;inset:-4px;width:calc(100% + 8px);height:calc(100% + 8px);opacity:0;cursor:pointer;border:none;padding:0;background:none}
+.cal-leg.off .cal-leg-dot{box-shadow:0 0 0 1px var(--bd2) inset;background:transparent!important}
+.cal-leg-nm{cursor:pointer;letter-spacing:.02em}
+.cal-leg-nm:hover{text-decoration:underline}
+.cal-leg.off .cal-leg-nm{text-decoration:line-through}
+.cal-leg-all{background:none;border:1px solid var(--bd);border-radius:4px;color:var(--mu);font-family:var(--fm);font-size:10px;letter-spacing:.04em;padding:3px 9px;cursor:pointer;transition:border-color .1s,color .1s}
+.cal-leg-all:hover{border-color:var(--mu);color:var(--tx)}
+.cal-leg-empty{font-size:11px;color:var(--mu)}
+.cal-sc{flex:1;overflow-y:auto}
+.cal-gw{padding:0 32px 32px}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);border-left:1px solid var(--bd);border-top:1px solid var(--bd)}
+.cal-dh{padding:8px;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--mu);text-align:center;border-right:1px solid var(--bd);border-bottom:1px solid var(--bd)}
+/* min-width:0 keeps the 7 columns equal — without it a long (nowrap) event title
+   forces its column wider and the whole grid balloons. */
+.cal-cell{min-width:0;min-height:110px;border-right:1px solid var(--bd);border-bottom:1px solid var(--bd);padding:8px 8px 6px;cursor:pointer;transition:background .1s}
+.cal-cell:hover{background:var(--sur)}
+/* Adjacent-month days are dimmed but still show events that peek in. */
+.cal-cell.om{opacity:.4}
+.cal-cell.om:hover{opacity:.65}
+.cal-cell.tod{background:rgba(196,125,50,.06)}
+.cal-num{font-size:11px;color:var(--mu);margin-bottom:4px}
+.cal-cell.tod .cal-num{color:var(--ac);font-weight:600}
+.cal-ev{display:block;padding:2px 6px;border-radius:3px;font-size:10px;margin-bottom:2px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cal-ev:hover{opacity:.75}
+.cal-ev.doc-ev{background:rgba(196,125,50,.15);color:var(--ac)}
+.cal-ev.row-ev{background:rgba(78,158,114,.15);color:var(--gr)}
+
+/* ── TABLES VIEW ─────────────────────────────── */
+.tbl-wrap{flex:1;display:flex;overflow:hidden}
+.tbl-sb{width:200px;flex-shrink:0;border-right:1px solid var(--bd);display:flex;flex-direction:column;padding:12px 0;overflow-y:auto}
+.tbl-sb-h{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--mu);padding:0 12px 8px}
+.tbl-sb-it{display:flex;align-items:center;gap:8px;padding:7px 12px;cursor:pointer;color:var(--mu);font-size:12px;border-radius:4px;margin:1px 6px;transition:background .1s,color .1s}
+.tbl-sb-it:hover{background:var(--bd);color:var(--tx)}
+.tbl-sb-it.active{background:var(--acs);color:var(--tx)}
+.tbl-main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.tbl-bar{display:flex;align-items:center;gap:8px;padding:12px 20px;border-bottom:1px solid var(--bd);flex-shrink:0}
+.tbl-nm{font-family:var(--fs);font-size:20px;font-weight:300;flex:1;border:none;background:none;color:var(--tx);outline:none}
+.tbl-fi{background:var(--sur);border:1px solid var(--bd);border-radius:4px;color:var(--tx);padding:5px 10px;font-size:11px;outline:none;font-family:var(--fm);width:160px}
+.tbl-fi:focus{border-color:var(--ac)}
+.tbl-sc{flex:1;overflow:auto}
+table.dbt{width:100%;border-collapse:collapse;font-size:12px}
+.dbt th{background:var(--sur);padding:9px 14px;text-align:left;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--mu);font-weight:400;border-bottom:1px solid var(--bd);border-right:1px solid var(--bd);cursor:pointer;white-space:nowrap;user-select:none}
+.dbt th:last-child{cursor:default;color:var(--mu)}
+.dbt th:not(:last-child):hover{color:var(--tx)}
+.dbt th.sa::after{content:' ↑';color:var(--ac)}
+.dbt th.sd::after{content:' ↓';color:var(--ac)}
+.dbt td{padding:8px 14px;border-bottom:1px solid var(--bd);border-right:1px solid var(--bd);color:var(--tx);vertical-align:middle;min-width:100px}
+.dbt td:last-child{width:36px;min-width:36px;padding:4px;text-align:center;border-right:none}
+.dbt tr:hover td{background:var(--sur)}
+.dbt td.ed{outline:none;cursor:text}
+.dbt td.ed:focus{background:var(--sur2)}
+.tbl-add{padding:10px 14px;color:var(--mu);font-size:11px;cursor:pointer;border-bottom:1px solid var(--bd)}
+.tbl-add:hover{background:var(--sur);color:var(--tx)}
+.chip{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px}
+.tbl-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;color:var(--mu);gap:8px;font-size:13px}
+.row-del{background:none;border:none;color:transparent;cursor:pointer;font-size:12px;padding:2px 6px;border-radius:3px;transition:color .1s,background .1s;width:28px}
+tr:hover .row-del{color:var(--mu)}
+.row-del:hover{color:var(--re) !important;background:rgba(196,84,84,.1)}
+

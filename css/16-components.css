@@ -1,0 +1,58 @@
+/* ── INLINE MENTION (formatted link) ── */
+.mention{display:inline;box-decoration-break:clone;-webkit-box-decoration-break:clone;padding:1px 7px 2px 6px;border-radius:5px;background:var(--sur);border:1px solid var(--bd);font-family:var(--fm);font-size:.82em;line-height:1.95;text-decoration:none;white-space:normal;cursor:pointer;transition:border-color .12s,background .12s}
+.mention:hover{border-color:var(--mu);background:var(--sur2)}
+.mention img.mention-fav{width:14px;height:14px;border-radius:3px;object-fit:cover;vertical-align:-3px;margin-right:5px}
+.mention .mention-site{color:var(--mu);margin-right:5px}
+.mention .mention-title{color:var(--tx)}
+td .mention{font-size:11px}
+.link-pop{position:fixed;z-index:650;background:var(--sur);border:1px solid var(--bd2);border-radius:8px;box-shadow:0 8px 28px rgba(0,0,0,.55);padding:8px;display:none;gap:6px;width:300px}
+.link-pop.open{display:flex}
+.link-pop input{flex:1;background:var(--bg);border:1px solid var(--bd);border-radius:5px;color:var(--tx);font-family:var(--fm);font-size:12px;padding:7px 9px;outline:none}
+.link-pop input:focus{border-color:var(--ac)}
+.link-pop button{background:var(--ac);color:#fff;border:none;border-radius:5px;padding:7px 14px;font-family:var(--fm);font-size:12px;cursor:pointer}
+/* ── #4 CALENDAR DRAG ── */
+.cal-ev[draggable=true]{cursor:grab}
+.cal-ev[draggable=true]:active{cursor:grabbing}
+.cal-cell.cal-drop{background:var(--acs);outline:2px dashed var(--ac);outline-offset:-2px}
+/* ── #3 TOAST + SHAKE ── */
+.toast-wrap{position:fixed;top:18px;left:50%;transform:translateX(-50%);z-index:1200;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none}
+.toast{background:var(--sur);border:1px solid var(--bd2);border-left:3px solid var(--ac);border-radius:8px;padding:10px 16px;font-size:12px;color:var(--tx);box-shadow:0 8px 28px rgba(0,0,0,.5);font-family:var(--fm);animation:toastIn .22s ease;max-width:80vw}
+@keyframes toastIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+.toast.out{animation:toastOut .25s ease forwards}
+@keyframes toastOut{to{opacity:0;transform:translateY(-10px)}}
+.toast{display:flex;align-items:center;gap:9px}
+.toast-spin{width:13px;height:13px;flex:0 0 13px;border:2px solid var(--bd2);border-top-color:var(--ac);border-radius:50%;animation:toastSpin .7s linear infinite}
+.toast-tick{flex:0 0 13px;color:#3fbf6b;font-weight:700}
+.toast.is-err{border-left-color:#e2585c}.toast.is-err .toast-tick{color:#e2585c}
+@keyframes toastSpin{to{transform:rotate(360deg)}}
+.tip{position:fixed;z-index:3000;background:var(--sur);border:1px solid var(--bd2);color:var(--tx);font-size:11px;font-family:var(--fm);padding:5px 9px;border-radius:6px;box-shadow:0 6px 20px rgba(0,0,0,.45);pointer-events:none;opacity:0;transition:opacity .13s ease;max-width:240px;line-height:1.4;display:none;white-space:normal}
+.tip.show{opacity:1}
+@keyframes shakeX{0%,100%{transform:translateX(0)}15%{transform:translateX(-7px)}30%{transform:translateX(6px)}45%{transform:translateX(-5px)}60%{transform:translateX(4px)}75%{transform:translateX(-2px)}}
+.shake-bad{animation:shakeX .42s ease;opacity:.55!important}
+/* ── #8 NAV: back/forward + breadcrumbs ── */
+.tp-left{display:flex;align-items:center;gap:6px;min-width:0}
+.nav-btn{background:none;border:1px solid var(--bd);border-radius:5px;color:var(--mu);cursor:pointer;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:16px;line-height:1;transition:border-color .12s,color .12s,background .12s;flex-shrink:0}
+.nav-btn:hover:not(:disabled){border-color:var(--mu);color:var(--tx);background:var(--sur)}
+.nav-btn:disabled{opacity:.32;cursor:default}
+.breadcrumbs{display:flex;align-items:center;gap:6px;font-family:var(--fs);font-size:17px;font-weight:300;letter-spacing:.04em;min-width:0;overflow:hidden;white-space:nowrap}
+.bc-sep{color:var(--mu);font-size:13px;opacity:.6;flex-shrink:0}
+.bc-link{color:var(--mu);cursor:pointer;transition:color .12s;flex-shrink:0}
+.bc-link:hover{color:var(--tx)}
+.bc-cur{color:var(--tx);overflow:hidden;text-overflow:ellipsis}
+
+/* ── Motion polish (item 5) ──
+   Consistent, gentler easing across interactive surfaces + a subtle view fade.
+   Wrapped in prefers-reduced-motion so it never fights accessibility settings. */
+@media (prefers-reduced-motion: no-preference){
+  :root{ --ease-out:cubic-bezier(.22,.61,.36,1); }
+  .dc,.home-card,.rec-card,.card{
+    transition:border-color .2s var(--ease-out), transform .22s var(--ease-out), box-shadow .22s var(--ease-out);
+  }
+  .dc:hover,.home-card:hover,.rec-card:hover{
+    transform:translateY(-3px); box-shadow:0 12px 26px -16px rgba(0,0,0,.55);
+  }
+  .doc-row{ transition:background .16s var(--ease-out), border-color .16s var(--ease-out); }
+  .prop-tag,.chip,.cm-it,.dpp-it{ transition:background .15s var(--ease-out), color .15s var(--ease-out), border-color .15s var(--ease-out); }
+  .view:not(.hidden){ animation:view-fade .24s var(--ease-out); }
+  @keyframes view-fade{ from{opacity:0; transform:translateY(5px)} to{opacity:1; transform:none} }
+}

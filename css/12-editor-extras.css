@@ -1,0 +1,118 @@
+/* ── COVER IMAGE ────────────────────────────── */
+.cover-wrap{position:relative;width:100%;height:280px;overflow:hidden;flex-shrink:0;background:var(--sur2)}
+.cover-img-el{width:100%;height:100%;object-fit:cover;display:block}
+.cover-actions{position:absolute;bottom:10px;right:20px;display:flex;gap:6px;opacity:0;transition:opacity .18s}
+.cover-wrap:hover .cover-actions{opacity:1}
+.cover-btn{background:rgba(12,11,8,.65);border:none;color:#fff;font-size:11px;padding:5px 13px;border-radius:5px;cursor:pointer;font-family:var(--fm);backdrop-filter:blur(8px);letter-spacing:.04em;transition:background .12s}
+.cover-btn:hover{background:rgba(12,11,8,.88)}
+
+/* ── EDITOR META ACTIONS ── */
+.ed-actions-row{display:flex;gap:4px;padding-bottom:10px;opacity:0;transition:opacity .18s;flex-wrap:wrap}
+.ed-title-row:hover .ed-actions-row,.ed-actions-row:focus-within{opacity:1}
+.meta-action-btn{background:none;border:none;color:var(--mu);font-size:11px;padding:4px 10px;border-radius:4px;cursor:pointer;font-family:var(--fm);display:inline-flex;align-items:center;gap:5px;transition:background .1s,color .1s;letter-spacing:.03em}
+.meta-action-btn:hover{background:var(--sur);color:var(--tx)}
+.meta-action-btn.danger-action:hover{background:rgba(196,84,84,.12);color:var(--re)}
+
+/* ── PAGE ICON ── */
+.icon-display{font-size:52px;line-height:1;cursor:pointer;display:inline-block;padding:4px 6px;border-radius:8px;margin-bottom:8px;transition:background .12s;user-select:none}
+.icon-display:hover{background:var(--sur)}
+.icon-display.has-img{display:inline-flex;align-items:center;justify-content:center;width:68px;height:68px;border-radius:10px;overflow:hidden;padding:0;margin-bottom:8px}
+/* Fit (don't crop) so icons wider/taller than square keep their proportions and
+   stay centered in the square box — no more off-centre look next to the title. */
+.icon-display.has-img img{width:100%;height:100%;object-fit:contain}
+/* Icon sits ABOVE the title (stacked, like the cover) */
+.ed-title-main{display:flex;flex-direction:column;align-items:flex-start;gap:4px}
+.ed-title-main .ed-title{width:100%}
+.ed-title-main #ed-icon-area:empty{display:none}
+.ed-title-main .icon-display{margin-bottom:2px;font-size:56px}
+.ed-title-main .icon-display.has-img{width:72px;height:72px;margin-bottom:2px;flex-shrink:0}
+.ed-icon-add{background:none;border:none;cursor:pointer;color:var(--mu);font-size:30px;line-height:1;opacity:0;padding:2px 8px;border-radius:8px;flex-shrink:0;transition:opacity .12s,background .12s}
+.ed-title-row:hover .ed-icon-add{opacity:.3}
+.ed-icon-add:hover{opacity:.9!important;background:var(--sur)}
+
+/* ── ICON PICKER ── */
+.icon-picker{position:fixed;z-index:650;background:var(--sur);border:1px solid var(--bd2);border-radius:12px;box-shadow:0 14px 52px rgba(0,0,0,.72);width:326px;display:none;flex-direction:column;overflow:hidden;max-height:440px}
+.icon-picker.open{display:flex}
+.ip-tabs{display:flex;border-bottom:1px solid var(--bd);flex-shrink:0;background:var(--sur2)}
+.ip-tab{flex:1;padding:9px 6px;font-size:11px;text-align:center;cursor:pointer;color:var(--mu);border:none;background:none;font-family:var(--fm);letter-spacing:.05em;transition:color .1s;border-bottom:2px solid transparent;margin-bottom:-1px}
+.ip-tab:hover{color:var(--tx)}
+.ip-tab.on{color:var(--ac);border-bottom-color:var(--ac)}
+.ip-scroll{flex:1;overflow-y:auto;padding:10px 12px}
+.ip-cat{font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--mu);margin:10px 0 5px;padding-bottom:3px;border-bottom:1px solid var(--bd)}
+.ip-cat:first-child{margin-top:2px}
+.ip-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:2px}
+.ip-em{font-size:20px;padding:5px;border-radius:5px;cursor:pointer;text-align:center;transition:background .08s;border:none;background:none;line-height:1.35}
+.ip-em:hover{background:var(--sur2)}
+.ip-up-area{border:2px dashed var(--bd2);border-radius:8px;padding:22px 16px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s;color:var(--mu);margin-bottom:8px}
+.ip-up-area:hover{border-color:var(--ac);background:rgba(196,125,50,.05);color:var(--tx)}
+.ip-up-ico{font-size:28px;margin-bottom:6px}
+.ip-up-lbl{font-size:12px;margin-bottom:4px}
+.ip-up-hint{font-size:10px;opacity:.6}
+.ip-clr{width:100%;background:none;border:1px solid var(--bd);border-radius:6px;color:var(--mu);font-size:11px;padding:7px;cursor:pointer;margin-top:6px;font-family:var(--fm);transition:border-color .1s,color .1s,background .1s}
+.ip-clr:hover{border-color:var(--mu);color:var(--tx)}
+
+/* ── IMAGE BLOCK ── */
+.bk-img-wrap{border-radius:8px;overflow:hidden;background:var(--sur);border:1px solid var(--bd);margin:4px 0;position:relative}
+.bk-img-wrap img{width:100%;display:block;max-height:540px;object-fit:contain;background:var(--sur)}
+.bk-img-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px;color:var(--mu);gap:8px;transition:background .12s;background:var(--sur);border:2px dashed var(--bd2);border-radius:8px;margin:4px 0}
+.bk-img-acts{display:flex;gap:6px}
+.bk-img-act{background:var(--sur2);border:1px solid var(--bd);border-radius:5px;color:var(--mu);font-family:var(--fm);font-size:11px;padding:5px 12px;cursor:pointer;transition:border-color .12s,color .12s}
+.bk-img-act:hover{border-color:var(--ac);color:var(--ac)}
+.bk-img-empty:hover{background:var(--sur2);border-color:var(--mu)}
+.bk-img-overlay{position:absolute;top:8px;right:8px;display:flex;gap:4px;opacity:0;transition:opacity .15s}
+.bk-img-wrap:hover .bk-img-overlay{opacity:1}
+.bk-img-btn{background:rgba(0,0,0,.58);border:none;color:#fff;font-size:11px;padding:4px 10px;border-radius:4px;cursor:pointer;font-family:var(--fm);backdrop-filter:blur(4px);transition:background .1s}
+.bk-img-btn:hover{background:rgba(0,0,0,.82)}
+.bk-img-cap{width:100%;background:none;border:none;outline:none;font-family:var(--fs);font-size:13px;color:var(--mu);padding:6px 4px 2px;text-align:center;border-top:1px solid var(--bd);font-style:italic;display:block}
+.bk-img-cap::placeholder{color:var(--bd2)}
+
+/* ── FILE BLOCK ── */
+.bk-file-card{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--sur);border:1px solid var(--bd);border-radius:8px;margin:4px 0;cursor:pointer;transition:border-color .15s}
+.bk-file-card:hover{border-color:var(--mu)}
+.bk-file-ico{font-size:26px;flex-shrink:0;line-height:1}
+.bk-file-info{flex:1;min-width:0}
+.bk-file-nm{font-size:13px;color:var(--tx);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bk-file-sz{font-size:10px;color:var(--mu);margin-top:2px}
+.bk-file-dl{font-size:12px;color:var(--mu);flex-shrink:0;letter-spacing:.03em}
+.bk-file-empty{display:flex;align-items:center;gap:10px;padding:14px 18px;background:var(--sur);border:2px dashed var(--bd2);border-radius:8px;margin:4px 0;cursor:pointer;transition:border-color .15s,background .12s;color:var(--mu);font-size:12px}
+.bk-file-empty:hover{border-color:var(--mu);background:var(--sur2);color:var(--tx)}
+
+/* ── DOC CARD COVER ── */
+.dc-cover-thumb{width:calc(100% + 40px);height:82px;object-fit:cover;display:block;margin:-20px -20px 14px -20px}
+
+/* ── PROP FILE TAG ── */
+.prop-file-thumb{width:14px;height:14px;border-radius:2px;object-fit:cover;vertical-align:middle;flex-shrink:0}
+
+/* ── TILT + OPEN BUTTON ── */
+.dc{transition:border-color .15s,transform .05s ease}
+.ov-doc-row,.dbt tbody tr{transition:background .1s,transform .05s ease}
+.ov-open-btn{
+  background:none;border:1px solid var(--bd);border-radius:4px;
+  color:var(--mu);cursor:pointer;font-size:11px;padding:3px 9px;
+  font-family:var(--fm);opacity:0;transition:opacity .12s,color .12s,border-color .12s;
+  white-space:nowrap;flex-shrink:0;margin-left:auto;
+}
+.ov-doc-row:hover .ov-open-btn,tr:hover .ov-open-btn{opacity:1}
+.ov-open-btn:hover{color:var(--ac)!important;border-color:var(--ac)!important}
+
+/* ── NEW ELEMENT SCALE ── */
+.meta-action-btn{font-size:13px!important}
+.cover-btn{font-size:12px!important}
+.ip-tab{font-size:13px!important}
+.ip-cat{font-size:11px!important}
+.ip-em{font-size:22px!important}
+.bk-img-cap{font-size:14px!important}
+.bk-file-nm{font-size:14px!important}
+.bk-file-sz{font-size:12px!important}
+.ip-up-lbl{font-size:13px!important}
+.ip-up-hint{font-size:11px!important}
+.ip-clr{font-size:12px!important}
+
+/* ── CAL EVENT DETAILS ── */
+.cal-grid.details .cal-cell{min-height:200px}
+.cal-ev.has-cover{padding:0;background:var(--sur)!important;border:1px solid var(--bd);border-radius:4px;overflow:hidden;color:var(--tx)!important;margin-bottom:4px}
+.cal-ev-cover{display:block;background-size:cover;background-repeat:no-repeat;background-position:center;background-color:var(--bg)}
+.cal-ev-cover.big{height:104px}
+.cal-ev-cover.med{height:70px}
+.cal-ev-inner{display:block;padding:3px 6px 1px;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cal-ev-props{display:flex;flex-wrap:wrap;gap:2px;padding:0 6px 4px}

@@ -1,0 +1,27 @@
+/* ── TOKENS ─────────────────────────────────── */
+:root{
+  --bg:#0C0B08;--sur:#141210;--sur2:#1A1814;
+  --bd:#252219;--bd2:#332E26;
+  --tx:#E4DDD0;--mu:#756E62;
+  /* Card titles: ~85% of the text brightness, blended toward the card surface so a bold
+     title complements the warm dark background instead of reading as a stark block. */
+  --card-title:color-mix(in srgb, var(--tx) 85%, var(--sur2));
+  --ac:#C47D32;--acs:rgba(196,125,50,.12);
+  --go:#C9A84C;--gr:#4E9E72;--pu:#7E6FBE;--re:#C45454;
+  --fs:'Cormorant',Georgia,serif;
+  --fn:'DM Sans',system-ui,sans-serif;
+  --fm:'DM Mono',monospace;
+  /* Heading weights — overridden per-typeface in applyCfg() so each font reads as "bold" correctly */
+  --hw1:700;--hw2:600;--hw3:600;
+}
+/* ── RESET ───────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+/* Bind the app shell to the *visible* viewport (100dvh excludes the mobile
+   address bar) and divide by the UI-scale zoom (--zoom, set in applyCfg) so the
+   shell isn't scaled taller than the screen — which clipped the sidebar foot /
+   collapse button. Falls back to height:100% above where dvh isn't supported. */
+body{font-family:var(--fm);font-size:13px;background:var(--bg);color:var(--tx);display:flex;overflow:hidden;height:calc(100dvh / var(--zoom, 1))}
+button{font-family:inherit;cursor:pointer}
+input{font-family:inherit}
+
