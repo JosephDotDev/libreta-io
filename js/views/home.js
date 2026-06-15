@@ -104,7 +104,11 @@ function homeCardHtml(d){
 }
 function homeRecentBody(){
   const recent=[...DB.getDocs()].sort((a,b)=>(b.updatedAt||'').localeCompare(a.updatedAt||'')).slice(0,10);
-  if(!recent.length) return `<div class="home-empty">No pages yet — create one to get started.</div>`;
+  if(!recent.length) return `<div class="home-empty home-empty-cta">
+      <div class="he-ico">&#128075;</div>
+      <div class="he-tx"><strong>Your workspace is a blank page.</strong><span>Create your first page and start writing, planning, or collecting.</span></div>
+      <button class="btn btn-a he-btn" onclick="newDoc()">&#43; Create your first page</button>
+    </div>`;
   return `<div class="home-carousel">${recent.map(homeCardHtml).join('')}</div>`;
 }
 function homeFavoritesBody(){
@@ -131,6 +135,20 @@ function homeSectionHtml(key,cfg){
     </div>
   </div>`;
   return `<section class="home-sec" data-key="${key}" ondragover="homeDragOver(event,'${key}')" ondragleave="homeDragLeave(event)" ondrop="homeDrop(event,'${key}')">${hdr}${collapsed?'':`<div class="home-sec-body">${homeSectionBody(key)}</div>`}</section>`;
+}
+/* ── home customization toolbar (cover/icon/title/width) ──
+   Hidden behind a single "Customize" toggle so a first-run home reads clean
+   instead of a row of intimidating controls. State is a non-folio_ key so it
+   stays device-local and never rides the cloud snapshot. */
+function homeCustomizeOn(){ try{ return localStorage.getItem('libreta_home_customize')==='1'; }catch(e){ return false; } }
+function applyHomeCustomize(on){
+  document.getElementById('home-actions')?.classList.toggle('show',on);
+  document.getElementById('home-customize-toggle')?.classList.toggle('on',on);
+}
+function toggleHomeCustomize(){
+  const on=!homeCustomizeOn();
+  try{ localStorage.setItem('libreta_home_customize', on?'1':'0'); }catch(e){}
+  applyHomeCustomize(on);
 }
 /* ── home title + width (document-like header) ── */
 function onHomeTitleInput(){ sched(); }
@@ -159,6 +177,7 @@ function renderHome(){
     if(hd.titleHidden){ ti.style.display='none'; document.getElementById('greeting').style.display='none'; if(titleToggle)titleToggle.innerHTML='&#43; Add title'; }
     else { ti.style.display=''; document.getElementById('greeting').style.display=''; ti.value=hd.title||''; if(titleToggle)titleToggle.innerHTML='&#128465; Remove title'; }
   }
+  applyHomeCustomize(homeCustomizeOn());
   const w=hd.fmt?.width||'focused'; applyHomeWidth(w); syncHomeWidthBtns(w);
   if(typeof applyDocFmt==='function') applyDocFmt(hd);   // apply the home's per-page typeface
   const cont=document.getElementById('home-sections'); if(!cont) return;

@@ -7,6 +7,22 @@
   <meta name="description" content="A local-first, Notion-like content planner.">
   <meta name="theme-color" content="#0C0B08">
   <meta name="robots" content="noindex, nofollow">
+  <!-- Logged-out marketing redirect: an anonymous visitor with no Supabase session and
+       no explicit sign-in intent is sent to the public landing page instead of the app
+       shell. Runs synchronously before any app asset loads, so there's no flash. OAuth /
+       magic-link / recovery callbacks carry tokens in the URL and are left untouched. -->
+  <script>
+  (function(){
+    try{
+      var p=new URLSearchParams(location.search);
+      if(p.has('signin')||p.has('signup')||p.has('auth')) return;            // came from landing → show the app's sign-in
+      var h=location.hash||'';
+      if(/access_token|refresh_token|type=recovery|error_description/.test(h)||p.has('code')) return; // auth provider callback
+      for(var i=0;i<localStorage.length;i++){ var k=localStorage.key(i); if(k&&/^sb-.*-auth-token$/.test(k)) return; } // already has a session
+      location.replace('landing.html');
+    }catch(e){}
+  })();
+  </script>
   <link rel="icon" href="favicon.svg?v=6" type="image/svg+xml">
   <link rel="apple-touch-icon" href="favicon.svg?v=6">
   <link rel="manifest" href="manifest.webmanifest">
@@ -30,7 +46,7 @@
 <link rel="stylesheet" href="css/10-scale.css?v=7">
 <link rel="stylesheet" href="css/11-overview.css?v=6">
 <link rel="stylesheet" href="css/12-editor-extras.css?v=9">
-<link rel="stylesheet" href="css/13-home-redesign.css?v=8">
+<link rel="stylesheet" href="css/13-home-redesign.css?v=9">
 <link rel="stylesheet" href="css/14-sidebar-misc.css?v=6">
 <link rel="stylesheet" href="css/15-rich-blocks.css?v=7">
 <link rel="stylesheet" href="css/16-components.css?v=7">
@@ -118,6 +134,10 @@
     <div class="pg-sc"><div class="home-c" id="home-c">
       <div id="home-cover-wrap" style="display:none"></div>
       <div class="home-head">
+        <div class="home-toolbar">
+          <button class="home-new-btn" onclick="newDoc()" data-tip="Create a new page"><span class="hnb-plus">&#43;</span> New page</button>
+          <button class="home-customize-toggle" id="home-customize-toggle" onclick="toggleHomeCustomize()" data-tip="Customize this page">&#9881;&#65038; Customize</button>
+        </div>
         <div class="ed-actions-row" id="home-actions">
           <button class="meta-action-btn" id="home-cover-add-btn" onclick="addBlankCover()">&#128444; Add cover</button>
           <button class="meta-action-btn" id="home-cover-link-btn" onclick="coverFromUrlPrompt(event)" style="display:none">&#128279; Link cover</button>
@@ -303,7 +323,7 @@
 <script src="js/blocks/file-block.js?v=6"></script>
 <script src="js/props/quick-edit.js?v=6"></script>
 <script src="js/props/filtering.js?v=6"></script>
-<script src="js/views/home.js?v=12"></script>
+<script src="js/views/home.js?v=13"></script>
 <script src="js/views/calendar.js?v=9"></script>
 <script src="js/views/tasks.js?v=1"></script>
 <script src="js/views/databases-page.js?v=8"></script>
@@ -336,7 +356,7 @@
 <script src="js/core/trash.js?v=4"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/cloud/config.js?v=6"></script>
-<script src="js/cloud/sync.js?v=24"></script>
+<script src="js/cloud/sync.js?v=25"></script>
 <script src="js/core/init.js?v=8"></script>
 
 
