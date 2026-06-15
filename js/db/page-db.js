@@ -25,30 +25,40 @@ function idbCreateNew(blockId,view){
   DB.saveTbl(t);
   insertDbBlock(blockId,t.id,view);
 }
-/* Slash flow for databases: pick a source, then pick which view this block shows.
-   (Each block is a single view; add another block to show the same DB differently.) */
-function idbSlashSourceMenu(sid){
-  const tbls=DB.getTbls();
-  const hdr=document.querySelector('#slash-menu .sm-hdr'); if(hdr) hdr.textContent='Database — choose a source';
-  const newItem=`<div class="sm-it" onclick="idbSlashView('${sid}','__new__')"><div class="sm-ico">＋</div><div><div class="sm-nm">New database</div><div class="sm-ds">Create one, then pick a view</div></div></div>`;
-  const items=tbls.map(t=>`<div class="sm-it" onclick="idbSlashView('${sid}','${t.id}')"><div class="sm-ico">⊞</div><div><div class="sm-nm">${escHtml(t.name)}</div><div class="sm-ds">${t.rows.length} entr${t.rows.length!==1?'ies':'y'} · add a view of this database</div></div></div>`).join('');
-  document.getElementById('sm-its').innerHTML=newItem+items;
-  S.slashSub=true; if(typeof slashSetFoc==='function') slashSetFoc(0);   // arrow keys now drive this submenu
-}
+/* Slash flow for databases: pick the format for a brand-new database. (Each block
+   shows a single view; add another block to show the same DB differently. To point a
+   block at an existing database, use the header control — idbUseExistingMenu.) */
 function idbSlashView(sid,source){
-  const hdr=document.querySelector('#slash-menu .sm-hdr'); if(hdr) hdr.textContent='Choose a view';
+  const hdr=document.querySelector('#slash-menu .sm-hdr'); if(hdr) hdr.textContent='New database — choose a format';
   const views=[
     {v:'table',ico:'⊞',lbl:'Table',ds:'A spreadsheet of entries'},
-    {v:'board',ico:'▥',lbl:'Board',ds:'Kanban grouped by a select property'},
+    {v:'board',ico:'▥',lbl:'Kanban board',ds:'Cards grouped by a select property'},
     {v:'calendar',ico:'▤',lbl:'Calendar',ds:'Entries on a month by a date property'},
   ];
   document.getElementById('sm-its').innerHTML=
-    `<div class="sm-it" onclick="idbSlashSourceMenu('${sid}')"><div class="sm-ico">‹</div><div><div class="sm-nm">Back</div><div class="sm-ds">Choose a different database</div></div></div>`
-    +views.map(x=>`<div class="sm-it" onclick="idbSlashCreate('${sid}','${source}','${x.v}')"><div class="sm-ico">${x.ico}</div><div><div class="sm-nm">${x.lbl} view</div><div class="sm-ds">${x.ds}</div></div></div>`).join('');
+    views.map(x=>`<div class="sm-it" onclick="idbSlashCreate('${sid}','${source}','${x.v}')"><div class="sm-ico">${x.ico}</div><div><div class="sm-nm">${x.lbl}</div><div class="sm-ds">${x.ds}</div></div></div>`).join('');
   S.slashSub=true; if(typeof slashSetFoc==='function') slashSetFoc(0);   // arrow keys now drive this submenu
 }
 function idbSlashCreate(sid,source,view){
   if(source==='__new__') idbCreateNew(sid,view);
   else insertDbBlock(sid,source,view);
+}
+/* Header control: point THIS database block at an existing database instead of its
+   current one (the clutter-free replacement for listing every table in /database). */
+function idbUseExistingMenu(e,blockId){
+  e.stopPropagation();
+  const blk=findBlock(blockId); const cur=idbTbl(blk);
+  const tbls=DB.getTbls().filter(t=>t.id!==(cur&&cur.id));
+  const list=tbls.length
+    ? tbls.map(t=>`<div class="idb-pop-it" onclick="idbSwitchTable('${blockId}','${t.id}');idbPopClose()"><span class="idb-pop-ico">⊞</span>${escHtml(t.name||'Untitled Table')}<span class="idb-mu" style="margin-left:auto">${t.rows.length}</span></div>`).join('')
+    : '<div class="idb-dd-empty">No other databases yet.</div>';
+  idbPopOpen(e.currentTarget.getBoundingClientRect(),`<div class="idb-pop-lbl">Show an existing database</div>${list}`);
+}
+function idbSwitchTable(blockId,tableId){
+  const blk=findBlock(blockId); if(!blk||blk.tableId===tableId) return;
+  blk.tableId=tableId;
+  // Reset view selections / per-view tweaks that may not apply to the new table.
+  blk.groupCol=null; blk.dateCol=null; blk.hiddenCols=[]; blk.filters=[]; blk.sort=null; blk.colWidths={};
+  idbPersistView(blk); reRenderBlock(blockId);
 }
 

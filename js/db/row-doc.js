@@ -18,11 +18,11 @@ function idbSetDateCol(blockId,colId){const blk=findBlock(blockId);if(blk){blk.d
 function idbEnsureRowDoc(tbl,row){
   if(!row.docId){
     const d=blankDoc(); d.dbId=tbl.id; d.rowId=row.id;
-    d.title=idbRowTitle(tbl,row)||'Untitled';
+    d.title=idbRowTitle(tbl,row)||'';   // empty → UI shows a soft "Untitled" placeholder
     DB.saveDoc(d); row.docId=d.id; DB.saveTbl(tbl);
   } else if(!DB.getDoc(row.docId)){
     const d=blankDoc(); d.id=row.docId; d.dbId=tbl.id; d.rowId=row.id;
-    d.title=idbRowTitle(tbl,row)||'Untitled'; DB.saveDoc(d);
+    d.title=idbRowTitle(tbl,row)||''; DB.saveDoc(d);
   }
   return row.docId;
 }
@@ -49,6 +49,9 @@ function openDocPeek(docId){
   S.dbRow=(doc.dbId&&doc.rowId&&DB.getTbl(doc.dbId)&&DB.getTbl(doc.dbId).rows.find(r=>r.id===doc.rowId))?{tableId:doc.dbId,rowId:doc.rowId}:null;
   const peek=document.getElementById('doc-peek');
   peek.className='doc-peek open '+(mode==='center'?'mode-center':'mode-side');
+  // The peek panel sits at a high z-index; flag the body so the shared property /
+  // menu popovers can lift above it (otherwise they open *behind* the peek).
+  document.body.classList.add('peek-open');
   document.getElementById('peek-title').value=doc.title||'';
   renderBlocks('peek-blocks'); renderProps(); initHistory();
   setTimeout(()=>{const el=document.querySelector('#peek-blocks .bk');if(el){el.focus();}},90);
@@ -59,6 +62,7 @@ function closeDocPeek(){
   const tableId=S.dbRow?S.dbRow.tableId:null;
   S.peekOpen=false;
   document.getElementById('doc-peek').classList.remove('open');
+  document.body.classList.remove('peek-open');
   const host=S.peekHost||{}; S.peekHost=null;
   S.docId=host.docId||null; S.dbRow=null;
   // Restore the host view's editor state + refresh any DB blocks that show this row.
