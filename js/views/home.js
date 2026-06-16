@@ -15,7 +15,8 @@ function getHomeCfg(){
   rows=(rows||[]).map(r=>r.filter(k=>{if(seen.has(k))return false;seen.add(k);return true;})).filter(r=>r.length);
   order.filter(k=>!hidden[k]&&!seen.has(k)).forEach(k=>rows.push([k])); // append any new/unplaced sections
   if(!rows.length) rows=order.filter(k=>!hidden[k]).map(k=>[k]);
-  return {order,collapsed,hidden,rows};
+  const flex=c.flex||{};   // per-section flex-grow weights for side-by-side resizing
+  return {order,collapsed,hidden,rows,flex};
 }
 function saveHomeCfg(c){ localStorage.setItem('folio_home_cfg',JSON.stringify(c)); }
 function getHomeDoc(){
@@ -134,7 +135,36 @@ function homeSectionHtml(key,cfg){
       <button onclick="event.stopPropagation();homeHideSection('${key}')" title="Hide section"><svg viewBox="0 0 16 16"><path d="M1 8s2.5-4.5 7-4.5S15 8 15 8s-2.5 4.5-7 4.5S1 8 1 8z"/><circle cx="8" cy="8" r="2"/></svg></button>
     </div>
   </div>`;
-  return `<section class="home-sec" data-key="${key}" ondragover="homeDragOver(event,'${key}')" ondragleave="homeDragLeave(event)" ondrop="homeDrop(event,'${key}')">${hdr}${collapsed?'':`<div class="home-sec-body">${homeSectionBody(key)}</div>`}</section>`;
+  const fx=(cfg.flex&&cfg.flex[key])||1;
+  return `<section class="home-sec" data-key="${key}" style="flex:${fx} 1 0" ondragover="homeDragOver(event,'${key}')" ondragleave="homeDragLeave(event)" ondrop="homeDrop(event,'${key}')">${hdr}${collapsed?'':`<div class="home-sec-body">${homeSectionBody(key)}</div>`}</section>`;
+}
+/* ── Resize side-by-side home sections (a drag handle in the gap between them) ── */
+function homeRowHtml(row,cfg){
+  // Interleave a resize handle between adjacent sections in a multi-section row.
+  const inner=row.map((k,i)=>(i>0?`<div class="home-col-rz" onmousedown="homeColResizeStart(event,'${row[i-1]}','${k}')" title="Drag to resize"></div>`:'')+homeSectionHtml(k,cfg)).join('');
+  return `<div class="home-row${row.length>1?' multi':''}">${inner}</div>`;
+}
+function homeColResizeStart(e,leftKey,rightKey){
+  e.preventDefault(); e.stopPropagation();
+  const leftEl=document.querySelector(`.home-sec[data-key="${leftKey}"]`);
+  const rightEl=document.querySelector(`.home-sec[data-key="${rightKey}"]`);
+  if(!leftEl||!rightEl) return;
+  const startX=e.clientX;
+  const lw=leftEl.getBoundingClientRect().width, rw=rightEl.getBoundingClientRect().width, total=lw+rw;
+  const c=getHomeCfg(); c.flex=c.flex||{};
+  const totalFlex=((c.flex[leftKey]||1)+(c.flex[rightKey]||1));
+  document.body.classList.add('home-col-resizing');
+  function move(ev){
+    // widths are in the same (zoomed) pixel space as clientX, so the ratio is zoom-safe
+    const newLw=Math.max(140, Math.min(total-140, lw+(ev.clientX-startX)));
+    const ratio=newLw/total;
+    c.flex[leftKey]=+(totalFlex*ratio).toFixed(3);
+    c.flex[rightKey]=+(totalFlex*(1-ratio)).toFixed(3);
+    leftEl.style.flex=c.flex[leftKey]+' 1 0';
+    rightEl.style.flex=c.flex[rightKey]+' 1 0';
+  }
+  function up(){ document.removeEventListener('mousemove',move); document.removeEventListener('mouseup',up); document.body.classList.remove('home-col-resizing'); saveHomeCfg(c); }
+  document.addEventListener('mousemove',move); document.addEventListener('mouseup',up);
 }
 /* ── home customization toolbar (cover/icon/title/width) ──
    Hidden behind a single "Customize" toggle so a first-run home reads clean
@@ -181,7 +211,7 @@ function renderHome(){
   const w=hd.fmt?.width||'focused'; applyHomeWidth(w); syncHomeWidthBtns(w);
   if(typeof applyDocFmt==='function') applyDocFmt(hd);   // apply the home's per-page typeface
   const cont=document.getElementById('home-sections'); if(!cont) return;
-  cont.innerHTML=cfg.rows.map(row=>`<div class="home-row${row.length>1?' multi':''}">${row.map(k=>homeSectionHtml(k,cfg)).join('')}</div>`).join('');
+  cont.innerHTML=cfg.rows.map(row=>homeRowHtml(row,cfg)).join('');
   // hidden-sections restore bar
   const hidden=cfg.order.filter(k=>cfg.hidden[k]);
   document.getElementById('home-hidden-bar').innerHTML=hidden.length
