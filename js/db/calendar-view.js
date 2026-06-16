@@ -35,9 +35,9 @@ function idbCalEvent(blk,tbl,r,detailed){
     const coverSrc=(imgCol&&r.cells[imgCol.id]&&srcFor(r.cells[imgCol.id]))||((doc&&doc.meta&&doc.meta.cover)?srcFor(doc.meta.cover):'');
     const cover=coverSrc?`<div class="idb-cev-cover"><img src="${coverSrc}" draggable="false" alt=""></div>`:'';
     const chips=vis.filter(hasOpts).slice(0,3).map(c=>idbCalChip(blk,r,c)).join('');
-    return `<div class="idb-cal-ev idb-cev${cover?' has-cover':''}" ${drag} onclick="idbOpenRow('${blk.id}','${r.id}')" title="Drag to reschedule \u00b7 click to open">${cover}<div class="idb-cev-row"><span class="idb-cev-t">${ico}${title}</span></div>${chips?`<div class="idb-cev-chips">${chips}</div>`:''}</div>`;
+    return `<div class="idb-cal-ev idb-cev${cover?' has-cover':''}" ${drag} onclick="idbOpenRow('${blk.id}','${r.id}')" title="Drag to reschedule \u00b7 click to open"><button class="idb-cev-del" onclick="event.stopPropagation();idbDelRow('${blk.id}','${r.id}')" data-tip="Delete">&#10005;</button>${cover}<div class="idb-cev-row"><span class="idb-cev-t">${ico}${title}</span></div>${chips?`<div class="idb-cev-chips">${chips}</div>`:''}</div>`;
   }
-  return `<div class="idb-cal-ev" ${drag} onclick="idbOpenRow('${blk.id}','${r.id}')" title="Drag to reschedule \u00b7 click to open">${ico}<span class="idb-cev-t">${title}</span></div>`;
+  return `<div class="idb-cal-ev" ${drag} onclick="idbOpenRow('${blk.id}','${r.id}')" title="Drag to reschedule \u00b7 click to open"><button class="idb-cev-del" onclick="event.stopPropagation();idbDelRow('${blk.id}','${r.id}')" data-tip="Delete">&#10005;</button>${ico}<span class="idb-cev-t">${title}</span></div>`;
 }
 function idbCalView(blk,tbl){
   const dateCols=tbl.columns.filter(c=>c.type==='date');

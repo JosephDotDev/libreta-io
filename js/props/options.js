@@ -42,6 +42,7 @@ document.addEventListener('click',e=>{
 function onEditorScroll(e){
   const sc=e.currentTarget; const shell=sc.closest('.ed-shell'); if(!shell) return;
   shell.classList.toggle('scrolled', sc.scrollTop>6);
+  if(typeof outlineSyncActive==='function') outlineSyncActive();   // keep the active section in sync
 }
 /* #5 — clicking empty space places the cursor on the nearest block, or creates a
    new paragraph when the click is below all content. */

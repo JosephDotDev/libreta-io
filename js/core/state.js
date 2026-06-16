@@ -34,6 +34,7 @@ const BT = [
   {t:'numbered',  lbl:'Numbered List',ico:'1.', ds:'Ordered list item'},
   {t:'alpha',     lbl:'Alphabetical List',ico:'a.',ds:'a, b, c… ordered list'},
   {t:'code',      lbl:'Code Block',  ico:'</>',  ds:'Preformatted code block'},
+  {t:'math',      lbl:'Equation',    ico:'∑', ds:'A LaTeX math block (e.g. E = mc^2)'},
   {t:'divider',   lbl:'Divider',     ico:'—',   ds:'Horizontal separator line'},
   {t:'database',  lbl:'Database',    ico:'⊞',   ds:'Embed a table view inline'},
   {t:'db-board',  lbl:'Kanban Board',ico:'▥',   ds:'New database as a Kanban board'},
