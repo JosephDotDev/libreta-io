@@ -2,6 +2,9 @@
    ROUTER
 ═══════════════════════════════════════════════ */
 function nav(view,id){
+  // Close any open side-peek first so its edits flush to the peeked doc and the shared
+  // editing state is re-pointed at the host — never carried into the destination view.
+  if(S.peekOpen && typeof closeDocPeek==='function') closeDocPeek();
   if(S.view==='editor'||S.view==='home'){clearTimeout(S.saveTimer);flushSave()}
   // Databases + Overview pages were removed; databases now live inline in pages.
   const viewEl=document.getElementById('view-'+view);

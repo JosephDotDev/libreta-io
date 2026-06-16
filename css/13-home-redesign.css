@@ -36,8 +36,14 @@
 .home-width-seg button{background:none;border:none;color:var(--mu);font-family:var(--fm);font-size:12px;padding:5px 11px;cursor:pointer;transition:background .1s,color .1s}
 .home-width-seg button.on{background:var(--acs);color:var(--ac)}
 .home-width-seg button:hover:not(.on){color:var(--tx)}
-.home-row{display:flex;gap:28px;align-items:flex-start;margin-bottom:30px}
+.home-row{display:flex;gap:28px;align-items:stretch;margin-bottom:30px}
 .home-row .home-sec{flex:1 1 0;min-width:0;margin-bottom:0}
+/* Drag handle that lives in the gap between two side-by-side home sections. */
+.home-col-rz{flex:0 0 2px;align-self:stretch;margin:0 -14px;position:relative;cursor:col-resize;border-radius:3px;z-index:3}
+.home-col-rz::before{content:'';position:absolute;inset:-4px -10px}      /* wider grab zone */
+.home-col-rz::after{content:'';position:absolute;left:0;top:6px;bottom:6px;width:2px;border-radius:2px;background:transparent;transition:background .12s}
+.home-col-rz:hover::after,body.home-col-resizing .home-col-rz::after{background:var(--bd2)}
+body.home-col-resizing{cursor:col-resize;user-select:none}
 .home-sec{margin-bottom:30px;border-radius:8px;transition:box-shadow .12s}
 .home-sec.home-drop{box-shadow:0 0 0 1px var(--bd2)}
 .home-sec.home-drop[data-dropzone=left]{box-shadow:inset 4px 0 0 var(--ac)}

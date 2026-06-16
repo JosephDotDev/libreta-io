@@ -42,6 +42,9 @@ function openDocPeek(docId){
   if(S.peekOpen) closeDocPeek(); // swap to the new doc
   clearTimeout(S.saveTimer); flushSave();
   S.peekHost={docId:S.docId, view:S.view};
+  // Isolate undo: stash the host's stack so the peek's Ctrl+Z can only undo the peek
+  // (never pop the host's edits), and the host keeps its history once the peek closes.
+  S._peekHostHist={hist:S.hist||[], redo:S.histRedo||[], present:S.histPresent};
   S.peekOpen=true; S.docId=docId;
   S.blocks=doc.blocks&&doc.blocks.length?doc.blocks:[mkBlock('paragraph')];
   ensureTrailingParagraph();
@@ -58,25 +61,37 @@ function openDocPeek(docId){
 }
 function closeDocPeek(){
   if(!S.peekOpen) return;
-  clearTimeout(S.saveTimer); flushSave(); // persist the peeked doc
+  if(typeof closeAll==='function') closeAll(); // dismiss any property/menu popover so it can't linger into the host/full view
+  clearTimeout(S.saveTimer); flushSave(); // persist the peeked doc (S still points at it)
   const tableId=S.dbRow?S.dbRow.tableId:null;
   S.peekOpen=false;
   document.getElementById('doc-peek').classList.remove('open');
   document.body.classList.remove('peek-open');
   const host=S.peekHost||{}; S.peekHost=null;
-  S.docId=host.docId||null; S.dbRow=null;
-  // Restore the host view's editor state + refresh any DB blocks that show this row.
-  if(host.view==='editor'&&host.docId){
-    const hd=DB.getDoc(host.docId);
-    if(hd){
-      S.blocks=hd.blocks&&hd.blocks.length?hd.blocks:[mkBlock('paragraph')];
-      S.props=hd.props||[]; ensureTrailingParagraph();
-      S.dbRow=(hd.dbId&&hd.rowId&&DB.getTbl(hd.dbId)&&DB.getTbl(hd.dbId).rows.find(r=>r.id===hd.rowId))?{tableId:hd.dbId,rowId:hd.rowId}:null;
-      renderBlocks('blocks-ct'); renderProps();
-    }
-  } else if(host.view==='tables'){
-    renderPageDb();
-  } else if(host.view==='overview'){ try{renderOverview();}catch(_){} }
+  S.dbRow=null;
+  // Re-point the shared editing state (docId + blocks + props) at the host doc BEFORE
+  // anything can autosave. This MUST happen for every host view, not just the editor:
+  // if S.blocks is left holding the peeked doc's content while S.docId points at the
+  // host, the next flushSave (e.g. one triggered by Ctrl+Z) writes the peek's blocks
+  // into the host doc — the "the side peek overwrote my page" data-loss bug.
+  const hd=host.docId?DB.getDoc(host.docId):null;
+  if(hd){
+    S.docId=host.docId;
+    S.blocks=hd.blocks&&hd.blocks.length?hd.blocks:[mkBlock('paragraph')];
+    S.props=hd.props||[];
+    ensureTrailingParagraph();
+    S.dbRow=(hd.dbId&&hd.rowId&&DB.getTbl(hd.dbId)&&DB.getTbl(hd.dbId).rows.find(r=>r.id===hd.rowId))?{tableId:hd.dbId,rowId:hd.rowId}:null;
+  } else {
+    // No host doc to return to (e.g. opened from the databases page) — clear the
+    // editing state entirely so no stray save can target a stale doc id.
+    S.docId=null; S.blocks=[mkBlock('paragraph')]; S.props=[];
+  }
+  // Restore the host's own undo stack (the peek ran on an isolated one).
+  if(S._peekHostHist){ S.hist=S._peekHostHist.hist; S.histRedo=S._peekHostHist.redo; S.histPresent=S._peekHostHist.present; S._peekHostHist=null; }
+  // Refresh whatever host surface is on screen.
+  if(host.view==='editor'&&hd){ renderBlocks('blocks-ct'); renderProps(); }
+  else if(host.view==='tables'){ renderPageDb(); }
+  else if(host.view==='overview'){ try{renderOverview();}catch(_){} }
   else if(tableId){ idbRerenderSiblings(tableId,null); }
 }
 function peekOpenFull(){ const id=S.docId; closeDocPeek(); if(id) nav('editor',id); }
