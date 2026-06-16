@@ -109,7 +109,7 @@ function renderCalMonth(grid,{evts,color}){
     const evH=evList.slice(0,limit).map(ev=>calEvChip(ev,color,S.calShowDetails)).join('');
     const more=(evList.length>limit)?`<span class="cal-ev" style="color:var(--mu)">+${evList.length-limit} more</span>`:'';
     return evH+more; };
-  const cell=(ds,dnum,extraCls)=>`<div class="cal-cell${extraCls}" data-ds="${ds}" onclick="newDocOnDate('${ds}')" ondragover="calCellDragOver(event)" ondragleave="this.classList.remove('cal-drop')" ondrop="calCellDrop(event,'${ds}')"><div class="cal-num">${dnum}</div>${cellEventsHtml(ds)}</div>`;
+  const cell=(ds,dnum,extraCls)=>`<div class="cal-cell${extraCls}" data-ds="${ds}" ondragover="calCellDragOver(event)" ondragleave="this.classList.remove('cal-drop')" ondrop="calCellDrop(event,'${ds}')"><div class="cal-numrow"><span class="cal-num">${dnum}</span><button class="cal-add" onclick="event.stopPropagation();newDocOnDate('${ds}')" data-tip="New page">+</button></div>${cellEventsHtml(ds)}</div>`;
   let html=WDAYS.map(d=>`<div class="cal-dh">${d}</div>`).join('');
   for(let i=fd-1;i>=0;i--){ const dnum=pdim-i; html+=cell(`${prevY}-${pad(prevM+1)}-${pad(dnum)}`,dnum,' om'); }
   for(let d=1;d<=dim;d++){ const ds=`${y}-${pad(m+1)}-${pad(d)}`; html+=cell(ds,d,ds===tod?' tod':''); }
@@ -121,9 +121,9 @@ function renderCalWeek(grid,{evts,color}){
   let html='';
   for(let i=0;i<7;i++){ const dt=new Date(start); dt.setDate(start.getDate()+i); const ds=dateStr(dt);
     const evList=evts[ds]||[];
-    html+=`<div class="calw-col${ds===tod?' tod':''}" data-ds="${ds}" onclick="if(event.target===this||event.target.classList.contains('calw-body'))newDocOnDate('${ds}')" ondragover="calCellDragOver(event)" ondragleave="this.classList.remove('cal-drop')" ondrop="calCellDrop(event,'${ds}')">
+    html+=`<div class="calw-col${ds===tod?' tod':''}" data-ds="${ds}" ondragover="calCellDragOver(event)" ondragleave="this.classList.remove('cal-drop')" ondrop="calCellDrop(event,'${ds}')">
       <div class="calw-h"><span class="calw-wd">${WDAYS[dt.getDay()]}</span><span class="calw-dn${ds===tod?' tod':''}">${dt.getDate()}</span></div>
-      <div class="calw-body">${evList.map(ev=>calEvChip(ev,color,true)).join('')}</div>
+      <div class="calw-body">${evList.map(ev=>calEvChip(ev,color,true)).join('')}<button class="calw-add" onclick="newDocOnDate('${ds}')"><span class="np-pill">+ New page</span></button></div>
     </div>`;
   }
   grid.className='cal-grid cal-week'; grid.innerHTML=html;

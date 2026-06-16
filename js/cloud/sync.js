@@ -32,7 +32,7 @@ const Cloud = (()=>{
   // mark the device dirty. Otherwise just *browsing* on a stale device (which writes
   // those view keys) would upload its out-of-date snapshot and clobber newer work
   // done elsewhere. This is the core fix for cross-device overwrites.
-  const CONTENT_RE = /^folio_(docs|tables|versions|trash|cfg|home_cfg|home_doc|doc_cols)$/;
+  const CONTENT_RE = /^folio_(docs|tables|versions|trash|cfg|home_cfg|home_doc|doc_cols|tasks)$/;
   // Non-folio_ key (so it never rides the snapshot or triggers autosync): set when
   // there are local content changes not yet confirmed pushed, cleared on a
   // successful push. Lets a quick reload keep local edits instead of losing them

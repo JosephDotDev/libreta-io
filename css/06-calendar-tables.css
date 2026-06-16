@@ -9,6 +9,16 @@
 .tk-col-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
 .tk-col-nm{font-size:13px;font-weight:500;color:var(--tx);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tk-col-ct{font-size:11px;color:var(--mu);background:var(--sur2);border-radius:9px;padding:1px 8px;flex-shrink:0}
+.tk-col-add{width:20px;height:20px;border:none;background:var(--sur2);color:var(--mu);border-radius:5px;font-size:14px;line-height:1;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:color .12s,background .12s}
+.tk-col-add:hover{color:var(--ac);background:var(--acs)}
+/* quick-add box: title field + destination picker */
+.tk-addbox{display:flex;flex-direction:column;gap:6px;background:var(--bg);border:1px solid var(--ac);border-radius:8px;padding:7px;margin-bottom:2px}
+.tk-addbox .tk-add-input{border:none;padding:3px 2px;background:none}
+.tk-add-dest{background:var(--sur);border:1px solid var(--bd);border-radius:6px;color:var(--mu);font-family:var(--fm);font-size:11px;padding:4px 6px;outline:none;cursor:pointer}
+.tk-add-dest:focus{border-color:var(--ac)}
+/* standalone task cards read slightly quieter than database-backed ones */
+.tk-card-std{border-style:dashed}
+.tk-card-std .tk-card-meta{font-style:italic}
 .tk-col-b{padding:8px;display:flex;flex-direction:column;gap:7px;overflow-y:auto}
 .tk-card{position:relative;background:var(--bg);border:1px solid var(--bd);border-radius:7px;padding:9px 11px;cursor:pointer;transition:border-color .12s,transform .08s,box-shadow .12s}
 .tk-card:hover{border-color:var(--bd2);transform:translateY(-1px);box-shadow:0 3px 10px rgba(0,0,0,.18)}
@@ -86,8 +96,16 @@
 .cal-dh{padding:8px;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--mu);text-align:center;border-right:1px solid var(--bd);border-bottom:1px solid var(--bd)}
 /* min-width:0 keeps the 7 columns equal — without it a long (nowrap) event title
    forces its column wider and the whole grid balloons. */
-.cal-cell{min-width:0;min-height:110px;border-right:1px solid var(--bd);border-bottom:1px solid var(--bd);padding:8px 8px 6px;cursor:pointer;transition:background .1s}
+.cal-cell{min-width:0;min-height:110px;border-right:1px solid var(--bd);border-bottom:1px solid var(--bd);padding:8px 8px 6px;transition:background .1s}
 .cal-cell:hover{background:var(--sur)}
+/* per-cell create "+" (replaces click-anywhere-to-create) */
+.cal-numrow{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+.cal-add{width:18px;height:18px;border:none;background:var(--sur2);color:var(--mu);border-radius:4px;font-size:13px;line-height:1;cursor:pointer;opacity:0;display:flex;align-items:center;justify-content:center;transition:opacity .12s,color .12s,background .12s}
+.cal-cell:hover .cal-add{opacity:1}
+.cal-add:hover{color:var(--ac);background:var(--acs)}
+.calw-add{background:none;border:none;cursor:pointer;text-align:left;padding:3px 2px;opacity:.6;transition:opacity .12s}
+.calw-col:hover .calw-add{opacity:1}
+.calw-add .np-pill{font-size:11px}
 /* Adjacent-month days are dimmed but still show events that peek in. */
 .cal-cell.om{opacity:.4}
 .cal-cell.om:hover{opacity:.65}
