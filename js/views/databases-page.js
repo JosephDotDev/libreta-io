@@ -32,7 +32,7 @@ function openTbl(id){
     const tbl=DB.getTbl(id);
     if(tbl){
       // Render the SAME interactive database component used inline (table/board/calendar).
-      S.pageDbBlk={id:'__pagedb__',type:'database',tableId:id,view:tbl._view||'table',groupCol:tbl._groupCol,dateCol:tbl._dateCol,calYM:tbl._calYM,filters:tbl._filters||[],sort:tbl._sort,hiddenCols:tbl._hiddenCols||[],groupCollapsed:tbl._groupCollapsed||{},colWidths:tbl._colWidths||{},tlDesc:tbl._tlDesc,colorRules:tbl._colorRules||[],hiddenGroups:tbl._hiddenGroups||{},hideGroupCount:!!tbl._hideGroupCount};
+      S.pageDbBlk={id:'__pagedb__',type:'database',tableId:id,view:tbl._view||'table',groupCol:tbl._groupCol,dateCol:tbl._dateCol,calYM:tbl._calYM,calView:tbl._calView,calAnchorDS:tbl._calAnchorDS,filters:tbl._filters||[],sort:tbl._sort,hiddenCols:tbl._hiddenCols||[],groupCollapsed:tbl._groupCollapsed||{},colWidths:tbl._colWidths||{},tlDesc:tbl._tlDesc,colorRules:tbl._colorRules||[],hiddenGroups:tbl._hiddenGroups||{},hideGroupCount:!!tbl._hideGroupCount};
     } else S.pageDbBlk=null;
     renderPageDb();
   }

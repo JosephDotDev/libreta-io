@@ -1,13 +1,41 @@
+/* Header label for the inline calendar, per view (month / week range / day). */
+function idbCalLabel(blk){
+  const view=blk.calView||'month';
+  const anchor=blk.calAnchorDS||dateStr(new Date());
+  if(view==='week'){ const s=_calWeekStart(anchor), e=new Date(s); e.setDate(s.getDate()+6);
+    return `${MONTHS[s.getMonth()].slice(0,3)} ${s.getDate()} \u2013 ${MONTHS[e.getMonth()].slice(0,3)} ${e.getDate()}`; }
+  if(view==='day'){ const d=_calParseDS(anchor); return `${WDAYS[d.getDay()]}, ${MONTHS[d.getMonth()]} ${d.getDate()}`; }
+  const [yy,mm]=idbYM(blk).split('-').map(Number);
+  return new Date(yy,mm-1,1).toLocaleDateString('en-US',{month:'long',year:'numeric'});
+}
 function idbCalBar(blk,tbl){
   const dateCols=tbl.columns.filter(c=>c.type==='date');
   if(!dateCols.length) return idbToolbar(blk,tbl,'table'); // still let them add a date prop & filter
   const dateCol=tbl.columns.find(c=>c.id===blk.dateCol)||dateCols[0];
-  const [yy,mm]=idbYM(blk).split('-').map(Number);
-  const monthName=new Date(yy,mm-1,1).toLocaleDateString('en-US',{month:'long',year:'numeric'});
-  return `<div class="idb-toolbar"><button class="idb-navbtn" onclick="idbCalNav('${blk.id}',-1)">\u2039</button><span class="idb-cal-month">${monthName}</span><button class="idb-navbtn" onclick="idbCalNav('${blk.id}',1)">\u203a</button><span class="idb-tb-lbl" style="margin-left:6px">By</span><select class="idb-sel" onchange="idbSetDateCol('${blk.id}',this.value)">${dateCols.map(c=>`<option value="${c.id}"${c.id===dateCol.id?' selected':''}>${escHtml(c.name)}</option>`).join('')}</select><span class="idb-tb-grow"></span>${idbFilterChips(blk,tbl)}${idbSortChip(blk,tbl)}
+  const view=blk.calView||'month';
+  const seg=`<span class="idb-calviewseg">${['month','week','day'].map(v=>`<button class="${v===view?'on':''}" onclick="idbSetCalView('${blk.id}','${v}')">${v[0].toUpperCase()+v.slice(1)}</button>`).join('')}</span>`;
+  return `<div class="idb-toolbar"><button class="idb-navbtn" onclick="idbCalNav('${blk.id}',-1)">\u2039</button><span class="idb-cal-month">${idbCalLabel(blk)}</span><button class="idb-navbtn" onclick="idbCalNav('${blk.id}',1)">\u203a</button><button class="idb-navbtn idb-cal-today" onclick="idbCalToday('${blk.id}')" data-tip="Today">\u25cf</button>${seg}<span class="idb-tb-lbl" style="margin-left:6px">By</span><select class="idb-sel" onchange="idbSetDateCol('${blk.id}',this.value)">${dateCols.map(c=>`<option value="${c.id}"${c.id===dateCol.id?' selected':''}>${escHtml(c.name)}</option>`).join('')}</select><span class="idb-tb-grow"></span>${idbFilterChips(blk,tbl)}${idbSortChip(blk,tbl)}
     <button class="idb-tb-ic${(blk.sort&&blk.sort.colId)?' on':''}" onclick="idbSortMenu(event,'${blk.id}')" data-tip="Sort">${IDB_ICON.sort}</button>
     <button class="idb-tb-ic${(blk.filters||[]).length?' on':''}" onclick="idbOpenFilter(event,'${blk.id}')" data-tip="Filter">${IDB_ICON.filter}</button>
     <button class="idb-tb-ic${(blk.hiddenCols||[]).length?' on':''}" onclick="idbPropsMenu(event,'${blk.id}')" data-tip="Properties">${IDB_ICON.props}</button></div>`;
+}
+function idbSetCalView(blockId,view){
+  const blk=findBlock(blockId); if(!blk)return;
+  blk.calView=view; if(view!=='month' && !blk.calAnchorDS) blk.calAnchorDS=dateStr(new Date());
+  idbPersistView(blk); reRenderBlock(blockId);
+}
+function idbCalToday(blockId){
+  const blk=findBlock(blockId); if(!blk)return;
+  const n=new Date(); blk.calYM=n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0'); blk.calAnchorDS=dateStr(n);
+  idbPersistView(blk); reRenderBlock(blockId);
+}
+/* Create a new entry on a given date (replaces click-to-create) and open it. */
+function idbCalAddOnDate(blockId,dISO){
+  const blk=findBlock(blockId),tbl=idbTbl(blk); if(!tbl)return;
+  const dateCol=tbl.columns.find(c=>c.id===blk.dateCol)||tbl.columns.find(c=>c.type==='date'); if(!dateCol)return;
+  const cells={}; tbl.columns.forEach(c=>cells[c.id]=''); cells[dateCol.id]=dISO;
+  const row={id:mkId('r'),cells}; tbl.rows.push(row); DB.saveTbl(tbl); idbSync(blockId,tbl.id);
+  if(typeof idbOpenRow==='function') idbOpenRow(blockId,row.id);
 }
 /* A clickable, editable property chip shown on a (detailed) calendar event. */
 function idbCalChip(blk,r,c){
@@ -42,13 +70,17 @@ function idbCalEvent(blk,tbl,r,detailed){
 function idbCalView(blk,tbl){
   const dateCols=tbl.columns.filter(c=>c.type==='date');
   if(!dateCols.length) return `<div class="idb-note">Add a <b>Date</b> property to place entries on a calendar.</div>`;
-  const dateCol=tbl.columns.find(c=>c.id===blk.dateCol)||dateCols[0];
+  const view=blk.calView||'month';
+  if(view==='week') return idbCalWeekView(blk,tbl);
+  if(view==='day') return idbCalDayView(blk,tbl);
+  return idbCalMonthView(blk,tbl);
+}
+function idbCalMonthView(blk,tbl){
+  const dateCol=tbl.columns.find(c=>c.id===blk.dateCol)||tbl.columns.find(c=>c.type==='date');
   const now=new Date(), detailed=true;   // covers + property chips always on; the Properties menu controls which show
   const [yy,mm]=idbYM(blk).split('-').map(Number);
   const startDow=new Date(yy,mm-1,1).getDay(), daysInMonth=new Date(yy,mm,0).getDate();
   const pad=n=>String(n).padStart(2,'0');
-  // Key events by full ISO date so adjacent-month days (peeking into the grid) can
-  // show their events too, not just the current month.
   const byDate={};
   idbFilteredRows(blk,tbl).forEach(r=>{const v=r.cells[dateCol.id];if(!v)return;(byDate[v]=byDate[v]||[]).push(r);});
   let cells='';
@@ -61,9 +93,32 @@ function idbCalView(blk,tbl){
     const dISO=`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
     const isTod=d.toDateString()===now.toDateString();
     const evs=(byDate[dISO]||[]).map(r=>idbCalEvent(blk,tbl,r,detailed)).join('');
-    cells+=`<div class="idb-cal-cell${inMonth?'':' idb-cal-out'}" ondragover="idbCalDayOver(event)" ondragleave="idbCalDayLeave(event)" ondrop="idbCalDrop(event,'${blk.id}','${dISO}')"><div class="idb-cal-num${isTod?' tod':''}">${d.getDate()}</div>${evs}</div>`;
+    cells+=`<div class="idb-cal-cell${inMonth?'':' idb-cal-out'}" ondragover="idbCalDayOver(event)" ondragleave="idbCalDayLeave(event)" ondrop="idbCalDrop(event,'${blk.id}','${dISO}')"><div class="idb-cal-numrow"><span class="idb-cal-num${isTod?' tod':''}">${d.getDate()}</span><button class="idb-cal-add" onclick="event.stopPropagation();idbCalAddOnDate('${blk.id}','${dISO}')" data-tip="New entry">+</button></div>${evs}</div>`;
   }
-  return `<div class="idb-cal${detailed?' detailed':''}" ondragstart="idbCalContainerDragStart(event)"><div class="idb-cal-grid">${cells}</div></div>`;
+  return `<div class="idb-cal detailed" ondragstart="idbCalContainerDragStart(event)"><div class="idb-cal-grid">${cells}</div></div>`;
+}
+function idbCalWeekView(blk,tbl){
+  const dateCol=tbl.columns.find(c=>c.id===blk.dateCol)||tbl.columns.find(c=>c.type==='date');
+  const start=_calWeekStart(blk.calAnchorDS||dateStr(new Date())), todayDS=dateStr(new Date());
+  const byDate={};
+  idbFilteredRows(blk,tbl).forEach(r=>{const v=r.cells[dateCol.id];if(v)(byDate[v]=byDate[v]||[]).push(r);});
+  let cols='';
+  for(let i=0;i<7;i++){ const dt=new Date(start); dt.setDate(start.getDate()+i); const ds=dateStr(dt);
+    const evs=(byDate[ds]||[]).map(r=>idbCalEvent(blk,tbl,r,true)).join('');
+    cols+=`<div class="idb-calw-col${ds===todayDS?' tod':''}" ondragover="idbCalDayOver(event)" ondragleave="idbCalDayLeave(event)" ondrop="idbCalDrop(event,'${blk.id}','${ds}')">
+      <div class="idb-calw-h"><span class="idb-calw-wd">${WDAYS[dt.getDay()]}</span><span class="idb-calw-dn${ds===todayDS?' tod':''}">${dt.getDate()}</span></div>
+      <div class="idb-calw-body">${evs}<button class="idb-calw-add" onclick="idbCalAddOnDate('${blk.id}','${ds}')"><span class="np-pill">+ New</span></button></div>
+    </div>`;
+  }
+  return `<div class="idb-cal detailed" ondragstart="idbCalContainerDragStart(event)"><div class="idb-calw">${cols}</div></div>`;
+}
+function idbCalDayView(blk,tbl){
+  const dateCol=tbl.columns.find(c=>c.id===blk.dateCol)||tbl.columns.find(c=>c.type==='date');
+  const ds=blk.calAnchorDS||dateStr(new Date()), todayDS=dateStr(new Date());
+  const evs=idbFilteredRows(blk,tbl).filter(r=>r.cells[dateCol.id]===ds).map(r=>idbCalEvent(blk,tbl,r,true)).join('');
+  return `<div class="idb-cal detailed" ondragstart="idbCalContainerDragStart(event)"><div class="idb-cald${ds===todayDS?' tod':''}" ondragover="idbCalDayOver(event)" ondragleave="idbCalDayLeave(event)" ondrop="idbCalDrop(event,'${blk.id}','${ds}')">
+    <div class="idb-cald-body">${evs||'<div class="idb-cald-empty">Nothing on this day yet.</div>'}<button class="idb-calw-add" onclick="idbCalAddOnDate('${blk.id}','${ds}')"><span class="np-pill">+ New entry</span></button></div>
+  </div></div>`;
 }
 function idbCalToggleDetails(blockId){const blk=findBlock(blockId);if(blk){blk.calDetails=!blk.calDetails;idbPersistView(blk);reRenderBlock(blockId);}}
 /* Drag a calendar event to another day to reschedule it. Only the grip starts a
@@ -111,10 +166,16 @@ function idbCalDrop(e,blockId,dISO){
 }
 function idbCalNav(blockId,delta){
   const blk=findBlock(blockId); if(!blk)return;
-  const now=new Date();
-  const ym=blk.calYM||(now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0'));
-  let [yy,mm]=ym.split('-').map(Number); mm+=delta;
-  if(mm<1){mm=12;yy--;} if(mm>12){mm=1;yy++;}
-  blk.calYM=yy+'-'+String(mm).padStart(2,'0'); idbPersistView(blk); reRenderBlock(blockId);
+  const view=blk.calView||'month';
+  if(view==='week'){ blk.calAnchorDS=_calAddDS(blk.calAnchorDS||dateStr(new Date()),delta*7); }
+  else if(view==='day'){ blk.calAnchorDS=_calAddDS(blk.calAnchorDS||dateStr(new Date()),delta); }
+  else {
+    const now=new Date();
+    const ym=blk.calYM||(now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0'));
+    let [yy,mm]=ym.split('-').map(Number); mm+=delta;
+    if(mm<1){mm=12;yy--;} if(mm>12){mm=1;yy++;}
+    blk.calYM=yy+'-'+String(mm).padStart(2,'0');
+  }
+  idbPersistView(blk); reRenderBlock(blockId);
 }
 /* ── TIMELINE VIEW: entries in chronological order by a date property ── */

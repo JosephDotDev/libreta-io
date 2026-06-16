@@ -1,12 +1,10 @@
 /* ═══════════════════════════════════════════════
    OUTLINE / SECTIONS
-   A per-document table of contents built from the page's headings (H1–H3).
-   Lives as a floating rail in the editor: click a heading to scroll to it, and
-   the section nearest the top stays highlighted as you scroll. Open/closed is
-   device-local (a non-folio_ key, so it never rides the cloud snapshot).
+   A per-document table of contents built from the page's headings (H1–H3). It
+   appears on its own on the right edge of the editor whenever the page has
+   headings — a collapsed rail of marks that expands to a labelled list on hover.
+   Click a heading to scroll to it; the section nearest the top stays highlighted.
 ═══════════════════════════════════════════════ */
-const OUTLINE_KEY='libreta_outline_open';
-function outlineOpen(){ try{ return localStorage.getItem(OUTLINE_KEY)==='1'; }catch(e){ return false; } }
 /* Headings in document order — flattenBlocks reaches into columns & toggles too. */
 function _outlineHeadings(){
   const all=(typeof flattenBlocks==='function')?flattenBlocks(S.blocks):(S.blocks||[]);
@@ -15,20 +13,14 @@ function _outlineHeadings(){
 }
 function renderOutline(){
   const panel=document.getElementById('outline-panel'); if(!panel) return;
-  const on=outlineOpen() && S.view==='editor';
+  const hs=(S.view==='editor')?_outlineHeadings():[];
+  const on=hs.length>0;                                   // appears on its own only when there are sections
   document.body.classList.toggle('outline-on', on);
-  document.getElementById('outline-btn')?.classList.toggle('on', outlineOpen());
   if(!on){ panel.innerHTML=''; return; }
-  const hs=_outlineHeadings();
-  if(!hs.length){ panel.innerHTML=`<div class="outline-hd">Outline</div><div class="outline-empty">Add a heading (H1–H3) to build sections.</div>`; return; }
-  panel.innerHTML=`<div class="outline-hd">Outline</div><div class="outline-list">`
-    + hs.map(h=>`<button class="outline-it lvl${h.level}" data-bid="${h.id}" onclick="outlineScrollTo('${h.id}')" title="${escAttr(h.text||'Untitled section')}">${escHtml(h.text)||'<span class="outline-mu">Untitled</span>'}</button>`).join('')
-    + `</div>`;
+  panel.innerHTML=`<div class="outline-inner"><div class="outline-hd">Outline</div><div class="outline-list">`
+    + hs.map(h=>`<button class="outline-it lvl${h.level}" data-bid="${h.id}" onclick="outlineScrollTo('${h.id}')" title="${escAttr(h.text||'Untitled section')}"><span class="ol-bar"></span><span class="ol-label">${escHtml(h.text)||'<span class="outline-mu">Untitled</span>'}</span></button>`).join('')
+    + `</div></div>`;
   outlineSyncActive();
-}
-function toggleOutline(){
-  try{ localStorage.setItem(OUTLINE_KEY, outlineOpen()?'0':'1'); }catch(e){}
-  renderOutline();
 }
 function _zoomFactor(){ return parseFloat(getComputedStyle(document.documentElement).zoom)||parseFloat(document.documentElement.style.zoom)||1; }
 function outlineScrollTo(bid){
@@ -46,7 +38,7 @@ function outlineScrollTo(bid){
 /* Highlight the heading nearest the top of the viewport as the user scrolls. */
 let _outlineRaf=0;
 function outlineSyncActive(){
-  if(!outlineOpen()||S.view!=='editor') return;
+  if(!document.body.classList.contains('outline-on')||S.view!=='editor') return;
   cancelAnimationFrame(_outlineRaf);
   _outlineRaf=requestAnimationFrame(()=>{
     const sc=document.getElementById('blocks-sc'); if(!sc) return;
@@ -56,7 +48,7 @@ function outlineSyncActive(){
     document.querySelectorAll('#outline-panel .outline-it').forEach(b=>b.classList.toggle('active', b.dataset.bid===activeId));
   });
 }
-/* Debounced rebuild — called from sched() so the list tracks heading edits and
-   structural changes without rebuilding on every keystroke. */
+/* Debounced rebuild — called from sched() so the rail appears/updates as headings
+   are added, edited, or removed, without rebuilding on every keystroke. */
 let _outlineRebuildT=0;
-function outlineRefreshSoon(){ if(!outlineOpen()) return; clearTimeout(_outlineRebuildT); _outlineRebuildT=setTimeout(renderOutline, 350); }
+function outlineRefreshSoon(){ if(S.view!=='editor') return; clearTimeout(_outlineRebuildT); _outlineRebuildT=setTimeout(renderOutline, 300); }

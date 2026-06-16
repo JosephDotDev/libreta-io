@@ -1,7 +1,7 @@
 /* Persist a DB block's view prefs. Inline blocks live in the doc (sched);
    the full-page database stores them on the table itself. */
 function idbPersistView(blk){
-  if(blk.id==='__pagedb__'){const t=idbTbl(blk);if(t){t._view=blk.view;t._groupCol=blk.groupCol;t._dateCol=blk.dateCol;t._calYM=blk.calYM;t._filters=blk.filters;t._sort=blk.sort;t._hiddenCols=blk.hiddenCols;t._groupCollapsed=blk.groupCollapsed;t._colWidths=blk.colWidths;t._tlDesc=blk.tlDesc;t._colorRules=blk.colorRules;t._hiddenGroups=blk.hiddenGroups;t._hideGroupCount=blk.hideGroupCount;DB.saveTbl(t);}}
+  if(blk.id==='__pagedb__'){const t=idbTbl(blk);if(t){t._view=blk.view;t._groupCol=blk.groupCol;t._dateCol=blk.dateCol;t._calYM=blk.calYM;t._calView=blk.calView;t._calAnchorDS=blk.calAnchorDS;t._filters=blk.filters;t._sort=blk.sort;t._hiddenCols=blk.hiddenCols;t._groupCollapsed=blk.groupCollapsed;t._colWidths=blk.colWidths;t._tlDesc=blk.tlDesc;t._colorRules=blk.colorRules;t._hiddenGroups=blk.hiddenGroups;t._hideGroupCount=blk.hideGroupCount;DB.saveTbl(t);}}
   else sched();
 }
 function idbSetView(blockId,view){
