@@ -71,6 +71,12 @@ function pickSlash(type){
     idbCreateNew(S.slashId, type.slice(3));   // 'board' | 'calendar'
     return;
   }
+  if(type==='math'){
+    const sid=S.slashId; const el=document.querySelector('.bk[data-id="'+sid+'"]'); if(el){ el.innerHTML=''; saveBlk(sid,''); }
+    closeSlash(); xformBlk(sid,'math','');
+    setTimeout(()=>{ if(typeof mathEdit==='function') mathEdit(sid); },30);
+    return;
+  }
   const el=document.querySelector('.bk[data-id="'+S.slashId+'"]');
   if(el){el.innerHTML='';saveBlk(S.slashId,'')}
   xformBlk(S.slashId,type,'');

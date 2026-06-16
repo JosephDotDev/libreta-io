@@ -5,6 +5,7 @@ function saveBlk(id,html){const b=findBlock(id);if(b)b.content=html;sched()}
 function sched(){
   clearTimeout(S.saveTimer);S.saveTimer=setTimeout(flushSave,700);
   clearTimeout(S.histTimer);S.histTimer=setTimeout(commitHistory,500);
+  if(typeof outlineRefreshSoon==='function') outlineRefreshSoon();   // keep the sections rail current
 }
 function flushSave(){
   if(!S.docId) return;
@@ -18,7 +19,7 @@ function flushSave(){
   doc.title=titleEl?.value??doc.title??'';
   doc.blocks=S.blocks; doc.props=S.props; doc.fmt=doc.fmt||{};
   const leaves=flattenBlocks(S.blocks);
-  const txt=leaves.filter(b=>!['divider','database','image','file','carousel','youtube','grid'].includes(b.type))
+  const txt=leaves.filter(b=>!['divider','database','image','file','carousel','youtube','grid','math'].includes(b.type))
     .map(b=>{const d=document.createElement('div');d.innerHTML=b.content||'';return d.innerText}).join(' ');
   const wc=txt.trim().split(/\s+/).filter(w=>w.length>0).length;
   doc.meta=Object.assign({version:1,pinned:false,icon:'',tags:[]},doc.meta||{},{

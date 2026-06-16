@@ -94,7 +94,7 @@ function xformBlk(id,newT,newContent){
   const content=newContent!==undefined?newContent:arr[idx].content;
 
   const oldType=arr[idx].type;
-  const MEDIA=['image','file','carousel','youtube','grid','page'];
+  const MEDIA=['image','file','carousel','youtube','grid','page','math'];
   if(newT==='divider'){
     arr[idx]={id,type:'divider',content:''};
     const row=document.querySelector(`.bk-row[data-id="${id}"]`);
