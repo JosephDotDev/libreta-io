@@ -3,7 +3,7 @@
 ═══════════════════════════════════════════════ */
 function histTitleEl(){return document.getElementById(S.peekOpen?'peek-title':(S.view==='overview'?'ov-panel-title':'ed-title'))}
 function histBlocksCt(){return currentCtId()}
-function histSnap(){return JSON.stringify({b:S.blocks,p:S.props,t:histTitleEl()?.value||''})}
+function histSnap(){return JSON.stringify({d:S.docId,b:S.blocks,p:S.props,t:histTitleEl()?.value||''})}
 function initHistory(){S.hist=[];S.histRedo=[];S.histPresent=histSnap();}
 function commitHistory(){
   const cur=histSnap();
@@ -14,6 +14,10 @@ function commitHistory(){
 }
 function restoreSnap(s){
   const o=JSON.parse(s);
+  // Safety net: never apply a snapshot captured for a different document. The undo
+  // state is a shared singleton, so this guards against an undo writing one doc's
+  // content into another (e.g. a stale peek snapshot landing on the host page).
+  if(o.d!==undefined && o.d!==S.docId) return;
   S.blocks=o.b; S.props=o.p;
   const t=histTitleEl(); if(t) t.value=o.t;
   renderBlocks(histBlocksCt()); renderProps();

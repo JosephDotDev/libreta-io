@@ -47,23 +47,20 @@ function mergeWithPrev(id,el){
   const arr=loc.arr, idx=loc.idx;
   const prev=arr[idx-1];
   if(prev.type==='divider'){delBlk(prev.id);return}
-  const pEl=document.querySelector(`.bk[data-id="${prev.id}"]`);
-  if(!pEl){
-    // Previous block has no editable text surface (image, file, database, page
-    // link, etc.) — there's nothing to merge text into. Hop this block above it
-    // instead of silently doing nothing, so Backspace at the start always acts.
-    const [cur]=arr.splice(idx,1); arr.splice(idx-1,0,cur);
-    rerender(); updNums(); sched();
-    const moved=document.querySelector(`.bk[data-id="${id}"]`);
-    if(moved){ moved.focus(); putCursorStart(moved); }
-    return;
-  }
-  const mergedHTML=pEl.innerHTML+el.innerHTML;
-  arr[idx-1].content=mergedHTML; pEl.innerHTML=mergedHTML;
-  const prevTextLen=pEl.innerText.length-el.innerText.length;
+  // Merge this block's content into the nearest EDITABLE block above it. Usually that's
+  // the immediately-previous block; if the previous block(s) have no text surface
+  // (image, file, database, page link, …) we skip past them and append to the closest
+  // line above, leaving the media in place. Nothing editable above → leave it be (a
+  // first block, or a block sitting only under media, has nowhere to merge).
+  let j=idx-1, tEl=null;
+  while(j>=0){ const e=document.querySelector(`.bk[data-id="${arr[j].id}"]`); if(e){ tEl=e; break; } j--; }
+  if(!tEl) return;
+  const mergedHTML=tEl.innerHTML+el.innerHTML;
+  arr[j].content=mergedHTML; tEl.innerHTML=mergedHTML;
+  const prevTextLen=tEl.innerText.length-el.innerText.length;
   arr.splice(idx,1);
   el.closest('.bk-row').remove();
-  pEl.focus(); putCursorAtOffset(pEl,Math.max(0,prevTextLen));
+  tEl.focus(); putCursorAtOffset(tEl,Math.max(0,prevTextLen));
   updNums(); sched();
 }
 
