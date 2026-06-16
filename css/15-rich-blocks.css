@@ -1,5 +1,15 @@
 /* ── #1 COLLAPSING HEADER (proportional, scroll-driven) ── */
 #ed-cover-wrap{overflow:hidden;will-change:max-height}
+/* ── MATH / EQUATION BLOCKS (KaTeX) ── */
+.bk-math-wrap{margin:6px 0}
+.bk-math{padding:14px 10px;text-align:center;cursor:pointer;border-radius:8px;overflow-x:auto;overflow-y:hidden;transition:background .12s}
+.bk-math:hover{background:var(--sur)}
+.bk-math .katex{font-size:1.3em;color:var(--tx)}
+.bk-math-ph{color:var(--mu);font-style:italic;font-size:13px;font-family:var(--fm)}
+.bk-math-err{color:var(--re);font-size:13px;font-family:var(--fm)}
+.bk-math-src{width:100%;margin-top:6px;background:var(--sur);border:1px solid var(--bd2);border-radius:8px;color:var(--tx);font-family:var(--fm);font-size:13px;padding:10px 12px;resize:vertical;min-height:54px;outline:none;line-height:1.5}
+.bk-math-src:focus{border-color:var(--ac)}
+.bk-math-wrap.editing .bk-math{background:var(--sur2)}
 /* ── #2 CAROUSEL CROP MODES ── */
 .bk-car-bar{display:flex;align-items:center;gap:6px;padding:2px 0 8px;font-size:11px;color:var(--mu)}
 .bk-car-fitbtn{background:none;border:1px solid var(--bd);border-radius:4px;color:var(--mu);cursor:pointer;padding:2px 9px;font-size:10px;font-family:var(--fm);transition:border-color .1s,color .1s,background .1s}
