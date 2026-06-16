@@ -175,8 +175,12 @@ body.peek-open .pm,
 body.peek-open .dp,
 body.peek-open .link-pop,
 body.peek-open .idb-pop,
+body.peek-open .idb-colpop,
 body.peek-open #tbl-dd,
 body.peek-open .idb-rowmenu{z-index:900}
+/* The click-catcher overlay must sit ABOVE the peek (so a click outside a popover,
+   anywhere over the peek, reaches it and closes the menu) but BELOW the popovers. */
+body.peek-open .ovl{z-index:850}
 body.peek-open #color-pal,
 body.peek-open .color-pal,
 body.peek-open #pm-dp{z-index:920}
