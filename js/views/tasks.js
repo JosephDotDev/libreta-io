@@ -10,6 +10,17 @@ const TASKPREFS_KEY='folio_taskprefs';
 function _taskPrefs(){ try{ const p=JSON.parse(localStorage.getItem(TASKPREFS_KEY)||'{}'); p.colors=p.colors||{}; p.hidden=p.hidden||{}; return p; }catch{ return {colors:{},hidden:{}}; } }
 function _saveTaskPrefs(p){ try{ localStorage.setItem(TASKPREFS_KEY,JSON.stringify(p)); }catch(e){} }
 
+/* Standalone tasks — quick tasks that DON'T belong to any database. Kept in their
+   own light store so the user can jot tasks without spawning a database for each.
+   It's a folio_* key (rides cloud sync; folio_tasks is allow-listed in sync.js). */
+const STD_TASKS_KEY='folio_tasks';
+function _loadStdTasks(){ try{ return JSON.parse(localStorage.getItem(STD_TASKS_KEY)||'[]'); }catch{ return []; } }
+function _saveStdTasks(arr){ try{ localStorage.setItem(STD_TASKS_KEY,JSON.stringify(arr)); }catch(e){} }
+/* Columns shown when there are no boards yet (so standalone tasks have a home). */
+const TASK_DEFAULT_STATUSES=[{l:'To do',c:'#C47D32'},{l:'In progress',c:'#4E7EC4'},{l:'Done',c:'#4E9E72'}];
+/* Remembered quick-add destination ('standalone' | a board id | '__new__'). */
+let _tkLastDest='standalone';
+
 /* The status/select column that makes a table a "board" (Status preferred). */
 function taskStatusCol(tbl){ return (tbl.columns||[]).find(c=>c.type==='status') || (tbl.columns||[]).find(c=>c.type==='select') || null; }
 
@@ -44,76 +55,116 @@ function renderTasks(){
   const boards=taskBoards();
   renderTaskLegend(boards);
 
-  // Status columns / ordering — collect each board's status options in order,
-  // merging by label (so boards that share "To do / Doing / Done" line up).
+  // Status columns / ordering — merge each board's status options by label so boards
+  // that share "To do / Doing / Done" line up.
   const order=[]; const statusColor={}; const seen=new Set();
+  const seeStatus=(label,color)=>{ if(label && !seen.has(label)){ seen.add(label); order.push(label); statusColor[label]=color; } };
   boards.forEach(b=>{ if(b.hidden) return; const sc=taskStatusCol(b.tbl);
-    (sc.options||[]).forEach(o=>{ if(o.l && !seen.has(o.l)){ seen.add(o.l); order.push(o.l); statusColor[o.l]=o.c; } });
-  });
+    (sc.options||[]).forEach(o=>seeStatus(o.l,o.c)); });
 
-  // Pool every row from every visible board into status buckets.
-  const groups={}; const NO='__nostatus__'; let total=0;
-  const add=(s,task)=>{ (groups[s]=groups[s]||[]).push(task); total++; };
+  // Pool board rows + standalone tasks into status buckets.
+  const groups={}; const NO='__nostatus__';
+  const add=(s,task)=>{ (groups[s]=groups[s]||[]).push(task); };
   boards.forEach(b=>{ if(b.hidden) return; const tbl=b.tbl; const sc=taskStatusCol(tbl);
     const titleCol=tbl.columns&&tbl.columns[0];
     (tbl.rows||[]).forEach(row=>{
       const sv=row.cells[sc.id]||'';
-      const title=(titleCol?row.cells[titleCol.id]:'')||'Untitled';
+      const title=(titleCol?row.cells[titleCol.id]:'')||'';
       const task={ title, tblId:tbl.id, rowId:row.id, board:b.name, boardColor:b.color };
-      if(sv){ if(!seen.has(sv)){ seen.add(sv); order.push(sv); statusColor[sv]=(sc.options||[]).find(o=>o.l===sv)?.c; } add(sv,task); }
-      else add(NO,task);
+      if(sv){ seeStatus(sv,(sc.options||[]).find(o=>o.l===sv)?.c||'var(--mu)'); add(sv,task); } else add(NO,task);
     });
   });
+  _loadStdTasks().forEach(t=>{
+    const task={ title:t.title, stdId:t.id, standalone:true, board:'Standalone', boardColor:'var(--mu)' };
+    if(t.status){ seeStatus(t.status,statusColor[t.status]||'var(--mu)'); add(t.status,task); } else add(NO,task);
+  });
+
+  // No real statuses anywhere → seed default columns so tasks have somewhere to land.
+  if(!order.length) TASK_DEFAULT_STATUSES.forEach(s=>seeStatus(s.l,s.c));
 
   const board=document.getElementById('tk-board'); if(!board) return;
-  if(!boards.length || total===0){
-    board.innerHTML=`<div class="tk-empty">${boards.length?'No tasks yet — add rows to a board and set their status.':'No boards yet.'}<br><span>A “board” is any database with a Status or Select property.</span></div>`;
-    return;
-  }
-  // Columns: each populated status in merged order, then "No status" last.
-  const colKeys=order.filter(s=>groups[s]&&groups[s].length);
+  const colKeys=order.slice();
   if(groups[NO]&&groups[NO].length) colKeys.push(NO);
-  const card=t=>`<div class="tk-card" onclick="calOpenRow('${t.tblId}','${t.rowId}')" title="Open task">
-      <button class="tk-card-del" onclick="event.stopPropagation();tkDeleteTask('${t.tblId}','${t.rowId}')" data-tip="Delete task">&#10005;</button>
-      <div class="tk-card-title">${escHtml(t.title)||'<span class="tk-mu">Untitled</span>'}</div>
-      <div class="tk-card-meta"><span class="tk-board-dot" style="background:${t.boardColor}"></span>${escHtml(t.board)}</div>
-    </div>`;
-  const canAdd=boards.some(b=>!b.hidden);
+
+  const card=t=> t.standalone
+    ? `<div class="tk-card tk-card-std" title="Standalone task">
+        <button class="tk-card-del" onclick="event.stopPropagation();tkDeleteStandalone('${t.stdId}')" data-tip="Delete task">&#10005;</button>
+        <div class="tk-card-title">${escHtml(t.title)||'<span class="tk-mu">Untitled</span>'}</div>
+        <div class="tk-card-meta"><span class="tk-board-dot" style="background:${t.boardColor}"></span>${escHtml(t.board)}</div>
+      </div>`
+    : `<div class="tk-card" onclick="calOpenRow('${t.tblId}','${t.rowId}')" title="Open task">
+        <button class="tk-card-del" onclick="event.stopPropagation();tkDeleteTask('${t.tblId}','${t.rowId}')" data-tip="Delete task">&#10005;</button>
+        <div class="tk-card-title">${escHtml(t.title)||'<span class="tk-mu">Untitled</span>'}</div>
+        <div class="tk-card-meta"><span class="tk-board-dot" style="background:${t.boardColor}"></span>${escHtml(t.board)}</div>
+      </div>`;
+
   board.innerHTML=colKeys.map(s=>{
     const label=s===NO?'No status':s;
     const dot=s===NO?'var(--mu)':(statusColor[s]||'var(--mu)');
-    const addBtn=canAdd?`<div class="tk-add" data-status="${escAttr(s===NO?'':s)}" onclick="tkAddPrompt(this)"><span class="tk-add-plus">&#43;</span> New task</div>`:'';
+    const st=escAttr(s===NO?'':s);
+    const items=(groups[s]||[]).map(card).join('');
     return `<div class="tk-col">
-      <div class="tk-col-h"><span class="tk-col-dot" style="background:${dot}"></span><span class="tk-col-nm">${escHtml(label)}</span><span class="tk-col-ct">${groups[s].length}</span></div>
-      <div class="tk-col-b">${groups[s].map(card).join('')}${addBtn}</div>
+      <div class="tk-col-h"><span class="tk-col-dot" style="background:${dot}"></span><span class="tk-col-nm">${escHtml(label)}</span><span class="tk-col-ct">${(groups[s]||[]).length}</span>
+        <button class="tk-col-add" data-status="${st}" onclick="tkOpenAdd(event,'top')" data-tip="Add a task">&#43;</button></div>
+      <div class="tk-col-b">${items}<div class="tk-add" data-status="${st}" onclick="tkOpenAdd(event,'bottom')"><span class="tk-add-plus">&#43;</span> New task</div></div>
     </div>`;
   }).join('');
 }
-/* ── Quick add / delete on the Tasks page ──
-   New tasks go into the first visible board, with the column's status applied.
-   (When several boards feed the page, the first visible one is the implicit home
-   for quick-adds — open the task to move it to another database if needed.) */
-function _primaryBoard(){ return taskBoards().find(b=>!b.hidden)||null; }
-function tkAddPrompt(el){
-  const status=el.getAttribute('data-status')||'';
-  el.innerHTML=`<input class="tk-add-input" placeholder="Task name, Enter to add…"
-    onkeydown="if(event.key==='Enter'){event.preventDefault();tkCreateTask('${escAttr(status)}',this.value);}else if(event.key==='Escape'){renderTasks();}"
-    onblur="if(!this.value.trim())renderTasks()">`;
-  el.querySelector('input').focus();
+/* ── Quick add / delete ── */
+function _tkDestOptions(){
+  const boards=taskBoards().filter(b=>!b.hidden);
+  return `<option value="standalone"${_tkLastDest==='standalone'?' selected':''}>Standalone (no database)</option>`
+    + boards.map(b=>`<option value="${b.id}"${_tkLastDest===b.id?' selected':''}>${escHtml(b.name)}</option>`).join('')
+    + `<option value="__new__"${_tkLastDest==='__new__'?' selected':''}>+ New database…</option>`;
 }
-function tkCreateTask(status,title){
+/* Open the inline quick-add (title field + destination picker) at the top or bottom
+   of a column. The destination decides whether the task goes to a database or stays
+   standalone — so a quick task never silently spawns a new database. */
+function tkOpenAdd(e,where){
+  e.stopPropagation();
+  const status=e.currentTarget.getAttribute('data-status')||'';
+  const col=e.currentTarget.closest('.tk-col'); if(!col) return;
+  const body=col.querySelector('.tk-col-b');
+  col.querySelectorAll('.tk-addbox').forEach(x=>x.remove());
+  const box=document.createElement('div'); box.className='tk-addbox'; box.dataset.status=status;
+  box.innerHTML=`<input class="tk-add-input" placeholder="Task name…"
+      onkeydown="if(event.key==='Enter'){event.preventDefault();tkSubmitAdd(this);}else if(event.key==='Escape'){renderTasks();}">
+    <select class="tk-add-dest" data-tip="Where this task lives" onmousedown="event.stopPropagation()" onchange="_tkLastDest=this.value">${_tkDestOptions()}</select>`;
+  if(where==='top') body.insertBefore(box, body.firstChild); else body.insertBefore(box, body.querySelector('.tk-add'));
+  box.querySelector('input').focus();
+}
+function tkSubmitAdd(input){
+  const box=input.closest('.tk-addbox'); if(!box) return;
+  const status=box.dataset.status||'';
+  const dest=box.querySelector('.tk-add-dest')?.value||'standalone';
+  tkCreateTask(status, input.value, dest);
+}
+function tkCreateTask(status,title,dest){
   title=(title||'').trim();
-  const b=_primaryBoard(); if(!b){ renderTasks(); return; }
-  const tbl=b.tbl; const titleCol=tbl.columns&&tbl.columns[0]; const sc=taskStatusCol(tbl);
-  const cells={}; (tbl.columns||[]).forEach(c=>cells[c.id]='');
-  if(titleCol) cells[titleCol.id]=title;
-  if(sc&&status) cells[sc.id]=status;
-  tbl.rows=tbl.rows||[]; tbl.rows.push({id:mkId('r'),cells});
-  DB.saveTbl(tbl); renderTasks();
-  // keep adding: re-open the input in the same column for fast entry
-  setTimeout(()=>{ const a=[...document.querySelectorAll('.tk-add')].find(x=>(x.getAttribute('data-status')||'')===status); if(a) tkAddPrompt(a); },0);
+  _tkLastDest=dest;
+  if(!title){ renderTasks(); return; }
+  if(dest==='standalone'){
+    const arr=_loadStdTasks(); arr.push({id:mkId('tk'),title,status:status||'',createdAt:new Date().toISOString()}); _saveStdTasks(arr);
+  }else if(dest==='__new__'){
+    const t=blankTbl(); t.name='Tasks'; const sc=taskStatusCol(t); const titleCol=t.columns[0];
+    const cells={}; t.columns.forEach(c=>cells[c.id]=''); if(titleCol)cells[titleCol.id]=title; if(sc&&status)cells[sc.id]=status;
+    t.rows=[{id:mkId('r'),cells}]; DB.saveTbl(t);
+    _tkLastDest=t.id;   // keep adding into THIS new board, not a fresh one each time
+  }else{
+    const tbl=DB.getTbl(dest);
+    if(tbl){ const sc=taskStatusCol(tbl); const titleCol=tbl.columns[0];
+      const cells={}; tbl.columns.forEach(c=>cells[c.id]=''); if(titleCol)cells[titleCol.id]=title; if(sc&&status)cells[sc.id]=status;
+      tbl.rows=tbl.rows||[]; tbl.rows.push({id:mkId('r'),cells}); DB.saveTbl(tbl); }
+  }
+  renderTasks();
+  // keep adding: re-open the input at the top of the same column for fast entry
+  setTimeout(()=>{ const add=[...document.querySelectorAll('.tk-col-add')].find(b=>(b.getAttribute('data-status')||'')===status); if(add) tkOpenAdd({stopPropagation(){},currentTarget:add},'top'); },0);
 }
 function tkDeleteTask(tblId,rowId){
   if(typeof idbDeleteRow==='function') idbDeleteRow(tblId,rowId);
+  renderTasks();
+}
+function tkDeleteStandalone(id){
+  _saveStdTasks(_loadStdTasks().filter(t=>t.id!==id));
   renderTasks();
 }

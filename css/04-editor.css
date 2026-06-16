@@ -1,24 +1,31 @@
 /* ── EDITOR SHELL ────────────────────────────── */
 .ed-shell{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative}
-/* ── OUTLINE / SECTIONS rail ── */
-.outline-panel{position:absolute;top:60px;right:14px;width:210px;max-height:calc(100% - 88px);overflow-y:auto;
-  background:color-mix(in srgb,var(--sur) 88%,transparent);backdrop-filter:blur(7px);border:1px solid var(--bd);
-  border-radius:11px;padding:8px 6px;z-index:60;box-shadow:0 14px 38px -18px rgba(0,0,0,.7);display:none;animation:olIn .16s ease}
-@keyframes olIn{from{opacity:0;transform:translateX(8px)}to{opacity:1;transform:none}}
+/* ── OUTLINE / SECTIONS rail (auto-appears on the right when the page has headings;
+      a collapsed strip of marks that expands to labels on hover) ── */
+.outline-panel{position:absolute;top:62px;right:10px;max-height:calc(100% - 96px);z-index:60;display:none}
 body.outline-on .outline-panel{display:block}
-.outline-hd{font-family:var(--fm);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--mu);padding:3px 8px 8px}
-.outline-list{display:flex;flex-direction:column;gap:1px}
-.outline-it{display:block;width:100%;text-align:left;background:none;border:none;border-left:2px solid transparent;
-  color:var(--mu);font-family:var(--fm);font-size:12.5px;line-height:1.35;padding:5px 8px;border-radius:6px;cursor:pointer;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .12s,background .12s,border-color .12s}
-.outline-it:hover{color:var(--tx);background:var(--sur2)}
-.outline-it.active{color:var(--ac);border-left-color:var(--ac)}
-.outline-it.lvl2{padding-left:19px;font-size:12px}
-.outline-it.lvl3{padding-left:31px;font-size:11.5px;opacity:.92}
-.outline-it .outline-mu{color:var(--mu);font-style:italic;opacity:.6}
-.outline-empty{color:var(--mu);font-size:11.5px;padding:4px 8px;font-style:italic;line-height:1.4}
-#outline-btn.on{color:var(--ac)}
-body:not([data-view="editor"]) #outline-btn{display:none}
+.outline-inner{width:50px;max-height:calc(100vh / var(--zoom,1) - 180px);overflow:hidden;border:1px solid transparent;border-radius:12px;
+  padding:10px 8px;transition:width .17s ease,background .17s,border-color .17s,box-shadow .17s;animation:olIn .18s ease}
+@keyframes olIn{from{opacity:0;transform:translateX(10px)}to{opacity:1;transform:none}}
+.outline-panel:hover .outline-inner{width:226px;overflow-y:auto;background:color-mix(in srgb,var(--sur) 93%,transparent);backdrop-filter:blur(8px);border-color:var(--bd);box-shadow:0 18px 44px -20px rgba(0,0,0,.75)}
+.outline-hd{font-family:var(--fm);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--mu);padding:2px 8px 9px;opacity:0;height:0;overflow:hidden;transition:opacity .14s}
+.outline-panel:hover .outline-hd{opacity:1;height:auto}
+.outline-list{display:flex;flex-direction:column;gap:3px}
+.outline-it{display:flex;align-items:center;gap:10px;justify-content:flex-end;width:100%;background:none;border:none;cursor:pointer;padding:4px 6px;border-radius:6px;transition:background .12s}
+.outline-panel:hover .outline-it{justify-content:flex-start}
+.outline-panel:hover .outline-it:hover{background:var(--sur2)}
+.ol-bar{flex-shrink:0;height:2.5px;border-radius:2px;background:var(--bd2);transition:background .12s}
+.outline-it.lvl1 .ol-bar{width:24px}
+.outline-it.lvl2 .ol-bar{width:17px}
+.outline-it.lvl3 .ol-bar{width:11px}
+.ol-label{font-family:var(--fm);font-size:12.5px;color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:0;opacity:0;transition:max-width .17s ease,opacity .14s}
+.outline-panel:hover .ol-label{max-width:170px;opacity:1}
+.outline-it:hover .ol-bar,.outline-it.active .ol-bar{background:var(--ac)}
+.outline-it:hover .ol-label{color:var(--tx)}
+.outline-it.active .ol-label{color:var(--ac)}
+.outline-it.lvl2{padding-left:14px}
+.outline-it.lvl3{padding-left:26px}
+.ol-label .outline-mu{color:var(--mu);font-style:italic;opacity:.6}
 .bk{scroll-margin-top:64px}   /* leave room for the sticky props bar when jumping to a section */
 .bk-flash{animation:bkFlash .9s ease}
 @keyframes bkFlash{0%,100%{background:transparent}28%{background:var(--acs)}}
