@@ -119,10 +119,23 @@ function fmtInlineCode(){
 /* Text color + highlight (background) for the current selection. */
 const FMT_TEXT_COLORS=[{l:'Default',c:'__tx__'},{l:'Gray',c:'#9A9389'},{l:'Brown',c:'#A6794D'},{l:'Orange',c:'#C47D32'},{l:'Yellow',c:'#C9A84C'},{l:'Green',c:'#4E9E72'},{l:'Teal',c:'#5E9BAA'},{l:'Blue',c:'#4E7EC4'},{l:'Purple',c:'#7E6FBE'},{l:'Pink',c:'#C454B4'},{l:'Red',c:'#C45454'}];
 const FMT_HL_COLORS=[{l:'None',c:'__none__'},{l:'Gray',c:'rgba(154,147,137,.30)'},{l:'Brown',c:'rgba(166,121,77,.30)'},{l:'Orange',c:'rgba(196,125,50,.32)'},{l:'Yellow',c:'rgba(201,168,76,.32)'},{l:'Green',c:'rgba(78,158,114,.30)'},{l:'Teal',c:'rgba(94,155,170,.30)'},{l:'Blue',c:'rgba(78,126,196,.32)'},{l:'Purple',c:'rgba(126,111,190,.32)'},{l:'Pink',c:'rgba(196,84,180,.30)'},{l:'Red',c:'rgba(196,84,84,.32)'}];
+/* Gradient text presets (Craft-style). Applied as a CSS class — not an inline
+   style — so the effect survives sanitizeHtml() on import (which strips styles
+   but keeps class). */
+const FMT_GRADIENTS=[
+  {n:'sunset', l:'Sunset'},
+  {n:'ember',  l:'Ember'},
+  {n:'gold',   l:'Gold'},
+  {n:'forest', l:'Forest'},
+  {n:'ocean',  l:'Ocean'},
+  {n:'grape',  l:'Grape'},
+  {n:'candy',  l:'Candy'},
+  {n:'aurora', l:'Aurora'},
+];
 function fmtColorOpen(e){
   e&&e.stopPropagation&&e.stopPropagation();
   const pop=document.getElementById('fmt-color-pop');
-  pop.innerHTML=`<div class="fcp-sec">Text</div><div class="fcp-row">${FMT_TEXT_COLORS.map(o=>`<button class="fcp-sw" onmousedown="event.preventDefault()" onclick="fmtSetColor('text','${o.c}')" title="${o.l}" style="color:${o.c==='__tx__'?'var(--tx)':o.c}">A</button>`).join('')}</div><div class="fcp-sec">Highlight</div><div class="fcp-row">${FMT_HL_COLORS.map(o=>`<button class="fcp-sw fcp-hl" onmousedown="event.preventDefault()" onclick="fmtSetColor('bg','${o.c}')" title="${o.l}" style="background:${o.c==='__none__'?'transparent':o.c}">${o.c==='__none__'?'⊘':'A'}</button>`).join('')}</div>`;
+  pop.innerHTML=`<div class="fcp-sec">Text</div><div class="fcp-row">${FMT_TEXT_COLORS.map(o=>`<button class="fcp-sw" onmousedown="event.preventDefault()" onclick="fmtSetColor('text','${o.c}')" title="${o.l}" style="color:${o.c==='__tx__'?'var(--tx)':o.c}">A</button>`).join('')}</div><div class="fcp-sec">Highlight</div><div class="fcp-row">${FMT_HL_COLORS.map(o=>`<button class="fcp-sw fcp-hl" onmousedown="event.preventDefault()" onclick="fmtSetColor('bg','${o.c}')" title="${o.l}" style="background:${o.c==='__none__'?'transparent':o.c}">${o.c==='__none__'?'⊘':'A'}</button>`).join('')}</div><div class="fcp-sec">Gradient</div><div class="fcp-row">${FMT_GRADIENTS.map(g=>`<button class="fcp-sw txt-grad txt-grad-${g.n}" onmousedown="event.preventDefault()" onclick="fmtSetGradient('${g.n}')" title="${g.l}">A</button>`).join('')}<button class="fcp-sw fcp-grad-x" onmousedown="event.preventDefault()" onclick="fmtClearGradient()" title="Remove gradient">⊘</button></div>`;
   pop.classList.add('open');
   const tb=document.getElementById('sel-toolbar'); const r=tb.getBoundingClientRect();
   const z=parseFloat(document.documentElement.style.zoom||'1')||1;
@@ -142,6 +155,35 @@ function fmtSetColor(kind,color){
     document.execCommand('styleWithCSS',false,true);
     if(!document.execCommand('hiliteColor',false,c)) document.execCommand('backColor',false,c);
   }
+  saveBlk(el.dataset.id, el.innerHTML);
+  fmtColorClose();
+}
+/* Wrap the selection in a gradient-text span (class-based; see FMT_GRADIENTS). */
+function fmtSetGradient(name){
+  const el=getSelectionBk(); const s=window.getSelection();
+  if(!el||!s||s.isCollapsed||!s.rangeCount){ fmtColorClose(); return; }
+  const range=s.getRangeAt(0);
+  try{
+    const frag=range.extractContents();
+    const span=document.createElement('span');
+    span.className='txt-grad txt-grad-'+name;
+    // Strip any inner colour/highlight/gradient so the new gradient actually shows.
+    span.appendChild(frag);
+    span.querySelectorAll('span').forEach(n=>{ n.style.color=''; n.style.background=''; n.style.webkitTextFillColor=''; n.classList.remove('txt-grad'); [...n.classList].forEach(c=>{ if(c.indexOf('txt-grad-')===0) n.classList.remove(c); }); });
+    range.insertNode(span);
+    s.removeAllRanges(); const nr=document.createRange(); nr.selectNodeContents(span); s.addRange(nr);
+  }catch(err){ fmtColorClose(); return; }
+  saveBlk(el.dataset.id, el.innerHTML);
+  fmtColorClose();
+}
+/* Remove gradient styling from any gradient span intersecting the selection. */
+function fmtClearGradient(){
+  const el=getSelectionBk(); const s=window.getSelection();
+  if(!el||!s.rangeCount){ fmtColorClose(); return; }
+  const range=s.getRangeAt(0);
+  el.querySelectorAll('span.txt-grad').forEach(sp=>{
+    if(range.intersectsNode(sp)){ const p=sp.parentNode; while(sp.firstChild) p.insertBefore(sp.firstChild, sp); p.removeChild(sp); }
+  });
   saveBlk(el.dataset.id, el.innerHTML);
   fmtColorClose();
 }

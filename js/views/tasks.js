@@ -74,15 +74,46 @@ function renderTasks(){
   const colKeys=order.filter(s=>groups[s]&&groups[s].length);
   if(groups[NO]&&groups[NO].length) colKeys.push(NO);
   const card=t=>`<div class="tk-card" onclick="calOpenRow('${t.tblId}','${t.rowId}')" title="Open task">
-      <div class="tk-card-title">${escHtml(t.title)}</div>
+      <button class="tk-card-del" onclick="event.stopPropagation();tkDeleteTask('${t.tblId}','${t.rowId}')" data-tip="Delete task">&#10005;</button>
+      <div class="tk-card-title">${escHtml(t.title)||'<span class="tk-mu">Untitled</span>'}</div>
       <div class="tk-card-meta"><span class="tk-board-dot" style="background:${t.boardColor}"></span>${escHtml(t.board)}</div>
     </div>`;
+  const canAdd=boards.some(b=>!b.hidden);
   board.innerHTML=colKeys.map(s=>{
     const label=s===NO?'No status':s;
     const dot=s===NO?'var(--mu)':(statusColor[s]||'var(--mu)');
+    const addBtn=canAdd?`<div class="tk-add" data-status="${escAttr(s===NO?'':s)}" onclick="tkAddPrompt(this)"><span class="tk-add-plus">&#43;</span> New task</div>`:'';
     return `<div class="tk-col">
       <div class="tk-col-h"><span class="tk-col-dot" style="background:${dot}"></span><span class="tk-col-nm">${escHtml(label)}</span><span class="tk-col-ct">${groups[s].length}</span></div>
-      <div class="tk-col-b">${groups[s].map(card).join('')}</div>
+      <div class="tk-col-b">${groups[s].map(card).join('')}${addBtn}</div>
     </div>`;
   }).join('');
+}
+/* ── Quick add / delete on the Tasks page ──
+   New tasks go into the first visible board, with the column's status applied.
+   (When several boards feed the page, the first visible one is the implicit home
+   for quick-adds — open the task to move it to another database if needed.) */
+function _primaryBoard(){ return taskBoards().find(b=>!b.hidden)||null; }
+function tkAddPrompt(el){
+  const status=el.getAttribute('data-status')||'';
+  el.innerHTML=`<input class="tk-add-input" placeholder="Task name, Enter to add…"
+    onkeydown="if(event.key==='Enter'){event.preventDefault();tkCreateTask('${escAttr(status)}',this.value);}else if(event.key==='Escape'){renderTasks();}"
+    onblur="if(!this.value.trim())renderTasks()">`;
+  el.querySelector('input').focus();
+}
+function tkCreateTask(status,title){
+  title=(title||'').trim();
+  const b=_primaryBoard(); if(!b){ renderTasks(); return; }
+  const tbl=b.tbl; const titleCol=tbl.columns&&tbl.columns[0]; const sc=taskStatusCol(tbl);
+  const cells={}; (tbl.columns||[]).forEach(c=>cells[c.id]='');
+  if(titleCol) cells[titleCol.id]=title;
+  if(sc&&status) cells[sc.id]=status;
+  tbl.rows=tbl.rows||[]; tbl.rows.push({id:mkId('r'),cells});
+  DB.saveTbl(tbl); renderTasks();
+  // keep adding: re-open the input in the same column for fast entry
+  setTimeout(()=>{ const a=[...document.querySelectorAll('.tk-add')].find(x=>(x.getAttribute('data-status')||'')===status); if(a) tkAddPrompt(a); },0);
+}
+function tkDeleteTask(tblId,rowId){
+  if(typeof idbDeleteRow==='function') idbDeleteRow(tblId,rowId);
+  renderTasks();
 }

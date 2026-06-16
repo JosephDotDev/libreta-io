@@ -83,6 +83,9 @@ function mkBkEl(blk){
     } else {
       row.innerHTML=gutter+`<div class="bk-wrap"><div class="bk-file-empty" onclick="openBlkFileInput('${blk.id}')"><span style="font-size:22px">📎</span><span>Click to upload a file</span></div></div>`;
     }
+  } else if(blk.type==='math'){
+    row.innerHTML=gutter+`<div class="bk-wrap"><div class="bk-math-wrap" data-id="${blk.id}"><div class="bk-math" data-id="${blk.id}" onclick="mathEdit('${blk.id}')"></div><textarea class="bk-math-src" data-id="${blk.id}" spellcheck="false" placeholder="LaTeX — e.g. E = mc^2   or   \\int_0^\\infty e^{-x}\\,dx" oninput="mathOnInput('${blk.id}',this.value)" onblur="mathBlur('${blk.id}')" style="display:none">${escHtml(blk.content||'')}</textarea></div></div>`;
+    if(typeof renderMathInto==='function') renderMathInto(row.querySelector('.bk-math'), blk.content);
   } else {
     row.innerHTML=gutter+`<div class="bk-wrap"><div class="bk" contenteditable="true" data-t="${blk.type}" data-id="${blk.id}" data-ph="${PH[blk.type]||''}" spellcheck="true">${blk.content}</div></div>`;
     const el=row.querySelector('.bk');
