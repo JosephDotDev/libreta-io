@@ -1,0 +1,50 @@
+/* ── PAGE SETTINGS (ribbon button + popover) + system-settings note ── */
+/* The old inline per-page width/size bar is gone — controls live in the menu. */
+.fmt-bar{display:none!important}
+
+/* ribbon button — only on document pages */
+.tp-pgset{display:none;align-items:center;justify-content:center;gap:6px;height:30px;padding:0 13px;border:1px solid var(--bd);border-radius:var(--r-md);background:transparent;color:var(--mu);cursor:pointer;font-family:var(--fm);font-size:12px;line-height:1;transition:border-color var(--t-fast),color var(--t-fast)}
+.tp-pgset:hover{color:var(--tx);border-color:var(--mu)}
+body[data-view="editor"] .tp-pgset,
+body[data-view="home"] .tp-pgset{display:inline-flex}
+/* Favorite star — to the left of the page-options menu, document pages only */
+.tp-fav{display:none;align-items:center;justify-content:center;height:30px;min-width:34px;padding:0 8px;border:1px solid var(--bd);border-radius:var(--r-md);background:transparent;color:var(--mu);cursor:pointer;font-size:15px;line-height:1;transition:border-color var(--t-fast),color var(--t-fast)}
+.tp-fav:hover{color:var(--tx);border-color:var(--mu)}
+.tp-fav.on{color:var(--go);border-color:var(--bd2)}
+body[data-view="editor"] .tp-fav{display:inline-flex}
+
+/* page-options popover: history button + property show/hide list */
+.ps-actbtn{width:100%;display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--bd);border-radius:var(--r-md);background:none;color:var(--tx);cursor:pointer;font-family:var(--fm);font-size:12px;transition:border-color var(--t-fast),background var(--t-fast)}
+.ps-actbtn:hover{border-color:var(--mu);background:var(--sur2)}
+.ps-actbtn.ps-danger{color:var(--re)}
+.ps-actbtn.ps-danger:hover{border-color:rgba(196,84,84,.5);background:rgba(196,84,84,.1)}
+.ps-proplist{display:flex;flex-direction:column;gap:3px;max-height:170px;overflow-y:auto}
+.ps-proprow{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 9px;border:none;border-radius:var(--r-md);background:none;color:var(--tx);cursor:pointer;font-family:var(--fm);font-size:12px;transition:background var(--t-fast)}
+.ps-proprow:hover{background:var(--sur2)}
+.ps-proprow.off{color:var(--mu)}
+.ps-propnm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ps-propeye{flex-shrink:0;opacity:.8}
+.ps-empty2{color:var(--mu);font-size:11px;padding:4px 9px}
+
+/* Page settings now render inside the unified Settings panel (#cfg-pane-page);
+   the .ps-* control styles below are shared by that pane. */
+.ps-hdr{font-size:9px;letter-spacing:var(--ls-label);text-transform:uppercase;color:var(--mu);padding:8px 8px 9px}
+.ps-empty{padding:18px 12px;color:var(--mu);font-size:12px;text-align:center}
+.ps-sec{padding:4px 8px 10px}
+.ps-lbl{font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:var(--mu);margin-bottom:7px}
+.ps-fgrp{font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--mu);opacity:.7;margin:6px 0 4px}
+.ps-fonts{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.ps-fgrp{grid-column:1/-1}
+.ps-font{padding:7px 9px;border:1px solid var(--bd);border-radius:var(--r-md);background:none;color:var(--tx);cursor:pointer;font-size:14px;text-align:left;transition:border-color var(--t-fast),background var(--t-fast)}
+.ps-font:hover{border-color:var(--mu)}
+.ps-font.on{border-color:var(--ac);background:var(--acs)}
+.ps-segrow{display:flex;gap:5px}
+.ps-seg{flex:1;padding:6px 4px;border:1px solid var(--bd);border-radius:var(--r-md);background:none;color:var(--mu);cursor:pointer;font-size:11px;font-family:var(--fm);transition:border-color var(--t-fast),color var(--t-fast),background var(--t-fast)}
+.ps-seg:hover{border-color:var(--mu);color:var(--tx)}
+.ps-seg.on{border-color:var(--ac);background:var(--acs);color:var(--ac)}
+/* Page-background swatches */
+.ps-bgrow{display:flex;flex-wrap:wrap;gap:6px}
+.ps-bg{width:30px;height:30px;border-radius:var(--r-md);border:2px solid var(--bd);cursor:pointer;background-size:cover;background-position:center;color:var(--mu);font-size:13px;display:flex;align-items:center;justify-content:center;padding:0;transition:transform var(--t-fast),border-color var(--t-fast)}
+.ps-bg:hover{transform:scale(1.07);border-color:var(--mu)}
+.ps-bg.on{border-color:var(--ac)}
+.ps-bg-none,.ps-bg-up{background:var(--sur2)}

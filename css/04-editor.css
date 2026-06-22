@@ -1,0 +1,196 @@
+/* ── EDITOR SHELL ────────────────────────────── */
+.ed-shell{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative}
+/* ── OUTLINE / SECTIONS rail (auto-appears on the right when the page has headings;
+      a collapsed strip of marks that expands to labels on hover) ── */
+.outline-panel{position:absolute;top:62px;right:10px;max-height:calc(100% - 96px);z-index:60;display:none}
+body.outline-on .outline-panel{display:block}
+.outline-inner{width:50px;max-height:calc(100vh / var(--zoom,1) - 180px);overflow:hidden;border:1px solid transparent;border-radius:var(--r-xl);
+  padding:10px 8px;transition:width var(--t-med) ease,background var(--t-med),border-color var(--t-med),box-shadow var(--t-med);animation:olIn var(--t-med) ease}
+@keyframes olIn{from{opacity:0;transform:translateX(10px)}to{opacity:1;transform:none}}
+.outline-panel:hover .outline-inner{width:226px;overflow-y:auto;background:color-mix(in srgb,var(--sur) 93%,transparent);backdrop-filter:blur(8px);border-color:var(--bd);box-shadow:0 18px 44px -20px rgba(0,0,0,.75)}
+.outline-hd{font-family:var(--fm);font-size:10px;letter-spacing:var(--ls-label);text-transform:uppercase;color:var(--mu);padding:2px 8px 9px;opacity:0;height:0;overflow:hidden;transition:opacity var(--t-med)}
+.outline-panel:hover .outline-hd{opacity:1;height:auto}
+.outline-list{display:flex;flex-direction:column;gap:3px}
+.outline-it{display:flex;align-items:center;gap:10px;justify-content:flex-end;width:100%;background:none;border:none;cursor:pointer;padding:4px 6px;border-radius:var(--r-md);transition:background var(--t-fast)}
+.outline-panel:hover .outline-it{justify-content:flex-start}
+.outline-panel:hover .outline-it:hover{background:var(--sur2)}
+.ol-bar{flex-shrink:0;height:2.5px;border-radius:var(--r-pill);background:var(--bd2);transition:background var(--t-fast)}
+.outline-it.lvl1 .ol-bar{width:24px}
+.outline-it.lvl2 .ol-bar{width:17px}
+.outline-it.lvl3 .ol-bar{width:11px}
+.ol-label{font-family:var(--fm);font-size:12.5px;color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:0;opacity:0;transition:max-width var(--t-med) ease,opacity var(--t-med)}
+.outline-panel:hover .ol-label{max-width:170px;opacity:1}
+.outline-it:hover .ol-bar,.outline-it.active .ol-bar{background:var(--ac)}
+.outline-it:hover .ol-label{color:var(--tx)}
+.outline-it.active .ol-label{color:var(--ac)}
+.outline-it.lvl2{padding-left:14px}
+.outline-it.lvl3{padding-left:26px}
+.ol-label .outline-mu{color:var(--mu);font-style:italic;opacity:.6}
+.bk{scroll-margin-top:64px}   /* leave room for the sticky props bar when jumping to a section */
+.bk-flash{animation:bkFlash .9s ease}
+@keyframes bkFlash{0%,100%{background:transparent}28%{background:var(--acs)}}
+/* The rail floats over the centered text column; hide it where it'd crowd the page. */
+@media(max-width:1180px){.outline-panel{display:none!important}}
+.props-bar{padding:0 60px;border-bottom:1px solid var(--bd);flex-shrink:0;min-height:40px;position:sticky;top:0;z-index:6;background:var(--bg)}
+.ed-shell.scrolled .props-bar{box-shadow:0 6px 16px -8px rgba(0,0,0,.6)}
+/* block (not flex) so the inline-props grid and the full-width text-prop column
+   stack vertically instead of the text box landing after "+ Add property". */
+.props-row{display:block;padding:8px 0}
+/* ── Properties: stacked name-above-value units (Notion style) ── */
+.props-grid{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:flex-end}
+.props-text-col{display:flex;flex-direction:column;gap:10px;margin-top:12px;width:100%}
+.prop-unit{display:flex;flex-direction:column;gap:4px;min-width:0;max-width:260px}
+.prop-unit.prop-text-unit{max-width:none;width:100%}
+.prop-name{font-size:10px;letter-spacing:.05em;color:var(--mu);cursor:pointer;border-radius:var(--r-sm);padding:1px 5px;align-self:flex-start;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:background var(--t-fast),color var(--t-fast)}
+.prop-name:hover{background:var(--sur2);color:var(--tx)}
+.prop-val{cursor:pointer;color:var(--tx)}
+.prop-val-pill{display:inline-flex;align-items:center;max-width:260px;background:var(--sur);border:1px solid var(--bd);border-radius:var(--r-xl);padding:4px 12px;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:border-color var(--t-fast)}
+.prop-val-pill:hover{border-color:var(--mu)}
+.prop-val-text{background:var(--sur);border:1px solid var(--bd);border-radius:var(--r-lg);padding:7px 12px;font-size:13px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere;cursor:text;transition:border-color var(--t-fast)}
+.prop-val-text:hover{border-color:var(--mu)}
+.prop-empty{color:var(--mu)}
+.prop-inline-edit{font-family:var(--fm);font-size:12px;background:var(--bg);border:1px solid var(--ac);border-radius:var(--r-lg);color:var(--tx);padding:4px 10px;outline:none;width:240px;max-width:100%}
+.prop-inline-text{width:100%;min-height:56px;resize:vertical;line-height:1.5}
+.prop-add{align-self:flex-end;display:inline-flex;align-items:center;gap:4px;color:var(--mu);background:none;border:1px dashed var(--bd);border-radius:var(--r-xl);padding:4px 12px;font-size:12px;cursor:pointer;transition:border-color var(--t-fast),color var(--t-fast)}
+.prop-add:hover{border-color:var(--mu);color:var(--tx)}
+.ed-title-row{padding:46px 60px 8px;flex-shrink:0}
+.ed-title{width:100%;font-family:var(--fs);font-size:34px;font-weight:600;background:none;border:none;outline:none;color:var(--tx);padding:0;letter-spacing:.01em;line-height:1.18;resize:none;overflow:hidden;display:block;white-space:pre-wrap;overflow-wrap:anywhere}
+.ed-title::placeholder{color:var(--mu)}
+.blocks-sc{flex:1;overflow-y:auto;padding-bottom:120px}
+/* ── PAGE BACKGROUND (Craft-style centered card) ──
+   When a page has a background image/gradient (doc.meta.bg), the header + body become
+   one centered, frosted card floating over the full-bleed backdrop on .blocks-sc. */
+#view-editor.has-pagebg .ed-title-row,
+#view-editor.has-pagebg .props-bar,
+#view-editor.has-pagebg .blocks-ct{
+  max-width:792px;margin-left:auto;margin-right:auto;
+  background:color-mix(in srgb,var(--bg) 90%,transparent);
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+  border-color:transparent;
+}
+#view-editor.has-pagebg .ed-title-row{margin-top:48px;padding:38px 40px 8px;border-radius:var(--r-2xl) var(--r-2xl) 0 0;box-shadow:0 -1px 0 rgba(0,0,0,.04)}
+#view-editor.has-pagebg .props-bar{padding-left:40px;padding-right:40px}
+#view-editor.has-pagebg .blocks-ct{padding:18px 40px 56px;border-radius:0 0 var(--r-2xl) var(--r-2xl);box-shadow:0 26px 70px rgba(0,0,0,.30)}
+/* Generous top padding (real CSS space, not an empty block) so writing starts
+   well clear of the properties bar. */
+.blocks-ct{max-width:720px;margin:0 auto;padding:72px 0 8px}
+
+/* ── BLOCK SYSTEM ────────────────────────────── */
+.bk-row{display:flex;align-items:flex-start;position:relative;padding:3px 0}
+.bk-row.drag-over{box-shadow:inset 0 2px 0 var(--ac)}
+.bk-row.dragging{opacity:.3}
+/* Multi-block selection (drag across rows / grab from the margin).
+   The highlight tints the .bk-wrap (the content box, so it hugs the text and skips
+   the wide left gutter) using ONLY background/border-radius — never padding, which
+   reflowed the text before. The fade is on the .bk-wrap base rule below so it eases
+   in AND out instead of snapping. The actual selected rule lives after .bk-bged so
+   it still shows on colour-coded blocks. */
+.ms-dragging{user-select:none;-webkit-user-select:none;cursor:default}
+/* Marquee lasso drawn when a selection drag begins in the page margin. */
+.ms-marquee{position:fixed;z-index:120;border:1px solid var(--ac);background:color-mix(in srgb,var(--ac) 14%,transparent);border-radius:var(--r-sm);pointer-events:none;display:none}
+.ms-marquee.on{display:block}
+body.bk-ptr-dragging{cursor:grabbing!important;user-select:none}
+body.bk-ptr-dragging .bk,body.bk-ptr-dragging .gb.drag{cursor:grabbing!important}
+.bk-gut{width:56px;flex-shrink:0;display:flex;align-items:flex-start;justify-content:flex-end;gap:2px;padding-right:8px;padding-top:5px;opacity:0;transition:opacity var(--t-med)}
+.bk-row:hover .bk-gut{opacity:1}
+.gb{display:flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:var(--r-xs);background:none;border:none;color:var(--mu);font-size:12px;cursor:pointer;transition:background var(--t-fast),color var(--t-fast);flex-shrink:0}
+.gb:hover{background:var(--bd2);color:var(--tx)}
+.gb.drag{cursor:grab;font-size:15px}
+.gb.drag:active{cursor:grabbing}
+/* isolation:isolate makes .bk-wrap its own stacking context so the selection-tint
+   ::before (z-index:-1) is confined to this box. Without it, inside the side-peek
+   (a fixed, z-indexed panel with an opaque background) the negative-z tint painted
+   BEHIND the panel and was invisible — the marquee showed but rows never lit up. */
+.bk-wrap{flex:1;min-width:0;padding-right:36px;position:relative;isolation:isolate}
+/* Selection tint is drawn by a pseudo-element so its left/right insets are set
+   independently of the text box (no reflow). The wrap has 36px right padding and
+   0 left, which made the highlight lopsided; the box reaches 18px into the left
+   gutter and stops 18px short of the right edge → ~18px breathing room each side.
+   Always present at opacity 0 so it can fade in AND out. */
+.bk-wrap::before{content:'';position:absolute;z-index:-1;top:0;bottom:0;left:-18px;right:18px;background:var(--acs);border-radius:var(--r-md);opacity:0;transition:opacity var(--t-med) ease;pointer-events:none}
+/* Block colour coding — text colour and a soft background tint (16% of the chosen
+   base colour, so it sits gently on any theme). Child-combinators keep the colour
+   on the block's OWN text, not on nested children (toggle bodies, columns). */
+.bk-row.bk-colored > .bk-wrap > .bk,
+.bk-row.bk-colored > .bk-wrap > .bk-callout > .bk,
+.bk-row.bk-colored > .bk-wrap > .bk-todo > .bk,
+.bk-row.bk-colored > .bk-wrap > .bk-toggle-head > .bk{ color:var(--bk-text) }
+.bk-row.bk-bged > .bk-wrap{ background:color-mix(in srgb, var(--bk-bg) 16%, transparent); border-radius:var(--r-md); padding-top:3px; padding-bottom:3px; padding-left:10px; margin-left:-10px }
+/* Reveal the selection tint (see .bk-wrap::before). */
+.bk-row.bk-row-sel > .bk-wrap::before{ opacity:1 }
+/* Base block */
+.bk{outline:none;width:100%;min-height:1.65em;padding:2px 0;line-height:1.75;font-family:var(--fs);font-size:18px;font-weight:300;caret-color:var(--ac);color:var(--tx);white-space:pre-wrap;word-wrap:break-word}
+/* Placeholder uses ::after so it never collides with list markers (which use ::before) */
+.bk:focus:empty::after{content:attr(data-ph);color:var(--mu);pointer-events:none;font-style:normal}
+/* Block types */
+.bk[data-t="h1"]{font-size:2.25em;font-weight:var(--hw1);line-height:1.2;padding:10px 0 4px}
+.bk[data-t="h2"]{font-size:1.75em;font-weight:var(--hw2);line-height:1.3;padding:8px 0 3px;border-bottom:1px solid var(--bd)}
+.bk[data-t="h3"]{font-size:1.4em;font-weight:var(--hw3);line-height:1.4;padding:5px 0 2px}
+.bk[data-t="quote"]{border-left:3px solid var(--ac);padding:4px 0 4px 16px;color:var(--mu);font-style:italic}
+.bk[data-t="code"]{font-family:var(--fm);font-size:13px;background:var(--sur);border:1px solid var(--bd);border-radius:var(--r-md);padding:14px 16px;color:var(--go);line-height:1.6;white-space:pre-wrap}
+.bk[data-t="bullet"]{padding-left:20px;position:relative}
+.bk[data-t="bullet"]::before{content:'•';position:absolute;left:4px;color:var(--mu);pointer-events:none;user-select:none}
+.bk[data-t="numbered"]{padding-left:28px;position:relative}
+.bk[data-t="numbered"]::before{content:attr(data-n)'.';position:absolute;left:0;color:var(--mu);pointer-events:none;user-select:none;min-width:22px;text-align:right;padding-right:5px}
+.bk-div{width:100%;border:none;border-top:1px solid var(--bd2);margin:10px 0;pointer-events:none}
+/* Inline styles inside blocks */
+.bk strong,.bk b{font-weight:600}
+.bk em,.bk i{font-style:italic}
+.bk u{text-decoration:underline;text-underline-offset:2px}
+.bk code{font-family:var(--fm);font-size:.85em;background:var(--sur);border:1px solid var(--bd);padding:1px 5px;border-radius:var(--r-xs);color:var(--go)}
+.bk del,.bk s,.bk strike{text-decoration:line-through;opacity:.6}
+.bk a{color:var(--ac);text-decoration:underline;text-underline-offset:3px}
+/* ── ALPHABETICAL LIST ── */
+.bk[data-t="alpha"]{padding-left:28px;position:relative}
+.bk[data-t="alpha"]::before{content:attr(data-n)'.';position:absolute;left:0;color:var(--mu);pointer-events:none;user-select:none;min-width:22px;text-align:right;padding-right:5px}
+/* ── TO-DO BLOCK ── */
+.bk-todo{display:flex;align-items:flex-start;gap:9px}
+.bk-todo-check{flex-shrink:0;width:18px;height:18px;margin-top:6px;border:1.5px solid var(--bd2);border-radius:var(--r-sm);background:none;cursor:pointer;color:#fff;font-size:12px;line-height:1;display:flex;align-items:center;justify-content:center;transition:background var(--t-fast),border-color var(--t-fast)}
+.bk-todo-check:hover{border-color:var(--mu)}
+.bk-todo-check.on{background:var(--ac);border-color:var(--ac)}
+.bk-todo .bk{flex:1;min-width:0}
+.bk-todo.done .bk{text-decoration:line-through;color:var(--mu)}
+/* ── TOGGLE BLOCK ── */
+.bk-toggle-head{display:flex;align-items:flex-start;gap:6px}
+.bk-toggle-arrow{flex-shrink:0;width:20px;height:20px;margin-top:5px;border:none;background:none;color:var(--mu);cursor:pointer;font-size:12px;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;transition:transform var(--t-med),background var(--t-fast),color var(--t-fast)}
+.bk-toggle-arrow:hover{background:var(--bd2);color:var(--tx)}
+.bk-toggle-arrow.collapsed{transform:rotate(-90deg)}
+.bk-toggle-head .bk{flex:1;min-width:0;font-weight:400}
+/* Toggle headers can adopt heading sizes (H1–H3) */
+.bk-toggle-head .bk[data-hsize="h1"]{font-size:1.9em;font-weight:var(--hw1);line-height:1.2}
+.bk-toggle-head .bk[data-hsize="h2"]{font-size:1.55em;font-weight:var(--hw2);line-height:1.3}
+.bk-toggle-head .bk[data-hsize="h3"]{font-size:1.25em;font-weight:var(--hw3);line-height:1.4}
+/* Nudge the arrow down so it lines up with the larger text baseline */
+.bk-toggle-head:has(.bk[data-hsize="h1"]) .bk-toggle-arrow{margin-top:11px}
+.bk-toggle-head:has(.bk[data-hsize="h2"]) .bk-toggle-arrow{margin-top:9px}
+.bk-toggle-head:has(.bk[data-hsize="h3"]) .bk-toggle-arrow{margin-top:7px}
+.bk-toggle-body{margin-left:14px;padding-left:10px;border-left:1px solid var(--bd)}
+.bk-toggle-body .bk-gut{width:40px}
+/* ── SELECTION FORMAT TOOLBAR ── */
+.sel-toolbar{position:fixed;z-index:900;transform:translateX(-50%);background:var(--sur);border:1px solid var(--bd2);border-radius:var(--r-md);box-shadow:var(--elev-1);display:none;padding:3px;gap:1px}
+.sel-toolbar.open{display:flex}
+.sel-toolbar button{background:none;border:none;color:var(--tx);cursor:pointer;width:30px;height:28px;border-radius:var(--r-sm);font-family:var(--fm);font-size:13px;display:flex;align-items:center;justify-content:center;transition:background var(--t-fast),color var(--t-fast)}
+.sel-toolbar button:hover{background:var(--sur2)}
+.sel-toolbar button.on{background:var(--acs);color:var(--ac)}
+.sel-toolbar button i{color:var(--go)}
+.sel-color-a{border-bottom:2px solid var(--go);line-height:1;padding-bottom:1px}
+.fmt-color-pop{position:fixed;z-index:901;background:var(--sur);border:1px solid var(--bd2);border-radius:var(--r-lg);box-shadow:var(--elev-2);padding:8px 9px;display:none;width:188px}
+.fmt-color-pop.open{display:block}
+.fcp-sec{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--mu);margin:2px 2px 5px;font-family:var(--fm)}
+.fcp-sec:not(:first-child){margin-top:9px}
+.fcp-row{display:flex;flex-wrap:wrap;gap:5px}
+.fcp-sw{width:26px;height:26px;border:1px solid var(--bd2);border-radius:var(--r-md);background:var(--bg);cursor:pointer;font-family:var(--fs);font-size:15px;font-weight:600;display:flex;align-items:center;justify-content:center;transition:transform var(--t-fast),border-color var(--t-fast)}
+.fcp-sw:hover{transform:scale(1.1);border-color:var(--mu)}
+.fcp-hl{color:var(--tx);font-weight:500}
+.fcp-grad-x{color:var(--mu);font-weight:500}
+/* ── GRADIENT TEXT (Craft-style) — applied via class so it survives sanitize ── */
+.txt-grad{-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;background-size:120% 100%;background-repeat:no-repeat;font-weight:600}
+.txt-grad-sunset{background-image:linear-gradient(95deg,#E8A44E,#C45454 45%,#C454B4)}
+.txt-grad-ember {background-image:linear-gradient(95deg,#C45454,#E8A44E 55%,#C9A84C)}
+.txt-grad-gold  {background-image:linear-gradient(95deg,#C9A84C,#C47D32 55%,#8C6A3E)}
+.txt-grad-forest{background-image:linear-gradient(95deg,#8BAD52,#4E9E72 55%,#5E9BAA)}
+.txt-grad-ocean {background-image:linear-gradient(95deg,#4E9EAA,#4E7EC4 55%,#7E6FBE)}
+.txt-grad-grape {background-image:linear-gradient(95deg,#7E6FBE,#C454B4 55%,#C45454)}
+.txt-grad-candy {background-image:linear-gradient(95deg,#C454B4,#E8A44E)}
+.txt-grad-aurora{background-image:linear-gradient(95deg,#4E9E72,#4E7EC4 40%,#7E6FBE 70%,#C454B4)}
+

@@ -1,0 +1,47 @@
+/* ── TOKENS ─────────────────────────────────── */
+:root{
+  /* Parra Blocks palette — cooler near-black shell so the saturated section
+     colours (rose / blue / lime / gold) read as vivid panels, Parra-style.
+     These are the static fallbacks; applyCfg() in config.js overrides them
+     live from the active theme + any per-key user customisation. */
+  --bg:#0D0C0F;--sur:#17161B;--sur2:#1E1C22;
+  --bd:#221F2A;--bd2:#2E2A38;
+  --tx:#E2DCD4;--mu:#706870;
+  /* Card titles: ~85% of the text brightness, blended toward the card surface so a bold
+     title complements the dark background instead of reading as a stark block. */
+  --card-title:color-mix(in srgb, var(--tx) 85%, var(--sur2));
+  /* Section identity colours — each app area owns a hue (Parra panel system).
+     --ac (rose) = primary/Home, --c-docs (blue) = Documents, --gr (lime) = Tasks,
+     --go (gold) = Calendar, --pu (purple) = Overview. All user-overridable. */
+  --ac:#E05572;--acs:rgba(224,85,114,.12);
+  --c-docs:#4D88E8;
+  --go:#D4A83C;--gr:#5DC27A;--pu:#7E6FBE;--re:#C45454;
+  --fs:'Cormorant',Georgia,serif;
+  --fn:'DM Sans',system-ui,sans-serif;
+  --fm:'DM Mono',monospace;
+  /* Shared label letter-spacing — was .12–.16em scattered across files; one token now. */
+  --ls-label:.13em;
+  /* Heading weights — overridden per-typeface in applyCfg() so each font reads as "bold" correctly */
+  --hw1:700;--hw2:600;--hw3:600;
+  /* ── Border-radius scale ── anchored to the dominant in-use values; near-neighbours
+     snap to the nearest step (≤2px shift). Use --r-pill for chips, 50% stays literal for circles. */
+  --r-xs:3px;--r-sm:4px;--r-md:6px;--r-lg:8px;--r-xl:12px;--r-2xl:16px;--r-pill:999px;
+  /* ── Elevation ── three tiers: raised (cards/chips), menus (popovers/dropdowns),
+     modals (dialogs/large overlays). Directional/accent/ring shadows stay bespoke. */
+  --elev-1:0 6px 20px rgba(0,0,0,.5);
+  --elev-2:0 12px 34px rgba(0,0,0,.55);
+  --elev-3:0 24px 70px rgba(0,0,0,.6);
+  /* ── Transition durations ── */
+  --t-fast:.1s;--t-med:.15s;--t-slow:.22s;
+}
+/* ── RESET ───────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+/* Bind the app shell to the *visible* viewport (100dvh excludes the mobile
+   address bar) and divide by the UI-scale zoom (--zoom, set in applyCfg) so the
+   shell isn't scaled taller than the screen — which clipped the sidebar foot /
+   collapse button. Falls back to height:100% above where dvh isn't supported. */
+body{font-family:var(--fm);font-size:13px;background:var(--bg);color:var(--tx);display:flex;overflow:hidden;height:calc(100dvh / var(--zoom, 1))}
+button{font-family:inherit;cursor:pointer}
+input{font-family:inherit}
+

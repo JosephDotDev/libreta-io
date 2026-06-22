@@ -1,0 +1,80 @@
+/* ── SIDEBAR: search, page tree, footer ── */
+.sb{position:relative}
+.sb-mid{position:relative}
+
+/* search box */
+.sb-search-wrap{display:flex;align-items:center;gap:7px;margin:0 12px 8px;padding:6px 9px;background:var(--sur2);border:1px solid var(--bd);border-radius:var(--r-md);transition:border-color var(--t-fast)}
+.sb-search-wrap:focus-within{border-color:var(--ac)}
+.sb-search-ico{color:var(--mu);font-size:13px;flex-shrink:0;line-height:1}
+.sb-search-input{flex:1;min-width:0;background:none;border:none;outline:none;color:var(--tx);font-family:var(--fm);font-size:12px}
+.sb-search-input::placeholder{color:var(--mu)}
+.sb-search-x{display:none;background:none;border:none;color:var(--mu);cursor:pointer;font-size:11px;padding:0 2px;flex-shrink:0}
+.sb-search-x:hover{color:var(--tx)}
+.sb-search-results{position:absolute;inset:0;background:var(--sur);z-index:6;overflow-y:auto;padding:6px}
+.sb-sr-it{display:flex;align-items:flex-start;gap:9px;padding:8px 9px;border-radius:var(--r-md);cursor:pointer;transition:background var(--t-fast)}
+.sb-sr-it:hover{background:var(--sur2)}
+.sb-sr-ico{width:15px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;color:var(--mu);margin-top:1px}
+.sb-sr-ico svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:1.4}
+.sb-sr-tx{min-width:0;flex:1}
+.sb-sr-nm{font-size:12px;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sb-sr-snip{font-size:10px;color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.sb-sr-empty{padding:24px 12px;text-align:center;color:var(--mu);font-size:11px}
+
+/* page-tree section header (+ button) */
+.sb-tree-hdr{display:flex!important;align-items:center;justify-content:space-between}
+.sb-tree-hdr-l{display:inline-flex;align-items:center;gap:6px;flex:1;min-width:0}
+.sb-add-btn{background:none;border:none;color:var(--mu);cursor:pointer;font-size:15px;line-height:1;width:20px;height:20px;border-radius:var(--r-sm);display:inline-flex;align-items:center;justify-content:center;opacity:0;transition:opacity var(--t-fast),background var(--t-fast),color var(--t-fast)}
+.sb-list-hdr:hover .sb-add-btn{opacity:1}
+.sb-add-btn:hover{background:var(--bd);color:var(--tx)}
+
+/* tree rows */
+.sb-tree{display:block}
+.sb-tree-empty{color:var(--mu);font-size:11px;padding:8px 12px;line-height:1.6}
+.sb-tree-row{display:flex;align-items:center;gap:2px;border-radius:var(--r-sm);position:relative}
+.sb-tree-row:hover{background:var(--bd)}
+.sb-tree-chev,.sb-tree-spacer{width:15px;height:22px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;color:var(--mu);font-size:9px;cursor:pointer;border-radius:var(--r-xs)}
+.sb-tree-chev{transition:transform var(--t-med),color var(--t-fast)}
+.sb-tree-chev:hover{color:var(--tx);background:var(--bd2)}
+.sb-tree-chev.collapsed{transform:rotate(-90deg)}
+.sb-tree-it{display:flex;align-items:center;gap:7px;padding:5px 4px;color:var(--mu);font-size:13px;font-weight:500;cursor:pointer;border:none;background:none;flex:1;min-width:0;text-align:left;transition:color var(--t-fast)}
+.sb-tree-row:hover .sb-tree-it{color:var(--tx)}
+/* The page tree lives under Documents, so its active row + drop targets carry
+   the Documents blue identity rather than the global rose accent. */
+.sb-tree-it.active{color:var(--tx);font-weight:500}
+.sb-tree-row:has(.sb-tree-it.active){background:color-mix(in srgb,var(--c-docs) 13%,transparent);box-shadow:inset 2px 0 0 var(--c-docs)}
+.sb-tree-it.dim{opacity:.55}
+.sb-tree-act{opacity:0;background:none;border:none;color:var(--mu);cursor:pointer;width:20px;height:20px;flex-shrink:0;border-radius:var(--r-sm);font-size:13px;line-height:1;display:inline-flex;align-items:center;justify-content:center;transition:opacity var(--t-fast),background var(--t-fast),color var(--t-fast)}
+.sb-tree-row:hover .sb-tree-act{opacity:.85}
+.sb-tree-act:hover{background:var(--bd2);color:var(--tx);opacity:1}
+
+/* drag + drop indicators */
+.sb-tree-row.sb-dragging{opacity:.4}
+.sb-tree-row.sb-drop-before::before,.sb-tree-row.sb-drop-after::after{content:'';position:absolute;left:14px;right:6px;height:2px;background:var(--c-docs);border-radius:var(--r-pill)}
+.sb-tree-row.sb-drop-before::before{top:-1px}
+.sb-tree-row.sb-drop-after::after{bottom:-1px}
+.sb-tree-row.sb-drop-inside{box-shadow:inset 0 0 0 1.5px var(--c-docs);background:color-mix(in srgb,var(--c-docs) 13%,transparent)}
+.sb-tree.sb-tree-root-drop{box-shadow:inset 0 0 0 1.5px var(--bd2);border-radius:var(--r-md)}
+
+/* per-page menu / move picker */
+.sb-menu{position:fixed;z-index:1300;display:none;background:var(--sur);border:1px solid var(--bd2);border-radius:var(--r-lg);box-shadow:var(--elev-2);padding:5px;min-width:190px;max-height:60vh;overflow-y:auto;font-family:var(--fm)}
+.sb-menu-hdr{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--mu);padding:6px 9px 5px}
+.sb-menu-it{display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:var(--r-sm);font-size:12px;color:var(--tx);cursor:pointer;white-space:nowrap}
+.sb-menu-it:hover{background:var(--sur2)}
+.sb-menu-it .sb-menu-i{width:16px;flex-shrink:0;text-align:center;color:var(--mu);font-size:13px}
+.sb-menu-it.danger{color:var(--re)}
+.sb-menu-it.danger .sb-menu-i{color:var(--re)}
+.sb-menu-sep{height:1px;background:var(--bd);margin:4px 6px}
+.sb-menu-empty{padding:8px 10px;color:var(--mu);font-size:11px}
+
+/* footer (settings + collapse) */
+.sb-foot{flex-shrink:0;padding:8px 10px;border-top:1px solid var(--bd);display:flex;flex-direction:column;gap:2px}
+.sb-foot-btn{display:flex;align-items:center;gap:9px;padding:8px 10px;border:none;background:none;color:var(--mu);font-family:var(--fm);font-size:11px;border-radius:var(--r-sm);cursor:pointer;width:100%;text-align:left;transition:background var(--t-fast),color var(--t-fast)}
+.sb-foot-btn:hover{background:var(--bd);color:var(--tx)}
+.sb-foot-ico{font-size:14px;width:16px;flex-shrink:0;text-align:center}
+
+/* collapsed sidebar */
+body.sb-collapsed .sb-search-wrap{display:none}
+body.sb-collapsed .sb-search-results{display:none!important}
+body.sb-collapsed .sb-foot-lbl{display:none}
+body.sb-collapsed .sb-foot{align-items:center}
+body.sb-collapsed .sb-foot-btn{justify-content:center;gap:0;width:auto;padding:9px}

@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Libreta — a personal workspace, built around you</title>
+  <meta name="description" content="Libreta is a highly customizable personal workspace for individuals. Write in blocks, build databases, and make it entirely yours. Local-first, private, and refreshingly free of AI.">
+  <meta name="theme-color" content="#0D0C0F">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="favicon.svg">
+  <!-- Open Graph / social -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Libreta — a personal workspace, built around you">
+  <meta property="og:description" content="A highly customizable workspace for individuals. Blocks, databases, and deep customization — local-first, private, and free of AI.">
+  <meta property="og:image" content="libreta-banner.png">
+  <meta name="twitter:card" content="libreta-banner.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      /* Cool near-black shell. Blue leads; rose / lime / gold / teal are equal
+         "pops". No single dominant hue, no gradients — flat ink + colour blocks. */
+      --bg:#0D0C0F; --sur:#17161B; --sur2:#1E1C22; --bd:#221F2A; --bd2:#2E2A38;
+      --tx:#E2DCD4; --mu:#857F8C;
+      --bl:#4D88E8; --ac:#E05572; --gr:#5DC27A; --go:#D4A83C; --tl:#46B5A6; --pu:#9A7DD6; --re:#C45454;
+      --fs:'Cormorant',Georgia,serif;
+      --fn:'DM Sans',system-ui,sans-serif;
+      --fm:'DM Mono',monospace;
+      --maxw:1120px;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth}
+    body{font-family:var(--fn); background:var(--bg); color:var(--tx); line-height:1.6; -webkit-font-smoothing:antialiased; overflow-x:hidden}
+    a{color:inherit;text-decoration:none}
+    ::selection{background:rgba(77,136,232,.22);color:#fff}
+    .wrap{max-width:var(--maxw); margin:0 auto; padding:0 24px; position:relative; z-index:1}
+    svg{display:block}
+    /* Line-icon defaults — every icon is a stroke drawing that inherits its colour
+       from the parent, so any element can be tinted with a section colour. */
+    .ic-svg{width:1em; height:1em; stroke:currentColor; fill:none; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round}
+
+    /* ── NAV ─────────────────────────────────────────── */
+    header.nav{position:sticky; top:0; z-index:50; backdrop-filter:blur(10px);
+      background:rgba(13,12,15,.72); border-bottom:1px solid transparent; transition:border-color .2s,background .2s}
+    header.nav.scrolled{border-color:var(--bd); background:rgba(13,12,15,.9)}
+    .nav-in{display:flex; align-items:center; justify-content:space-between; height:64px}
+    .brand{font-family:var(--fs); font-size:27px; font-weight:600; letter-spacing:.01em}
+    .brand i{font-style:normal; color:var(--bl)}
+    .nav-links{display:flex; align-items:center; gap:8px}
+    .nav-links a.txt{color:var(--mu); font-size:14px; padding:9px 14px; border-radius:7px; transition:color .15s}
+    .nav-links a.txt:hover{color:var(--tx)}
+
+    .btn{display:inline-flex; align-items:center; justify-content:center; gap:8px;
+      font-family:var(--fn); font-weight:500; font-size:14px; border:1px solid transparent;
+      padding:10px 18px; border-radius:9px; cursor:pointer; transition:transform .12s,background .15s,border-color .15s,box-shadow .15s; white-space:nowrap}
+    .btn:active{transform:translateY(1px)}
+    .btn .ic-svg{width:16px;height:16px;stroke-width:2.1}
+    .btn-primary{background:var(--bl); color:#06122a; box-shadow:0 6px 22px -10px rgba(77,136,232,.75)}
+    .btn-primary:hover{background:#5f97ea; box-shadow:0 10px 30px -10px rgba(77,136,232,.85)}
+    .btn-ghost{background:transparent; color:var(--tx); border-color:var(--bd2)}
+    .btn-ghost:hover{border-color:var(--mu); background:var(--sur)}
+    .btn-lg{padding:14px 26px; font-size:15.5px; border-radius:11px}
+
+    /* ── HERO ────────────────────────────────────────── */
+    .hero{padding:84px 0 40px; text-align:center; position:relative; overflow:hidden}
+    /* Flat ink swooshes behind the hero — no gradients, just brush shapes. */
+    .hero-swoosh{position:absolute; inset:0; width:100%; height:100%; z-index:0; pointer-events:none}
+    .eyebrow{display:inline-flex; align-items:center; gap:10px; font-family:var(--fm);
+      font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--bl);
+      background:rgba(77,136,232,.12); border:1px solid rgba(77,136,232,.28); padding:7px 15px; border-radius:100px; margin-bottom:28px}
+    .eyebrow .dot{width:6px; height:6px; border-radius:50%; background:var(--bl)}
+    h1.hero-h{font-family:var(--fs); font-weight:500; font-size:clamp(42px,6.4vw,76px);
+      line-height:1.04; letter-spacing:-.01em; margin:0 auto 22px; max-width:14ch}
+    h1.hero-h .ink{position:relative; display:inline-block; color:var(--bl)}
+    h1.hero-h .ink .uline{position:absolute; left:-2%; bottom:-.16em; width:104%; height:.2em}
+    .hero-sub{font-size:clamp(17px,2.1vw,20px); color:#b9b1c0; max-width:60ch; margin:0 auto 36px; font-weight:300}
+    .hero-cta{display:flex; gap:14px; justify-content:center; flex-wrap:wrap}
+    .hero-note{margin-top:18px; font-size:13px; color:var(--mu); font-family:var(--fm)}
+
+    /* ── APP MOCKUP (hero) ───────────────────────────── */
+    .mock-stage{margin:56px auto 0; max-width:1000px; position:relative}
+    .mk-window{background:var(--sur); border:1px solid var(--bd2); border-radius:16px; overflow:hidden;
+      box-shadow:0 40px 90px -30px rgba(0,0,0,.8), 0 0 0 1px rgba(255,255,255,.02) inset}
+    .mk-bar{display:flex; align-items:center; gap:8px; padding:13px 16px; border-bottom:1px solid var(--bd); background:var(--sur2)}
+    .mk-dot{width:11px; height:11px; border-radius:50%; background:var(--bd2)}
+    .mk-bar .mk-url{margin-left:14px; font-family:var(--fm); font-size:11.5px; color:var(--mu);
+      background:var(--bg); border:1px solid var(--bd); padding:5px 14px; border-radius:7px; flex:1; max-width:280px}
+    .mk-body{display:flex; min-height:430px; text-align:left}
+    /* sidebar */
+    .mk-side{width:210px; flex-shrink:0; background:var(--sur2); border-right:1px solid var(--bd); padding:16px 12px; display:flex; flex-direction:column; gap:5px}
+    .mk-logo{font-family:var(--fs); font-size:19px; font-weight:600; padding:2px 8px 12px}
+    .mk-logo i{color:var(--bl);font-style:normal}
+    .mk-search{display:flex; align-items:center; gap:8px; font-family:var(--fm); font-size:11px; color:var(--mu); background:var(--bg); border:1px solid var(--bd); border-radius:7px; padding:7px 10px; margin-bottom:8px}
+    .mk-search .ic-svg{width:13px;height:13px}
+    .mk-nav{display:flex; align-items:center; gap:9px; padding:7px 9px; border-radius:7px; font-size:13px; color:#bdb6c4}
+    .mk-nav .ic{display:inline-flex; color:var(--mu)}
+    .mk-nav .ic .ic-svg{width:15px;height:15px}
+    .mk-nav.on{background:rgba(77,136,232,.13); color:var(--tx)}
+    .mk-nav.on .ic{color:var(--bl)}
+    .mk-nav.sub{padding-left:24px; font-size:12.5px; color:var(--mu)}
+    .mk-nav.sub .ic .ic-svg{width:12px;height:12px}
+    /* page */
+    .mk-page{flex:1; min-width:0; display:flex; flex-direction:column}
+    /* Flat colour-blocked cover — blue panel with a section-colour swoosh, no gradient. */
+    .mk-cover{height:96px; background:var(--bl); position:relative; overflow:hidden}
+    .mk-cover svg{position:absolute; inset:0; width:100%; height:100%}
+    .mk-page-in{padding:0 26px 24px}
+    .mk-icon{width:54px; height:54px; border-radius:13px; background:var(--sur); border:1px solid var(--bd2);
+      display:flex; align-items:center; justify-content:center; color:var(--bl); margin:-27px 0 14px; box-shadow:0 8px 20px -10px rgba(0,0,0,.7)}
+    .mk-icon .ic-svg{width:26px;height:26px;stroke-width:1.6}
+    .mk-title{font-family:var(--fs); font-size:26px; font-weight:600; margin-bottom:12px}
+    .mk-props{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:18px}
+    .mk-chip{font-family:var(--fm); font-size:10.5px; padding:4px 10px; border-radius:100px; border:1px solid var(--bd2); color:var(--mu); display:inline-flex; align-items:center; gap:6px}
+    .mk-chip .pdot{width:6px;height:6px;border-radius:50%}
+    .mk-chip.s-blue{color:var(--bl); border-color:rgba(77,136,232,.4); background:rgba(77,136,232,.12)}
+    .mk-chip.s-lime{color:var(--gr); border-color:rgba(93,194,122,.4); background:rgba(93,194,122,.12)}
+    .mk-callout{display:flex; gap:11px; align-items:flex-start; background:rgba(212,168,60,.1); border:1px solid rgba(212,168,60,.22); border-left:3px solid var(--go); border-radius:9px; padding:13px 15px; margin:16px 0; color:var(--go)}
+    .mk-callout .ic-svg{width:18px;height:18px;flex-shrink:0}
+    .mk-callout .cl{flex:1; display:flex; flex-direction:column; gap:7px; padding-top:2px}
+    .mk-line{height:9px; border-radius:5px; background:var(--bd2); margin:11px 0; opacity:.7}
+    .mk-h{height:13px; width:60%; border-radius:5px; background:var(--bd2); margin:14px 0; opacity:.85}
+    .mk-todo{display:flex; align-items:center; gap:11px; margin:10px 0}
+    .mk-box{width:16px; height:16px; border-radius:5px; border:1.5px solid var(--mu); flex-shrink:0}
+    .mk-box.on{background:var(--gr); border-color:var(--gr); position:relative}
+    .mk-box.on::after{content:'✓'; color:#0c0b08; font-size:11px; position:absolute; inset:0; display:flex; align-items:center; justify-content:center}
+
+    /* ── SECTIONS ────────────────────────────────────── */
+    section{padding:72px 0; position:relative}
+    .sec-head{text-align:center; max-width:60ch; margin:0 auto 52px}
+    .kicker{display:inline-flex; align-items:center; gap:9px; font-family:var(--fm); font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:var(--bl); margin-bottom:16px}
+    .kicker::before{content:''; width:22px; height:2px; border-radius:2px; background:var(--bl)}
+    h2{font-family:var(--fs); font-weight:500; font-size:clamp(30px,4.4vw,46px); line-height:1.1; letter-spacing:-.01em; margin-bottom:16px}
+    h2 em{font-style:italic; color:var(--bl); position:relative}
+    .sec-head p{color:#b1a9bb; font-size:17px; font-weight:300}
+
+    /* philosophy strip — three flat colour-blocked cells, a pop each */
+    .philo{border-top:1px solid var(--bd); border-bottom:1px solid var(--bd); background:var(--sur)}
+    .philo-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--bd)}
+    .philo-cell{background:var(--bg); padding:40px 30px; text-align:center; position:relative; overflow:hidden}
+    .philo-cell .pic{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;color:var(--c);background:color-mix(in srgb,var(--c) 13%,transparent);border:1px solid color-mix(in srgb,var(--c) 26%,transparent)}
+    .philo-cell .pic .ic-svg{width:24px;height:24px}
+    .ph-swoosh{position:absolute; width:230px; height:230px; opacity:.4; pointer-events:none}
+    .philo-cell:nth-child(1) .ph-swoosh{right:6px; top:0; transform:rotate(8deg)}
+    .philo-cell:nth-child(2) .ph-swoosh{left:6px; bottom:0; transform:rotate(184deg)}
+    .philo-cell:nth-child(3) .ph-swoosh{right:6px; bottom:0; transform:rotate(176deg)}
+    .philo-cell .big{font-family:var(--fs); font-size:34px; color:var(--c); margin-bottom:8px; font-weight:600}
+    .philo-cell h3{font-size:17px; font-weight:600; margin-bottom:7px}
+    .philo-cell p{color:var(--mu); font-size:14.5px; font-weight:300}
+
+    /* alternating feature rows */
+    .feat{display:grid; grid-template-columns:1fr 1fr; gap:60px; align-items:center; margin-bottom:96px}
+    .feat:last-child{margin-bottom:0}
+    .feat.rev .feat-copy{order:2}
+    .feat-copy h3{font-family:var(--fs); font-weight:500; font-size:30px; margin-bottom:14px; line-height:1.15}
+    .feat-copy h3 i{font-style:italic; color:var(--c,var(--bl))}
+    .feat-copy p{color:#b1a9bb; font-size:16px; font-weight:300; margin-bottom:18px}
+    .feat-list{list-style:none; display:flex; flex-direction:column; gap:11px}
+    .feat-list li{display:flex; gap:11px; align-items:flex-start; font-size:14.5px; color:#cbc3d2}
+    .feat-list li .tick{color:var(--c,var(--bl)); flex-shrink:0; margin-top:3px; display:inline-flex}
+    .feat-list li .tick .ic-svg{width:15px;height:15px;stroke-width:2.4}
+    .feat-vis{position:relative; background:var(--sur); border:1px solid var(--bd); border-radius:16px; padding:24px; min-height:280px;
+      display:flex; flex-direction:column; box-shadow:0 24px 60px -36px rgba(0,0,0,.8); overflow:hidden}
+    /* Each card's swoosh sits in a different corner at a different angle, so the
+       motif reads as dynamic rather than a repeated stamp. */
+    .feat-vis .vis-swoosh{position:absolute; width:300px; height:300px; opacity:.55; pointer-events:none}
+    .vis-swoosh.vs-tr{right:6px; top:-6px; transform:rotate(8deg)}
+    .vis-swoosh.vs-bl{left:6px; bottom:-6px; transform:rotate(184deg)}
+    .vis-swoosh.vs-br{right:0; bottom:-10px; transform:rotate(176deg); width:340px; height:340px}
+
+    /* feature visual: blocks demo */
+    .vis-thumbs{display:flex; gap:11px; margin-top:8px}
+    .vis-thumb{flex:1; background:var(--sur2); border:1px solid var(--bd); border-radius:9px; height:64px; display:flex; align-items:center; justify-content:center; color:var(--bl)}
+    .vis-thumb.t2{color:var(--ac)}
+    .vis-thumb .ic-svg{width:24px;height:24px}
+
+    /* view-tabs mockup */
+    .vtabs{display:flex; gap:6px; margin-bottom:18px; flex-wrap:wrap}
+    .vtab{display:inline-flex; align-items:center; gap:6px; font-family:var(--fm); font-size:11.5px; color:var(--mu); padding:6px 11px; border-radius:7px; border:1px solid var(--bd)}
+    .vtab .ic-svg{width:13px;height:13px}
+    .vtab.on{background:rgba(77,136,232,.13); color:var(--bl); border-color:rgba(77,136,232,.4)}
+    /* mini table */
+    .mtab{border:1px solid var(--bd); border-radius:10px; overflow:hidden}
+    .mtr{display:grid; grid-template-columns:1.6fr 1fr 1fr; border-bottom:1px solid var(--bd)}
+    .mtr:last-child{border-bottom:none}
+    .mtr.head{background:var(--sur2)}
+    .mtd{padding:10px 13px; font-size:12.5px; color:#c3bbd2; border-right:1px solid var(--bd); display:flex; align-items:center; gap:7px}
+    .mtd:last-child{border-right:none}
+    .mtd .ic-svg{width:14px;height:14px;color:var(--mu)}
+    .mtr.head .mtd{font-family:var(--fm); font-size:10.5px; text-transform:uppercase; letter-spacing:.08em; color:var(--mu)}
+    .pill{font-family:var(--fm); font-size:10px; padding:2px 9px; border-radius:100px}
+    .pill.g{color:var(--gr); background:rgba(93,194,122,.14)}
+    .pill.b{color:var(--bl); background:rgba(77,136,232,.14)}
+    .pill.t{color:var(--tl); background:rgba(70,181,166,.14)}
+    .pill.y{color:var(--go); background:rgba(212,168,60,.14)}
+
+    /* customization mockup */
+    .swatches{display:flex; gap:9px; margin-bottom:18px; flex-wrap:wrap}
+    .sw{width:30px; height:30px; border-radius:9px; border:2px solid var(--bd2)}
+    .sw.on{border-color:var(--tx); transform:scale(1.06)}
+    .theme-rows{display:flex; flex-direction:column; gap:10px}
+    .trow{display:flex; align-items:center; justify-content:space-between; background:var(--sur2); border:1px solid var(--bd); border-radius:9px; padding:11px 14px; font-size:13px; color:#c3bbd2}
+    .trow .toggle{width:34px; height:19px; border-radius:100px; background:var(--bd2); position:relative}
+    .trow .toggle.on{background:var(--bl)}
+    .trow .toggle::after{content:''; position:absolute; top:2px; left:2px; width:15px; height:15px; border-radius:50%; background:var(--tx); transition:.2s}
+    .trow .toggle.on::after{left:17px; background:#06122a}
+    .fontpick{display:flex; gap:8px; margin-bottom:14px}
+    .fp{flex:1; text-align:center; border:1px solid var(--bd); border-radius:8px; padding:9px; font-size:18px; color:#cbc3d2}
+    .fp.on{border-color:var(--bl); color:var(--tx); background:rgba(77,136,232,.12)}
+
+    /* ── FEATURE GRID ────────────────────────────────── */
+    .grid{display:grid; grid-template-columns:repeat(3,1fr); gap:16px}
+    .card{position:relative; background:var(--sur); border:1px solid var(--bd); border-radius:14px; padding:26px; transition:border-color .18s,transform .18s,background .18s; overflow:hidden}
+    .card::after{content:''; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--c); opacity:0; transition:opacity .18s}
+    .card:hover{border-color:var(--bd2); transform:translateY(-3px); background:var(--sur2)}
+    .card:hover::after{opacity:1}
+    .card .ci{width:42px; height:42px; border-radius:11px; color:var(--c);
+      background:color-mix(in srgb,var(--c) 13%,transparent); border:1px solid color-mix(in srgb,var(--c) 25%,transparent);
+      display:flex; align-items:center; justify-content:center; margin-bottom:16px}
+    .card .ci .ic-svg{width:21px;height:21px}
+    /* A swoosh in a different corner/angle on every card so the grid feels lively. */
+    .card-swoosh{position:absolute; width:200px; height:200px; opacity:.34; pointer-events:none; transition:opacity .18s,transform .18s}
+    .card:hover .card-swoosh{opacity:.6}
+    .card:nth-child(1) .card-swoosh{right:4px; top:-4px; transform:rotate(8deg)}
+    .card:nth-child(2) .card-swoosh{left:4px; bottom:-4px; transform:rotate(184deg)}
+    .card:nth-child(3) .card-swoosh{right:4px; bottom:-2px; transform:rotate(176deg)}
+    .card:nth-child(4) .card-swoosh{left:4px; top:-2px; transform:rotate(-8deg)}
+    .card:nth-child(5) .card-swoosh{right:2px; top:-6px; transform:rotate(6deg); width:225px; height:225px}
+    .card:nth-child(6) .card-swoosh{left:4px; bottom:-4px; transform:rotate(180deg)}
+    /* Keep decorative swooshes strictly behind their content for legibility, and let
+       their rounded caps render fully (no clipping at the box edge). */
+    .card-swoosh,.ph-swoosh,.vis-swoosh{z-index:0; overflow:visible}
+    .card .ci,.card h4,.card p{position:relative; z-index:1}
+    .philo-cell .pic,.philo-cell .big,.philo-cell h3,.philo-cell p{position:relative; z-index:1}
+    .feat-vis > *:not(.vis-swoosh){position:relative; z-index:1}
+    .card h4{font-size:16.5px; font-weight:600; margin-bottom:8px}
+    .card p{color:var(--mu); font-size:14px; font-weight:300; line-height:1.55}
+
+    /* ── CTA BAND ────────────────────────────────────── */
+    .cta{position:relative; text-align:center; border:1px solid var(--bd2); border-radius:22px; padding:64px 30px; background:var(--sur); margin:0 0 8px; overflow:hidden}
+    .cta-swoosh{position:absolute; inset:0; width:100%; height:100%; pointer-events:none; opacity:.6}
+    .cta h2{margin-bottom:14px; position:relative}
+    .cta p{color:#b1a9bb; font-size:17px; font-weight:300; margin-bottom:30px; max-width:48ch; margin-left:auto; margin-right:auto; position:relative}
+    .cta .hero-cta{position:relative}
+
+    /* ── FOOTER ──────────────────────────────────────── */
+    footer{border-top:1px solid var(--bd); padding:40px 0 56px; margin-top:72px}
+    .foot-in{display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:18px}
+    .foot-in .brand{font-size:22px}
+    .foot-links{display:flex; gap:22px; font-size:13.5px; color:var(--mu)}
+    .foot-links a:hover{color:var(--tx)}
+    .foot-note{color:var(--mu); font-size:12.5px; font-family:var(--fm); margin-top:20px}
+
+    /* ── RESPONSIVE ──────────────────────────────────── */
+    @media(max-width:860px){
+      .feat{grid-template-columns:1fr; gap:30px; margin-bottom:64px}
+      .feat.rev .feat-copy{order:0}
+      .philo-grid{grid-template-columns:1fr}
+      .grid{grid-template-columns:1fr 1fr}
+      .mk-side{display:none}
+    }
+    @media(max-width:560px){
+      .hero{padding:56px 0 28px}
+      .nav-links a.txt{display:none}
+      .grid{grid-template-columns:1fr}
+      .mk-body{min-height:320px}
+      .cta{padding:48px 22px}
+    }
+    @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+  </style>
+</head>
+<body>
+  <!-- Reusable line-icon symbols (drawn once, referenced via <use>) -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9.5"/></symbol>
+      <symbol id="i-book" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="1.5"/><path d="M9 3v18"/></symbol>
+      <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.4"/></symbol>
+      <symbol id="i-chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol>
+      <symbol id="i-bookopen" viewBox="0 0 24 24"><path d="M12 6c-2-1.4-5-1.4-8 0v12c3-1.4 6-1.4 8 0 2-1.4 5-1.4 8 0V6c-3-1.4-6-1.4-8 0z"/><path d="M12 6v12"/></symbol>
+      <symbol id="i-plane" viewBox="0 0 24 24"><path d="M21 3 3 10.5l7 2.5 2.5 7z"/><path d="M21 3 10 14"/></symbol>
+      <symbol id="i-utensils" viewBox="0 0 24 24"><path d="M5 3v6a2 2 0 0 0 4 0V3"/><path d="M7 9v12"/><path d="M16 3c-1.4 0-2.5 2-2.5 5s1.1 4 2.5 4 2.5-1 2.5-4-1.1-5-2.5-5z"/><path d="M16 12v9"/></symbol>
+      <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4-4"/></symbol>
+      <symbol id="i-bulb" viewBox="0 0 24 24"><path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 3a6 6 0 0 0-4 10.5c.7.7 1 1.2 1 2.5h6c0-1.3.3-1.8 1-2.5A6 6 0 0 0 12 3z"/></symbol>
+      <symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="M21 16l-5-5L5 20"/></symbol>
+      <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></symbol>
+      <symbol id="i-doc" viewBox="0 0 24 24"><path d="M5 3h9l5 5v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M14 3v5h5"/></symbol>
+      <symbol id="i-table" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="1.5"/><path d="M3 9.5h18M9 9.5V20"/></symbol>
+      <symbol id="i-board" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="1.5"/><path d="M9 4v16M15 4v16"/></symbol>
+      <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="1.5"/><path d="M3 9.5h18M8 2v4M16 2v4"/></symbol>
+      <symbol id="i-timeline" viewBox="0 0 24 24"><rect x="4" y="5" width="9" height="3" rx="1.5"/><rect x="9" y="11" width="9" height="3" rx="1.5"/><rect x="6" y="17" width="7" height="3" rx="1.5"/></symbol>
+      <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
+      <symbol id="i-cloud" viewBox="0 0 24 24"><path d="M7 18a4 4 0 0 1-.5-8 5.5 5.5 0 0 1 10.6 1.4A3.5 3.5 0 0 1 17 18z"/></symbol>
+      <symbol id="i-tree" viewBox="0 0 24 24"><rect x="4" y="3" width="11" height="14" rx="1.5"/><path d="M9 21h11V9"/></symbol>
+      <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></symbol>
+      <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+      <symbol id="i-check" viewBox="0 0 24 24"><path d="M4 12.5 9 17.5 20 6.5"/></symbol>
+      <symbol id="i-tasks" viewBox="0 0 24 24"><path d="M4 6l1.6 1.6L9 4.2"/><path d="M4 13l1.6 1.6L9 11.2"/><path d="M4 20l1.6 1.6L9 18.2"/><path d="M12 6h8M12 13h8M12 20h8"/></symbol>
+    </defs>
+  </svg>
+
+  <!-- NAV -->
+  <header class="nav" id="nav">
+    <div class="wrap nav-in">
+      <a class="brand" href="#top">Libre<i>ta</i></a>
+      <nav class="nav-links">
+        <a class="txt" href="#features">Features</a>
+        <a class="txt" href="#customize">Make it yours</a>
+        <a class="txt" href="index.html?signin=1">Sign in</a>
+        <a class="btn btn-primary" href="index.html?signup=1">Get started</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="top">
+    <!-- HERO -->
+    <section class="hero">
+      <!-- Ink-swoosh backdrop: blue lead with rose / lime / gold pops, all flat. -->
+      <svg class="hero-swoosh" viewBox="0 0 1200 600" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        <path d="M-40 150 C 260 70, 620 70, 880 140 C 1010 175, 1140 165, 1260 120" fill="none" stroke="#4D88E8" stroke-width="46" stroke-linecap="round" opacity="0.15"/>
+        <path d="M-60 470 C 220 540, 560 540, 820 470" fill="none" stroke="#E05572" stroke-width="30" stroke-linecap="round" opacity="0.12"/>
+        <path d="M980 290 C 1070 270, 1140 312, 1166 392" fill="none" stroke="#D4A83C" stroke-width="22" stroke-linecap="round" opacity="0.15"/>
+        <path d="M-40 360 C 120 320, 300 330, 420 380" fill="none" stroke="#5DC27A" stroke-width="20" stroke-linecap="round" opacity="0.12"/>
+        <path d="M620 -10 C 700 40, 760 40, 860 8" fill="none" stroke="#46B5A6" stroke-width="18" stroke-linecap="round" opacity="0.12"/>
+        <circle cx="1080" cy="470" r="60" fill="#5DC27A" opacity="0.10"/>
+        <circle cx="120" cy="90" r="34" fill="#46B5A6" opacity="0.13"/>
+        <circle cx="940" cy="120" r="20" fill="#E05572" opacity="0.12"/>
+      </svg>
+      <div class="wrap">
+        <span class="eyebrow"><span class="dot"></span>Your Personal workspace · No AI · No Data Collection</span>
+        <h1 class="hero-h">A workspace that bends to <span class="ink">how you think.<svg class="uline" viewBox="0 0 260 18" preserveAspectRatio="none" aria-hidden="true"><path d="M3,11 C 60,4 170,4 252,9 C 254,9 255,11 252,12 C 170,8 60,9 6,15 C 3,15 1,13 3,11 Z" fill="#4D88E8"/></svg></span></h1>
+        <p class="hero-sub">Libreta is a personal notebook, planner, and database. Endlessly customizable, built for one person instead of a whole team, and refreshingly free of "AI agents". Your pages, your structure, your rules.</p>
+        <div class="hero-cta">
+          <a class="btn btn-primary btn-lg" href="index.html?signup=1">Start for free <svg class="ic-svg"><use href="#i-arrow"/></svg></a>
+          <a class="btn btn-ghost btn-lg" href="#features">See what's inside</a>
+        </div>
+        <div class="hero-note">No credit card · Works offline · Syncs across your devices</div>
+
+        <!-- HERO APP MOCKUP -->
+        <div class="mock-stage">
+          <div class="mk-window">
+            <div class="mk-bar">
+              <span class="mk-dot"></span><span class="mk-dot"></span><span class="mk-dot"></span>
+              <span class="mk-url">libreta.io / my workspace</span>
+            </div>
+            <div class="mk-body">
+              <aside class="mk-side">
+                <div class="mk-logo">Libre<i>ta</i></div>
+                <div class="mk-search"><svg class="ic-svg"><use href="#i-search"/></svg>Search…</div>
+                <div class="mk-nav on"><span class="ic"><svg class="ic-svg"><use href="#i-home"/></svg></span>Home</div>
+                <div class="mk-nav"><span class="ic"><svg class="ic-svg"><use href="#i-book"/></svg></span>Journal</div>
+                <div class="mk-nav"><span class="ic"><svg class="ic-svg"><use href="#i-target"/></svg></span>Goals 2026</div>
+                <div class="mk-nav sub"><span class="ic"><svg class="ic-svg"><use href="#i-chev"/></svg></span>Q3 plan</div>
+                <div class="mk-nav"><span class="ic"><svg class="ic-svg"><use href="#i-bookopen"/></svg></span>Reading list</div>
+                <div class="mk-nav"><span class="ic"><svg class="ic-svg"><use href="#i-plane"/></svg></span>Trips</div>
+                <div class="mk-nav"><span class="ic"><svg class="ic-svg"><use href="#i-utensils"/></svg></span>Recipes</div>
+              </aside>
+              <div class="mk-page">
+                <div class="mk-cover">
+                  <svg viewBox="0 0 600 96" preserveAspectRatio="none" aria-hidden="true"><path d="M-20 70 C 160 30, 360 30, 520 64 C 580 76, 620 70, 660 56" fill="none" stroke="#9ec1f5" stroke-width="24" stroke-linecap="round" opacity="0.4"/><circle cx="520" cy="30" r="30" fill="#fff" opacity="0.12"/></svg>
+                </div>
+                <div class="mk-page-in">
+                  <div class="mk-icon"><svg class="ic-svg"><use href="#i-target"/></svg></div>
+                  <div class="mk-title">Goals for 2026</div>
+                  <div class="mk-props">
+                    <span class="mk-chip s-blue"><span class="pdot" style="background:var(--bl)"></span>In progress</span>
+                    <span class="mk-chip s-lime">Updated today</span>
+                    <span class="mk-chip">12 pages</span>
+                  </div>
+                  <div class="mk-callout">
+                    <svg class="ic-svg"><use href="#i-bulb"/></svg>
+                    <span class="cl"><span class="mk-line" style="width:90%;margin:0"></span><span class="mk-line" style="width:60%;margin:0"></span></span>
+                  </div>
+                  <div class="mk-h"></div>
+                  <div class="mk-todo"><span class="mk-box on"></span><span class="mk-line" style="width:48%;margin:0;opacity:.45"></span></div>
+                  <div class="mk-todo"><span class="mk-box on"></span><span class="mk-line" style="width:38%;margin:0;opacity:.45"></span></div>
+                  <div class="mk-todo"><span class="mk-box"></span><span class="mk-line" style="width:55%;margin:0"></span></div>
+                  <div class="mk-todo"><span class="mk-box"></span><span class="mk-line" style="width:44%;margin:0"></span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PHILOSOPHY -->
+    <section class="philo" style="padding:0">
+      <div class="philo-grid">
+        <div class="philo-cell" style="--c:var(--bl)">
+          <svg class="ph-swoosh" viewBox="0 0 170 170" aria-hidden="true"><path d="M18 66 C 58 28, 112 28, 152 64" fill="none" style="stroke:var(--c)" stroke-width="20" stroke-linecap="round"/></svg>
+          <div class="pic"><svg class="ic-svg"><use href="#i-bulb"/></svg></div>
+          <div class="big">No AI</div>
+          <h3>Your thoughts, not a model's</h3>
+          <p>No autocomplete looking over your shoulder. Just you and a blank page.</p>
+        </div>
+        <div class="philo-cell" style="--c:var(--ac)">
+          <svg class="ph-swoosh" viewBox="0 0 170 170" aria-hidden="true"><path d="M18 66 C 58 28, 112 28, 152 64" fill="none" style="stroke:var(--c)" stroke-width="20" stroke-linecap="round"/></svg>
+          <div class="pic"><svg class="ic-svg"><use href="#i-home"/></svg></div>
+          <div class="big">For You</div>
+          <h3>Built for individuals</h3>
+          <p>No seats, no comments, no shared-cursor noise. A calm space that's entirely yours.</p>
+        </div>
+        <div class="philo-cell" style="--c:var(--gr)">
+          <svg class="ph-swoosh" viewBox="0 0 170 170" aria-hidden="true"><path d="M18 66 C 58 28, 112 28, 152 64" fill="none" style="stroke:var(--c)" stroke-width="20" stroke-linecap="round"/></svg>
+          <div class="pic"><svg class="ic-svg"><use href="#i-lock"/></svg></div>
+          <div class="big">Private</div>
+          <h3>Local-first &amp; secure</h3>
+          <p>Everything lives on your device first, then syncs. Work offline, on a plane, anywhere.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section id="features">
+      <div class="wrap">
+        <div class="sec-head">
+          <div class="kicker">Everything you need</div>
+          <h2>One canvas for <em>your whole life</em></h2>
+          <p>Notes, plans, trackers, collections — all built from the same flexible blocks and databases.</p>
+        </div>
+
+        <!-- Feature 1: blocks -->
+        <div class="feat" style="--c:var(--bl)">
+          <div class="feat-copy">
+            <h3>Write in blocks that become <i>anything</i></h3>
+            <p>Every line is a block you can reshape — text, headings, to-dos, toggles, callouts, code, images, embeds, and nested sub-pages. Drag to reorder, stack side-by-side, or fold it all away.</p>
+            <ul class="feat-list">
+              <li><span class="tick"><svg class="ic-svg"><use href="#i-check"/></svg></span> Rich text, lists, quotes, code &amp; dividers</li>
+              <li><span class="tick"><svg class="ic-svg"><use href="#i-check"/></svg></span> Image covers, carousels, files &amp; video embeds</li>
+              <li><span class="tick"><svg class="ic-svg"><use href="#i-check"/></svg></span> Multi-column layouts and collapsible toggles</li>
+              <li><span class="tick"><svg class="ic-svg"><use href="#i-check"/></svg></span> Nested pages with breadcrumb navigation</li>
+            </ul>
+          </div>
+          <div class="feat-vis">
+            <svg class="vis-swoosh vs-tr" viewBox="0 0 200 200" aria-hidden="true"><path d="M18 82 C 72 36, 128 36, 182 78" fill="none" stroke="#4D88E8" stroke-width="26" stroke-linecap="round" opacity="0.55"/></svg>
+            <div class="mk-callout" style="margin-top:0"><svg class="ic-svg"><use href="#i-bulb"/></svg><span class="cl"><span class="mk-line" style="width:88%;margin:0"></span><span class="mk-line" style="width:54%;margin:0"></span></span></div>
+            <div class="mk-h" style="width:50%"></div>
+            <div class="mk-todo"><span class="mk-box on"></span><span class="mk-line" style="width:50%;margin:0;opacity:.45"></span></div>
+            <div class="mk-todo"><span class="mk-box"></span><span class="mk-line" style="width:62%;margin:0"></span></div>
+            <div class="vis-thumbs">
+              <div class="vis-thumb"><svg class="ic-svg"><use href="#i-image"/></svg></div>
+              <div class="vis-thumb t2"><svg class="ic-svg"><use href="#i-play"/></svg></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Feature 2: databases -->
+        <div class="feat rev" style="--c:var(--gr)">
+          <div class="feat-copy">
+            <h3>Databases, shown your way</h3>
+            <p>Turn any collection into a database and flip between views without copying a thing. The same data as a table, a Kanban board, a calendar, or a timeline — filtered, sorted, and grouped however you like.</p>
+            <ul class="feat-list">
+              <li><span class="tick"><svg class="ic-svg"><use href="#i-check"/></svg></span> Table, Board, Calendar &amp; Timeline views</li>
+              <li><span class="tick"><svg class="ic-svg"><use href="#i-check"/></svg></span> Custom properties: status, select, date, text &amp; more</li>
+              <li><span class="tick"><svg class="ic-svg"><use href="#i-check"/></svg></span> Filter, sort, group &amp; colour-code at a glance</li>
+              <li><span class="tick"><svg class="ic-svg"><use href="#i-check"/></svg></span> Every row opens as a full page</li>
+            </ul>
+          </div>
+          <div class="feat-vis">
+            <svg class="vis-swoosh vs-bl" viewBox="0 0 200 200" aria-hidden="true"><path d="M18 78 C 68 34, 132 44, 182 82" fill="none" stroke="#5DC27A" stroke-width="24" stroke-linecap="round" opacity="0.55"/></svg>
+            <div class="vtabs">
+              <span class="vtab on"><svg class="ic-svg"><use href="#i-table"/></svg>Table</span><span class="vtab"><svg class="ic-svg"><use href="#i-board"/></svg>Board</span><span class="vtab"><svg class="ic-svg"><use href="#i-cal"/></svg>Calendar</span><span class="vtab"><svg class="ic-svg"><use href="#i-timeline"/></svg>Timeline</span>
+            </div>
+            <div class="mtab">
+              <div class="mtr head"><div class="mtd">Name</div><div class="mtd">Status</div><div class="mtd">Tag</div></div>
+              <div class="mtr"><div class="mtd"><svg class="ic-svg"><use href="#i-book"/></svg>Morning pages</div><div class="mtd"><span class="pill g">Done</span></div><div class="mtd"><span class="pill b">Daily</span></div></div>
+              <div class="mtr"><div class="mtd"><svg class="ic-svg"><use href="#i-target"/></svg>Run a 10k</div><div class="mtd"><span class="pill b">Active</span></div><div class="mtd"><span class="pill t">Health</span></div></div>
+              <div class="mtr"><div class="mtd"><svg class="ic-svg"><use href="#i-bookopen"/></svg>Finish novel</div><div class="mtd"><span class="pill y">Soon</span></div><div class="mtd"><span class="pill t">Read</span></div></div>
+              <div class="mtr"><div class="mtd"><svg class="ic-svg"><use href="#i-plane"/></svg>Plan Lisbon</div><div class="mtd"><span class="pill b">Active</span></div><div class="mtd"><span class="pill g">Travel</span></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Feature 3: customization -->
+        <div class="feat" id="customize" style="--c:var(--ac)">
+          <div class="feat-copy">
+            <h3>Make it unmistakably yours</h3>
+            <p>This is where Libreta pulls ahead. Reshape the home page, pick themes and accent colours, swap typefaces per page, and even flip on playful visual filters. Your workspace should feel like <em>yours</em> — so it does.</p>
+            <ul class="feat-list">
+              <li><span class="tick"><svg class="ic-svg"><use href="#i-check"/></svg></span> Custom themes, accent colours &amp; hex picker</li>
+              <li><span class="tick"><svg class="ic-svg"><use href="#i-check"/></svg></span> Per-page typefaces and page width</li>
+              <li><span class="tick"><svg class="ic-svg"><use href="#i-check"/></svg></span> Drag-to-arrange, collapsible home sections</li>
+              <li><span class="tick"><svg class="ic-svg"><use href="#i-check"/></svg></span> Just-for-fun filters: Pixel art, CRT &amp; B&amp;W</li>
+            </ul>
+          </div>
+          <div class="feat-vis">
+            <svg class="vis-swoosh vs-br" viewBox="0 0 200 200" aria-hidden="true"><path d="M18 86 C 74 40, 150 40, 182 80" fill="none" stroke="#E05572" stroke-width="28" stroke-linecap="round" opacity="0.55"/></svg>
+            <div class="swatches">
+              <span class="sw on" style="background:#4D88E8"></span>
+              <span class="sw" style="background:#E05572"></span>
+              <span class="sw" style="background:#5DC27A"></span>
+              <span class="sw" style="background:#D4A83C"></span>
+              <span class="sw" style="background:#46B5A6"></span>
+              <span class="sw" style="background:#9A7DD6"></span>
+            </div>
+            <div class="fontpick">
+              <div class="fp on" style="font-family:var(--fs)">Aa</div>
+              <div class="fp" style="font-family:var(--fn)">Aa</div>
+              <div class="fp" style="font-family:var(--fm)">Aa</div>
+            </div>
+            <div class="theme-rows">
+              <div class="trow">Dark theme<span class="toggle on"></span></div>
+              <div class="trow">Full-width pages<span class="toggle"></span></div>
+              <div class="trow">CRT visual filter<span class="toggle"></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FEATURE GRID -->
+    <section style="padding-top:0">
+      <div class="wrap">
+        <div class="sec-head">
+          <div class="kicker">And the details that matter</div>
+          <h2>Thoughtful where it counts</h2>
+        </div>
+        <div class="grid">
+          <div class="card" style="--c:var(--bl)"><svg class="card-swoosh" viewBox="0 0 135 135" aria-hidden="true"><path d="M16 58 C 48 26, 86 26, 118 56" fill="none" style="stroke:var(--c)" stroke-width="17" stroke-linecap="round"/></svg><div class="ci"><svg class="ic-svg"><use href="#i-clock"/></svg></div><h4>Version history</h4><p>Automatic page snapshots you can preview and restore — your words are never one mistake away from gone.</p></div>
+          <div class="card" style="--c:var(--tl)"><svg class="card-swoosh" viewBox="0 0 135 135" aria-hidden="true"><path d="M16 58 C 48 26, 86 26, 118 56" fill="none" style="stroke:var(--c)" stroke-width="17" stroke-linecap="round"/></svg><div class="ci"><svg class="ic-svg"><use href="#i-cloud"/></svg></div><h4>Cross-device sync</h4><p>Sign in once and your workspace follows you. Edit on a laptop, pick up on a phone, no setup.</p></div>
+          <div class="card" style="--c:var(--go)"><svg class="card-swoosh" viewBox="0 0 135 135" aria-hidden="true"><path d="M16 58 C 48 26, 86 26, 118 56" fill="none" style="stroke:var(--c)" stroke-width="17" stroke-linecap="round"/></svg><div class="ci"><svg class="ic-svg"><use href="#i-plane"/></svg></div><h4>Works offline</h4><p>Local-first by design. Keep writing on a plane or a dead-zone train — it syncs when you're back.</p></div>
+          <div class="card" style="--c:var(--ac)"><svg class="card-swoosh" viewBox="0 0 135 135" aria-hidden="true"><path d="M16 58 C 48 26, 86 26, 118 56" fill="none" style="stroke:var(--c)" stroke-width="17" stroke-linecap="round"/></svg><div class="ci"><svg class="ic-svg"><use href="#i-tree"/></svg></div><h4>Nested pages</h4><p>Build a hierarchy as deep as you like, with a drag-to-organize sidebar tree and breadcrumbs.</p></div>
+          <div class="card" style="--c:var(--gr)"><svg class="card-swoosh" viewBox="0 0 135 135" aria-hidden="true"><path d="M16 58 C 48 26, 86 26, 118 56" fill="none" style="stroke:var(--c)" stroke-width="17" stroke-linecap="round"/></svg><div class="ci"><svg class="ic-svg"><use href="#i-search"/></svg></div><h4>Instant search</h4><p>⌘K finds any page by title or content in milliseconds, ranked so the right one is on top.</p></div>
+          <div class="card" style="--c:var(--pu)"><svg class="card-swoosh" viewBox="0 0 135 135" aria-hidden="true"><path d="M16 58 C 48 26, 86 26, 118 56" fill="none" style="stroke:var(--c)" stroke-width="17" stroke-linecap="round"/></svg><div class="ci"><svg class="ic-svg"><use href="#i-lock"/></svg></div><h4>Private &amp; portable</h4><p>Your data is yours — export and import the whole workspace whenever you want, no lock-in.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section style="padding-top:0">
+      <div class="wrap">
+        <div class="cta">
+          <svg class="cta-swoosh" viewBox="0 0 1100 300" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+            <path d="M-40 90 C 240 30, 560 30, 820 80 C 940 103, 1060 96, 1160 70" fill="none" stroke="#4D88E8" stroke-width="34" stroke-linecap="round" opacity="0.13"/>
+            <path d="M-40 230 C 220 280, 540 280, 760 230" fill="none" stroke="#E05572" stroke-width="22" stroke-linecap="round" opacity="0.11"/>
+            <circle cx="930" cy="220" r="44" fill="#D4A83C" opacity="0.1"/>
+          </svg>
+          <div class="kicker" style="justify-content:center">Ready when you are</div>
+          <h2>Start your <em>libreta</em> today</h2>
+          <p>Create your workspace in seconds. Free to start, yours to shape.</p>
+          <div class="hero-cta">
+            <a class="btn btn-primary btn-lg" href="index.html?signup=1">Get started — it's free <svg class="ic-svg"><use href="#i-arrow"/></svg></a>
+            <a class="btn btn-ghost btn-lg" href="index.html?signin=1">I already have an account</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <div class="foot-in">
+        <a class="brand" href="#top">Libre<i>ta</i></a>
+        <nav class="foot-links">
+          <a href="#features">Features</a>
+          <a href="#customize">Make it yours</a>
+          <a href="index.html?signin=1">Sign in</a>
+          <a href="index.html?signup=1">Get started</a>
+        </nav>
+      </div>
+      <div class="foot-note">Libreta · A personal workspace, built around you. <span id="yr"></span></div>
+    </div>
+  </footer>
+
+  <script>
+    // Add a border to the nav once the page scrolls.
+    var nav=document.getElementById('nav');
+    var onScroll=function(){ nav.classList.toggle('scrolled', window.scrollY>8); };
+    window.addEventListener('scroll', onScroll, {passive:true}); onScroll();
+    document.getElementById('yr').textContent='© '+new Date().getFullYear();
+  </script>
+</body>
+</html>

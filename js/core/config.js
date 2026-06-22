@@ -1,0 +1,362 @@
+const CFG_KEY='folio_cfg';
+/* Each theme carries the shell colours plus the section-identity hues:
+   ac (rose/primary+Home), c_docs (Documents), gr (lime/Tasks), go (gold/Calendar).
+   Presets without an explicit c_docs/gr fall back to sensible values in applyCfg(). */
+const THEMES={
+  'parra'        :{bg:'#0D0C0F',sur:'#17161B',sur2:'#1E1C22',bd:'#221F2A',bd2:'#2E2A38',tx:'#E2DCD4',mu:'#706870',ac:'#E05572',c_docs:'#4D88E8',gr:'#5DC27A',go:'#D4A83C'},
+  /* The two sibling Parra directions, kept as one-click presets. --gr stays in the
+     green family in every theme so the success/done semantic (checkboxes, etc.)
+     never turns a non-green colour. */
+  'night-garden' :{bg:'#0B0B10',sur:'#16161F',sur2:'#1C1C28',bd:'#23222E',bd2:'#2E2D3C',tx:'#E0DAD8',mu:'#6A6878',ac:'#C44B90',c_docs:'#3CB8A4',gr:'#5DC27A',go:'#D4A83C'},
+  'warm-spectrum':{bg:'#0C0B08',sur:'#141210',sur2:'#1A1814',bd:'#252219',bd2:'#332E26',tx:'#E4DDD0',mu:'#756E62',ac:'#D45A50',c_docs:'#4ABBA0',gr:'#6FB87A',go:'#D4A83C'},
+  'dark-warm'  :{bg:'#0C0B08',sur:'#141210',sur2:'#1A1814',bd:'#252219',bd2:'#332E26',tx:'#E4DDD0',mu:'#756E62',ac:'#C47D32',c_docs:'#4E7EC4',gr:'#4E9E72',go:'#C9A84C'},
+  'dark-cool'  :{bg:'#080C10',sur:'#0F1520',sur2:'#131C28',bd:'#1B2D3D',bd2:'#253648',tx:'#CEE0EE',mu:'#5A7A8A',ac:'#4E9E72',c_docs:'#4E9EC4',gr:'#6FC48E',go:'#7EC4B8'},
+  'dark-ink'   :{bg:'#0A0A0A',sur:'#121212',sur2:'#1A1A1A',bd:'#242424',bd2:'#303030',tx:'#E8E8E8',mu:'#666666',ac:'#E8C547',c_docs:'#5B9BD5',gr:'#5DC27A',go:'#C47D32'},
+  'light-warm' :{bg:'#F5F0E8',sur:'#EDE8DC',sur2:'#E5DDD0',bd:'#D4CCBC',bd2:'#C4BAA8',tx:'#1C1917',mu:'#8B7E6E',ac:'#8B4A2B',c_docs:'#2E5FA8',gr:'#3B7D53',go:'#7A5C20'},
+  'light-clean':{bg:'#FAFAFA',sur:'#F0F0F0',sur2:'#E8E8E8',bd:'#E0E0E0',bd2:'#D0D0D0',tx:'#1A1A1A',mu:'#888888',ac:'#2962FF',c_docs:'#1976D2',gr:'#2E9E5B',go:'#FF6D00'},
+};
+/* Curated content typefaces. `hw` = heading weights [h1,h2,h3] tuned so each reads as bold without faux-bolding.
+   `grp` groups them in the picker so the choice feels structured, not a soup of fonts. */
+const FONTS={
+  cormorant :{lbl:'Cormorant', grp:'Serif', stack:"'Cormorant',Georgia,serif",      hw:[700,600,600]},
+  newsreader:{lbl:'Newsreader',grp:'Serif', stack:"'Newsreader',Georgia,serif",     hw:[600,600,600]},
+  lora      :{lbl:'Lora',      grp:'Serif', stack:"'Lora',Georgia,serif",           hw:[600,600,600]},
+  dmsans    :{lbl:'DM Sans',   grp:'Sans',  stack:"'DM Sans',system-ui,sans-serif", hw:[700,600,600]},
+  inter     :{lbl:'Inter',     grp:'Sans',  stack:"'Inter',system-ui,sans-serif",   hw:[700,600,600]},
+  dmmono    :{lbl:'DM Mono',   grp:'Mono',  stack:"'DM Mono',ui-monospace,monospace",hw:[500,500,500]},
+};
+/* Map legacy/short config values onto the new keys */
+function normFontKey(v){
+  if(FONTS[v]) return v;
+  return ({serif:'cormorant',sans:'dmsans',mono:'dmmono'})[v]||'cormorant';
+}
+function getCfg(){try{return JSON.parse(localStorage.getItem(CFG_KEY)||'{}')}catch{return{}}}
+function applyCfg(){
+  const c=getCfg(); const tn=c.theme||'parra';
+  const t=(tn==='custom'&&c.customSnapshot)?c.customSnapshot:(THEMES[tn]||THEMES['parra']);
+  const r=document.documentElement.style;
+  r.setProperty('--bg',  c.bg   ||t.bg);  r.setProperty('--sur', c.sur  ||t.sur);
+  r.setProperty('--sur2',c.sur2 ||t.sur2);r.setProperty('--bd',  c.bd   ||t.bd);
+  r.setProperty('--bd2', c.bd2  ||t.bd2); r.setProperty('--tx',  c.tx   ||t.tx);
+  r.setProperty('--mu',  c.mu   ||t.mu);  r.setProperty('--ac',  c.ac   ||t.ac);
+  r.setProperty('--go',  c.go   ||t.go);
+  // Section-identity hues. Older saved themes / snapshots may lack these keys,
+  // so fall back: Documents→a blue, Tasks→the green token, both leaning on --ac
+  // only as a last resort so the app is never left with an undefined section colour.
+  const ac=c.ac||t.ac;
+  r.setProperty('--c-docs', c.c_docs || t.c_docs || '#4D88E8');
+  r.setProperty('--gr',     c.gr     || t.gr     || '#5DC27A');
+  // Accent tint tracks the live accent so custom accent colours get a matching
+  // 12% wash everywhere --acs is used (active nav, callouts, chips, selection).
+  r.setProperty('--acs', `color-mix(in srgb, ${ac} 12%, transparent)`);
+  // Content typeface — curated set, each with its own heading weights
+  const f=FONTS[normFontKey(c.font)]||FONTS.cormorant;
+  r.setProperty('--fs',f.stack);
+  r.setProperty('--hw1',f.hw[0]); r.setProperty('--hw2',f.hw[1]); r.setProperty('--hw3',f.hw[2]);
+  // UI scale via CSS zoom. Expose the factor as --zoom so the app shell can
+  // divide its viewport height by it — otherwise zoom>1 scales the 100dvh shell
+  // taller than the screen and clips the sidebar foot (collapse button).
+  const _zoom = c.zoom || '1.1';
+  document.documentElement.style.zoom = _zoom;
+  document.documentElement.style.setProperty('--zoom', _zoom);
+  // Visual filter (fun whole-app display effect)
+  if(document.body){
+    document.body.classList.remove('vf-pixel','vf-crt','vf-bw');
+    const vf=c.filter||'none'; if(vf!=='none') document.body.classList.add('vf-'+vf);
+  }
+  applyNavVisibility();
+  updCfgUI();
+}
+/* Which sidebar shortcuts (Home / Documents / Calendar) are visible. Hiding one
+   only removes its sidebar button — the view stays reachable via breadcrumbs,
+   the logo (Home), and direct hash links. */
+function navHidden(){ return getCfg().navHidden||{}; }
+function applyNavVisibility(){
+  const h=navHidden();
+  ['home','documents','calendar','tasks'].forEach(k=>{
+    const btn=document.querySelector(`.nav-it[data-nav="${k}"]`);
+    if(btn) btn.style.display=h[k]?'none':'';
+  });
+}
+function toggleNavItem(k){
+  const c=getCfg(); c.navHidden=c.navHidden||{};
+  if(c.navHidden[k]) delete c.navHidden[k]; else c.navHidden[k]=true;
+  localStorage.setItem(CFG_KEY,JSON.stringify(c)); applyNavVisibility(); updCfgUI();
+}
+function setCfgColor(k,v){
+  const c=getCfg();
+  const tn=c.theme||'parra';
+  const base=(tn==='custom'&&c.customSnapshot)?c.customSnapshot:(THEMES[tn]||THEMES['parra']);
+  /* Snapshot every effective color + apply this override. Section hues
+     (c_docs/gr) are included so they survive a switch to the custom theme. */
+  c.customSnapshot={
+    bg:c.bg||base.bg, sur:c.sur||base.sur, sur2:c.sur2||base.sur2,
+    bd:c.bd||base.bd, bd2:c.bd2||base.bd2, tx:c.tx||base.tx,
+    mu:c.mu||base.mu, ac:c.ac||base.ac,   go:c.go||base.go,
+    c_docs:c.c_docs||base.c_docs||'#4D88E8', gr:c.gr||base.gr||'#5DC27A',
+    [k]:v
+  };
+  c.theme='custom'; c[k]=v;
+  localStorage.setItem(CFG_KEY,JSON.stringify(c)); applyCfg();
+}
+function setCfgFont(f){const c=getCfg();c.font=f;localStorage.setItem(CFG_KEY,JSON.stringify(c));applyCfg()}
+function setCfgDef(k,v){const c=getCfg();c[k]=v;localStorage.setItem(CFG_KEY,JSON.stringify(c));applyCfg()}
+function setVisualFilter(v){const c=getCfg();if(!v||v==='none')delete c.filter;else c.filter=v;localStorage.setItem(CFG_KEY,JSON.stringify(c));applyCfg()}
+/* Apply a custom colour from a typed hex value (accepts #rgb or #rrggbb, with or
+   without the leading #). Invalid input just snaps the field back. */
+function setCfgColorHex(k,val){
+  val=(val||'').trim().replace(/^#/,'');
+  if(/^[0-9a-fA-F]{3}$/.test(val)) val=val.split('').map(c=>c+c).join('');
+  if(/^[0-9a-fA-F]{6}$/.test(val)) setCfgColor(k,'#'+val.toLowerCase());
+  else updCfgUI();
+}
+function setTheme(name){
+  const c=getCfg();
+  if(name==='custom'){
+    /* Restore saved snapshot */
+    if(c.customSnapshot) Object.assign(c,c.customSnapshot);
+    c.theme='custom';
+  }else{
+    /* Switch to preset, clear per-key overrides but keep snapshot */
+    ['bg','sur','sur2','bd','bd2','tx','mu','ac','go','c_docs','gr'].forEach(k=>delete c[k]);
+    c.theme=name;
+  }
+  localStorage.setItem(CFG_KEY,JSON.stringify(c)); applyCfg();
+}
+function resetCfg(){showConfirm('Reset all themes, colors, and display settings to defaults?',()=>{localStorage.removeItem(CFG_KEY);applyCfg()},'Reset','Reset Settings');}
+function openCfg(tab){
+  // On mobile the sidebar is an off-canvas drawer (z-index 1000); close it so
+  // the settings panel (z-index 800) slides in on top without being occluded.
+  if(typeof closeMobileSidebar==='function') closeMobileSidebar();
+  document.getElementById('cfg-panel').classList.add('open');
+  document.getElementById('cfg-ovl').classList.add('open');
+  updCfgUI();renderStorageStatus();renderAccountStatus();
+  if(typeof updateTrashBadge==='function')updateTrashBadge();
+  cfgInitCollapsible();
+  // Two scopes share this panel: "This page" (per-page formatting) and
+  // "Workspace" (global settings). Sidebar foot defaults to Workspace; the
+  // ribbon kebab + Home "Customize" open straight to This page.
+  cfgTab(tab||'workspace');
+}
+/* Toggle the panel's scope tab. 'page' renders the per-page settings into the
+   This-page pane; 'workspace' shows the global settings sections. */
+function cfgTab(which){
+  const page=which==='page';
+  const pp=document.getElementById('cfg-pane-page'), pw=document.getElementById('cfg-pane-ws');
+  if(pp) pp.style.display=page?'block':'none';
+  if(pw) pw.style.display=page?'none':'block';
+  document.getElementById('cfg-tab-page')?.classList.toggle('on',page);
+  document.getElementById('cfg-tab-ws')?.classList.toggle('on',!page);
+  if(page) renderPageSettings();
+}
+/* Make the Workspace settings sections collapsible (the panel is dense). State is
+   per-section-label, persisted locally; enhancement is idempotent across opens. */
+function _cfgSecState(){ try{return JSON.parse(localStorage.getItem('folio_cfg_secs')||'{}')}catch{return{}} }
+function cfgToggleSec(sl){
+  const sec=sl.closest('.cfg-sec'); if(!sec) return;
+  const collapsed=sec.classList.toggle('collapsed');
+  const s=_cfgSecState(); s[sl.dataset.seckey]=collapsed;
+  try{localStorage.setItem('folio_cfg_secs',JSON.stringify(s))}catch(e){}
+}
+function cfgInitCollapsible(){
+  const s=_cfgSecState();
+  document.querySelectorAll('#cfg-pane-ws .cfg-sec').forEach(sec=>{
+    const sl=sec.querySelector('.cfg-sl'); if(!sl) return;
+    if(!sl.dataset.seckey){
+      sl.dataset.seckey=sl.textContent.trim();
+      sl.classList.add('cfg-sl-toggle');
+      sl.insertAdjacentHTML('beforeend','<span class="cfg-sl-chev">▾</span>');
+      sl.addEventListener('click',()=>cfgToggleSec(sl));
+    }
+    sec.classList.toggle('collapsed', !!s[sl.dataset.seckey]);
+  });
+}
+/* Account section — shown only when signed in to cloud sync. Hosts the email + Log out. */
+function renderAccountStatus(){
+  const el=document.getElementById('cfg-account'), sec=document.getElementById('cfg-account-sec');
+  let user=null; try{ if(typeof Cloud!=='undefined') user=Cloud.user; }catch(e){}
+  if(!user || !el){ if(sec) sec.style.display='none'; return; }
+  sec.style.display='';
+  el.innerHTML=`<div style="font-size:12px;color:var(--mu);margin-bottom:6px">Signed in as</div>
+    <div class="cfg-email-pill" title="${escAttr(user.email)}">${escHtml(user.email)}</div>
+    <button class="cfg-opt" onclick="cloudSignOut()" style="color:var(--re);border-color:rgba(196,84,84,.4)">Log out</button>`;
+}
+function cloudSignOut(){ if(typeof Cloud!=='undefined' && Cloud.signOut) Cloud.signOut(); }
+/* Danger Zone — wipe all data locally + in the cloud, then sign out. Double-confirm
+   because it can't be undone. (Cloud-only when signed in; falls back to a local
+   wipe when running offline/local-only.) */
+function confirmDeleteAllData(){
+  showConfirm('Delete ALL your data — every page, database, image and setting, on this device and in the cloud? This cannot be undone.',
+    ()=>{ showConfirm('Are you absolutely sure? There is no way to recover this.',
+      ()=>{
+        if(typeof Cloud!=='undefined' && Cloud.deleteEverything){ Cloud.deleteEverything(); return; }
+        // Local-only fallback
+        try{ const ks=[]; for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i); if(k&&k.indexOf('folio_')===0)ks.push(k);} ks.forEach(k=>localStorage.removeItem(k)); }catch(e){}
+        location.reload();
+      },'Delete everything','Final confirmation'); },
+    'Continue','Delete all data');
+}
+function closeCfg(){document.getElementById('cfg-panel').classList.remove('open');document.getElementById('cfg-ovl').classList.remove('open')}
+function updCfgUI(){
+  const c=getCfg(); const tn=c.theme||'parra';
+  const t=(tn==='custom'&&c.customSnapshot)?c.customSnapshot:(THEMES[tn]||THEMES['parra']);
+  const el=document.getElementById('cfg-themes');
+  if(el){
+    const presets=Object.entries(THEMES);
+    const hasCustom=!!(c.customSnapshot);
+    const entries=(hasCustom||tn==='custom')?[...presets,['custom',c.customSnapshot||t]]:presets;
+    el.innerHTML=entries.map(([k,tv])=>{
+      const dot=k==='custom'?(c.ac||tv?.ac||'#888'):tv.ac;
+      const lbl=k==='custom'?'Custom':k.replace(/-/g,' ').replace(/\b\w/g,x=>x.toUpperCase());
+      return`<button class="t-btn${k===tn?' on':''}" onclick="setTheme('${k}')"><span class="t-dot" style="background:${dot}"></span>${lbl}</button>`;
+    }).join('');
+  }
+  const sv=(id,v)=>{const e=document.getElementById(id);if(e)e.value=v};
+  sv('cfg-ac',c.ac||t.ac); sv('cfg-bg',c.bg||t.bg);
+  sv('cfg-sur',c.sur||t.sur); sv('cfg-tx',c.tx||t.tx);
+  sv('cfg-ac-hex',c.ac||t.ac); sv('cfg-bg-hex',c.bg||t.bg);
+  sv('cfg-sur-hex',c.sur||t.sur); sv('cfg-tx-hex',c.tx||t.tx);
+  // Section colours (fall back to the parra defaults if a theme/snapshot omits them)
+  const docsC=c.c_docs||t.c_docs||'#4D88E8', tasksC=c.gr||t.gr||'#5DC27A', calC=c.go||t.go||'#D4A83C';
+  sv('cfg-docs',docsC); sv('cfg-docs-hex',docsC);
+  sv('cfg-tasks',tasksC); sv('cfg-tasks-hex',tasksC);
+  sv('cfg-cal',calC); sv('cfg-cal-hex',calC);
+  // (Typeface / default width / default size are per-page now — they live in the
+  // "This page" tab via renderPageSettings, not in this Workspace pane.)
+  const om=c.openMode||'peek';
+  document.querySelectorAll('.cfg-opt[data-om]').forEach(b=>b.classList.toggle('on',b.dataset.om===om));
+  // Zoom buttons
+  const zoom=c.zoom||'1.1';
+  document.querySelectorAll('.zoom-btn').forEach(b=>b.classList.toggle('on',b.dataset.zoom===zoom));
+  // Property tags on cards (item 8)
+  const lt=c.listTags||'on';
+  document.querySelectorAll('.cfg-opt[data-tags]').forEach(b=>b.classList.toggle('on',b.dataset.tags===lt));
+  // Sidebar shortcut visibility — "on" = shown
+  const nh=c.navHidden||{};
+  document.querySelectorAll('.cfg-opt[data-navtoggle]').forEach(b=>b.classList.toggle('on',!nh[b.dataset.navtoggle]));
+  // Visual filter active button
+  const vf=c.filter||'none';
+  document.querySelectorAll('.cfg-opt[data-filter]').forEach(b=>b.classList.toggle('on',b.dataset.filter===vf));
+}
+/* Whether property tag chips show on Home cards + Documents list (item 8). */
+function listTagsOn(){ return getCfg().listTags!=='off'; }
+function setListTags(v){
+  const c=getCfg(); c.listTags=v; localStorage.setItem(CFG_KEY,JSON.stringify(c)); updCfgUI();
+  if(typeof refreshActiveLists==='function') refreshActiveLists();
+  if(typeof renderHome==='function' && S.view==='home') renderHome();
+}
+
+/* ===================================================
+   PER-DOC FORMAT BAR
+=================================================== */
+/* Width / Size / Typeface are PER-PAGE (doc.fmt) and live in the ribbon's
+   Page-settings menu — the old inline fmt bar just applies them now. */
+function renderFmtBar(doc){ applyDocFmt(doc); if(document.getElementById('cfg-panel')?.classList.contains('open') && document.getElementById('cfg-tab-page')?.classList.contains('on')) renderPageSettings(); if(typeof renderBreadcrumbs==='function') renderBreadcrumbs(S.view,S.docId); }
+function applyDocFmt(doc){
+  const fmt=doc.fmt||{}; const cfg=getCfg();
+  const f=FONTS[normFontKey(fmt.font||cfg.font)]||FONTS.cormorant;
+  // Home only carries a per-page typeface (width lives in its own toggle) — scope it to #view-home.
+  if(doc.id===HOME_ID){
+    const hv=document.getElementById('view-home');
+    if(hv){ hv.style.setProperty('--fs',f.stack); hv.style.setProperty('--hw1',f.hw[0]); hv.style.setProperty('--hw2',f.hw[1]); hv.style.setProperty('--hw3',f.hw[2]); }
+    return;
+  }
+  const w=fmt.width||cfg.defWidth||'focused';
+  const s=fmt.size||cfg.defSize||'normal';
+  const ct=document.getElementById('blocks-ct');
+  if(ct){
+    ct.classList.remove('w-wide','w-full'); if(w==='wide') ct.classList.add('w-wide'); if(w==='full') ct.classList.add('w-full');
+    ct.classList.remove('fs-sm','fs-lg','fs-xl'); if(s!=='normal') ct.classList.add('fs-'+s);
+  }
+  // Per-page typeface — scope --fs to the editor view so other surfaces keep the global font.
+  const ev=document.getElementById('view-editor');
+  if(ev){ ev.style.setProperty('--fs',f.stack); ev.style.setProperty('--hw1',f.hw[0]); ev.style.setProperty('--hw2',f.hw[1]); ev.style.setProperty('--hw3',f.hw[2]); }
+}
+function setDocWidth(w){ const doc=getActiveDoc(); if(!doc) return; doc.fmt=doc.fmt||{}; doc.fmt.width=w; saveActiveDoc(doc); renderFmtBar(doc); }
+function setDocSize(s){ const doc=getActiveDoc(); if(!doc) return; doc.fmt=doc.fmt||{}; doc.fmt.size=s; saveActiveDoc(doc); renderFmtBar(doc); }
+function setDocFont(f){ const doc=getActiveDoc(); if(!doc) return; doc.fmt=doc.fmt||{}; doc.fmt.font=f; saveActiveDoc(doc); renderFmtBar(doc); }
+
+/* ── PAGE SETTINGS — the ribbon kebab + Home "Customize" open the unified
+   Settings panel on its "This page" tab. ── */
+function togglePageSettings(e){
+  e&&e.stopPropagation&&e.stopPropagation();
+  const open=document.getElementById('cfg-panel')?.classList.contains('open');
+  const onPage=document.getElementById('cfg-tab-page')?.classList.contains('on');
+  if(open&&onPage){ closeCfg(); return; }
+  openCfg('page');
+}
+function closePageSettings(){ closeCfg(); }
+function renderPageSettings(){
+  const pop=document.getElementById('cfg-pane-page'); if(!pop) return;
+  const home=S.docId===HOME_ID;
+  const doc=getActiveDoc(); if(!doc){ pop.innerHTML='<div class="ps-empty">Open a page to adjust its settings.</div>'; return; }
+  const fmt=doc.fmt||{}; const cfg=getCfg();
+  const fk=normFontKey(fmt.font||cfg.font);
+  const w=fmt.width||cfg.defWidth||'focused';
+  const s=fmt.size||cfg.defSize||'normal';
+  let fonts='',last=null;
+  Object.keys(FONTS).forEach(k=>{ const f=FONTS[k]; if(f.grp!==last){ fonts+=`<div class="ps-fgrp">${f.grp}</div>`; last=f.grp; }
+    fonts+=`<button class="ps-font${k===fk?' on':''}" onclick="setDocFont('${k}')" style="font-family:${f.stack}">${f.lbl}</button>`; });
+  const wb=(v,l)=>`<button class="ps-seg${w===v?' on':''}" onclick="setDocWidth('${v}')">${l}</button>`;
+  const sb=(v,l)=>`<button class="ps-seg${s===v?' on':''}" onclick="setDocSize('${v}')">${l}</button>`;
+  // Home: page setup (cover / icon / title) + width + typeface. The buttons keep
+  // their original IDs so renderHome() / renderCover() / page-icon sync still target
+  // them while the panel is open.
+  if(home){
+    const hd=doc, hw=hd.fmt?.width||'focused';
+    const titleLbl=hd.titleHidden?'&#43; Add title':'&#128465; Remove title';
+    pop.innerHTML=`
+      <div class="ps-sec"><div class="ps-lbl">Page</div>
+        <div class="ps-setup">
+          <button class="meta-action-btn" id="home-cover-add-btn" onclick="addBlankCover()">&#128444; Add cover</button>
+          <button class="meta-action-btn" id="home-cover-link-btn" onclick="coverFromUrlPrompt(event)" style="display:none">&#128279; Link cover</button>
+          <button class="meta-action-btn" id="home-icon-add-btn" onclick="openIconPicker(event,this)">&#128512; Add icon</button>
+          <button class="meta-action-btn" id="home-title-toggle" onclick="toggleHomeTitle()">${titleLbl}</button>
+        </div></div>
+      <div class="ps-sec"><div class="ps-lbl">Width</div><div class="ps-segrow">
+        <button class="ps-seg${hw!=='full'?' on':''}" id="home-w-focused" onclick="setHomeWidth('focused')">Centered</button>
+        <button class="ps-seg${hw==='full'?' on':''}" id="home-w-full" onclick="setHomeWidth('full')">Full width</button>
+      </div></div>
+      <div class="ps-sec"><div class="ps-lbl">Typeface</div><div class="ps-fonts">${fonts}</div></div>`;
+    if(typeof renderCover==='function') renderCover(hd);
+    return;
+  }
+  // Show/hide shared properties (only when this page is a database entry).
+  let propsSec='';
+  if(S.dbRow && typeof DB!=='undefined'){
+    const tbl=DB.getTbl(S.dbRow.tableId);
+    if(tbl){
+      const titleId=idbTitleColId(tbl), hidden=idbHiddenDocProps(tbl);
+      const cols=tbl.columns.filter(c=>c.id!==titleId);
+      const items=cols.map(c=>{ const on=!hidden.has(c.id);
+        return `<button class="ps-proprow${on?'':' off'}" onclick="idbToggleDocProp('${c.id}');renderPageSettings()"><span class="ps-propnm">${escHtml(c.name)}</span><span class="ps-propeye">${on?'&#128065;':'&#128683;'}</span></button>`;
+      }).join('')||'<div class="ps-empty2">No shared properties</div>';
+      propsSec=`<div class="ps-sec"><div class="ps-lbl">Show properties</div><div class="ps-proplist">${items}</div></div>`;
+    }
+  }
+  // Page background (Craft-style centered-card-over-image). Preset gradients + upload.
+  const curBg=(doc.meta&&doc.meta.bg)||'';
+  const bgIsImg=curBg&&!curBg.startsWith('bg:');
+  const bgSw=(k,css)=>`<button class="ps-bg${curBg==='bg:'+k?' on':''}" title="${k}" style="background-image:${css}" onclick="setPageBg('${k}')"></button>`;
+  const bgSwatches=Object.entries(typeof PAGE_BGS!=='undefined'?PAGE_BGS:{}).map(([k,css])=>bgSw(k,css)).join('');
+  const bgSec=`<div class="ps-sec"><div class="ps-lbl">Page background</div>
+    <div class="ps-bgrow">
+      <button class="ps-bg ps-bg-none${curBg?'':' on'}" title="None" onclick="removePageBg()">∅</button>
+      ${bgSwatches}
+      <button class="ps-bg ps-bg-up${bgIsImg?' on':''}" title="Upload an image" onclick="triggerPageBgUpload()">↑</button>
+    </div></div>`;
+  pop.innerHTML=`
+    <div class="ps-sec"><div class="ps-lbl">Typeface</div><div class="ps-fonts">${fonts}</div></div>
+    <div class="ps-sec"><div class="ps-lbl">Width</div><div class="ps-segrow">${wb('focused','Focused')}${wb('wide','Wide')}${wb('full','Full')}</div></div>
+    <div class="ps-sec"><div class="ps-lbl">Font size</div><div class="ps-segrow">${sb('sm','S')}${sb('normal','M')}${sb('lg','L')}${sb('xl','XL')}</div></div>
+    ${bgSec}
+    ${propsSec}
+    <div class="ps-sec">
+      <button class="ps-actbtn" onclick="closePageSettings();openVersionPanel()">&#128336; Version history</button>
+      <button class="ps-actbtn ps-danger" onclick="closePageSettings();deleteSbDoc(event,S.docId)" style="margin-top:6px">&#128465; Delete page</button>
+    </div>`;
+}
+
+/* ===================================================
+   DATABASE BLOCK
+=================================================== */

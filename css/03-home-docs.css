@@ -1,0 +1,77 @@
+/* ── HOME ────────────────────────────────────── */
+/* Documents-section identity = blue. The list/card/tree view switcher inside the
+   Documents view takes the --c-docs accent (Home's same toggle stays rose). The
+   id selector outranks the generic .vt-btn.on rule regardless of load order. */
+#view-documents .vt-btn.on{background:color-mix(in srgb,var(--c-docs) 13%,transparent);border-color:var(--c-docs);color:var(--c-docs)}
+.pg-sc{flex:1;overflow-y:auto}
+.home-c{padding:40px 48px 80px;max-width:900px;margin:0 auto}
+.hero{margin-bottom:44px;animation:fadeUp .45s ease both}
+.hero-ey{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--ac);margin-bottom:10px}
+.hero-h{font-family:var(--fs);font-size:54px;font-weight:300;line-height:1.1;margin-bottom:14px}
+.hero-h em{font-style:italic;color:var(--go)}
+.hero-d{font-size:13px;color:var(--mu);line-height:1.75;max-width:480px}
+.cg{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:44px;animation:fadeUp .45s var(--t-fast) ease both}
+.card{background:var(--sur);border:1px solid var(--bd);border-radius:var(--r-lg);padding:22px;cursor:pointer;transition:transform var(--t-med),border-color var(--t-med);position:relative;overflow:hidden}
+.card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--ca,var(--ac));transform:scaleX(0);transform-origin:left;transition:transform var(--t-slow)}
+.card:hover{transform:translateY(-3px);border-color:#3a3530}
+.card:hover::after{transform:scaleX(1)}
+.c-ico{width:38px;height:38px;border-radius:var(--r-md);display:flex;align-items:center;justify-content:center;margin-bottom:14px;background:var(--ci,var(--acs));color:var(--ca,var(--ac))}
+.c-ico svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.5}
+.c-title{font-family:var(--fs);font-size:21px;font-weight:400;margin-bottom:8px}
+.c-desc{font-size:11px;color:var(--mu);line-height:1.75}
+.c-lbl{display:inline-block;margin-top:14px;font-size:9px;letter-spacing:var(--ls-label);text-transform:uppercase;color:var(--ca,var(--ac));border:1px solid var(--ca,var(--ac));opacity:.7;padding:3px 8px;border-radius:var(--r-pill)}
+.sec-h{font-size:9px;letter-spacing:var(--ls-label);text-transform:uppercase;color:var(--mu);padding-bottom:10px;border-bottom:1px solid var(--bd);margin-bottom:12px}
+.rec-it{display:flex;align-items:center;gap:12px;padding:9px 12px;border-radius:var(--r-sm);cursor:pointer;transition:background var(--t-fast);color:var(--mu);font-size:12px}
+.rec-it:hover{background:var(--sur);color:var(--tx)}
+.rec-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.rec-nm{flex:1}
+.rec-tp{font-size:9px;letter-spacing:.1em;text-transform:uppercase}
+.rec-dt{font-size:10px;opacity:.55}
+
+/* ── DOCS LIST ───────────────────────────────── */
+.dl-hdr{display:flex;align-items:center;justify-content:space-between;padding:28px 40px 20px;flex-shrink:0}
+.dl-title{font-family:var(--fs);font-size:32px;font-weight:300}
+.dl-body{flex:1;overflow-y:auto;padding:0 40px 40px}
+.dl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
+/* ── DOCUMENTS ROWS VIEW ── */
+.dl-rows{display:flex;flex-direction:column;gap:2px}
+.doc-row{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:var(--r-md);cursor:pointer;transition:background var(--t-fast);border:1px solid transparent}
+.doc-row:hover{background:var(--sur);border-color:var(--bd)}
+.doc-row-ico{font-size:18px;line-height:1;flex-shrink:0;display:inline-flex;align-items:center;width:22px;justify-content:center}
+.doc-row-main{flex:1;min-width:0;display:flex;align-items:center;gap:10px}
+.doc-row-title{font-family:var(--fs);font-size:17px;font-weight:400;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:0;max-width:46%}
+.doc-row-chips{display:flex;gap:4px;flex-wrap:nowrap;overflow:hidden;min-width:0}
+.doc-row-meta{font-size:11px;color:var(--mu);flex-shrink:0;white-space:nowrap}
+.doc-row-date{font-size:11px;color:var(--mu);flex-shrink:0;white-space:nowrap;width:74px;text-align:right}
+.doc-row .dc-del{opacity:0;flex-shrink:0}
+.doc-row:hover .dc-del{opacity:1}
+
+/* ── Documents page — collapsible nested hierarchy (Tree view) ── */
+.doc-tree{gap:0}
+.doc-tree .doc-row{padding-top:7px;padding-bottom:7px;border-radius:var(--r-md)}
+/* Let the title flex and truncate instead of collapsing to 0 when the row is
+   tight (deep indentation + chevron/count/action buttons). */
+.doc-tree .doc-row-main{flex:1;min-width:0}
+.doc-tree .doc-row-title{flex:1;min-width:0;max-width:none}
+.doc-tree-chev,.doc-tree-spacer{width:16px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;color:var(--mu);font-size:10px;border-radius:var(--r-xs);cursor:pointer;align-self:center}
+.doc-tree-chev{transition:transform var(--t-med),color var(--t-fast),background var(--t-fast)}
+.doc-tree-chev:hover{color:var(--tx);background:var(--bd2)}
+.doc-tree-chev.collapsed{transform:rotate(-90deg)}
+.doc-tree-count{flex-shrink:0;font-size:10px;font-weight:600;color:var(--mu);background:var(--sur2);border:1px solid var(--bd);border-radius:var(--r-lg);padding:1px 7px;min-width:18px;text-align:center}
+.doc-tree-add,.doc-tree-menu{opacity:0;background:none;border:none;color:var(--mu);cursor:pointer;flex-shrink:0;width:24px;height:24px;border-radius:var(--r-sm);font-size:15px;line-height:1;display:inline-flex;align-items:center;justify-content:center;transition:opacity var(--t-fast),background var(--t-fast),color var(--t-fast)}
+.doc-tree-row:hover .doc-tree-add,.doc-tree-row:hover .doc-tree-menu{opacity:.8}
+.doc-tree-add:hover,.doc-tree-menu:hover{opacity:1!important;background:var(--bd2);color:var(--tx)}
+.dl-tree-empty{padding:40px;text-align:center;color:var(--mu);font-size:13px}
+.dc{background:var(--sur);border:1px solid var(--bd);border-radius:var(--r-lg);padding:20px;cursor:pointer;transition:border-color var(--t-med),transform var(--t-med);overflow:hidden}
+.dc:hover{border-color:var(--mu);transform:translateY(-2px)}
+.dc-t{font-family:var(--fs);font-size:18px;font-weight:400;margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dc-e{font-size:11px;color:var(--mu);line-height:1.6;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;margin-bottom:12px;min-height:48px}
+.dc-m{display:flex;align-items:center;justify-content:space-between;font-size:10px;color:var(--mu)}
+.dc-del{background:none;border:none;color:var(--mu);cursor:pointer;padding:2px 6px;border-radius:var(--r-xs);opacity:0;transition:opacity var(--t-fast),color var(--t-fast)}
+.dc:hover .dc-del{opacity:1}
+.dc-del:hover{color:var(--re)}
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 40px;text-align:center;color:var(--mu);grid-column:1/-1}
+.empty svg{width:56px;height:56px;stroke:var(--bd);fill:none;stroke-width:1;margin-bottom:16px}
+.empty h3{font-family:var(--fs);font-size:22px;font-weight:300;margin-bottom:8px}
+.empty p{font-size:12px;line-height:1.7;margin-bottom:20px}
+

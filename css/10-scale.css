@@ -1,0 +1,71 @@
+/* ── FONT SCALE (4K / large display) ── */
+body{font-size:15px!important}
+.bk{font-size:20px;line-height:1.82}
+.bk[data-t="h1"]{font-size:2.3em!important}
+.bk[data-t="h2"]{font-size:1.8em!important}
+.bk[data-t="h3"]{font-size:1.45em!important}
+.bk[data-t="code"]{font-size:14px!important}
+.sb-logo{font-size:32px!important}
+.sb-sub,.nav-lbl,.sb-ver{font-size:11px!important}
+.nav-it{font-size:14px!important}
+.tp-pg{font-size:20px!important}
+.btn{font-size:13px!important}
+.btn-sm{font-size:11px!important}
+.hero-h{font-size:64px!important}
+.hero-ey,.sec-h{font-size:12px!important}
+.c-title{font-size:25px!important}
+.c-desc{font-size:14px!important}
+.c-lbl{font-size:11px!important}
+.dl-title{font-size:38px!important}
+.dc-t{font-size:20px!important}
+.dc-e{font-size:13px!important}
+.dc-meta-row,.dc-wc{font-size:12px!important}
+.rec-it{font-size:14px!important}
+.rec-tp{font-size:11px!important}
+.ed-title{font-size:38px!important}
+.prop-add{font-size:13px!important}
+.fmt-btn{font-size:12px!important}
+.fmt-lbl{font-size:11px!important}
+.dbt td{font-size:14px!important}
+.dbt th{font-size:12px!important}
+.tbl-nm{font-size:24px!important}
+.tbl-fi,.tbl-add{font-size:13px!important}
+.tbl-sb-it{font-size:14px!important}
+.tbl-sb-h,.tbl-empty{font-size:13px!important}
+.cal-mo{font-size:26px!important}
+.cal-dh{font-size:11px!important}
+.cal-num{font-size:13px!important}
+.cal-ev{font-size:12px!important}
+.sm-nm{font-size:14px!important}
+.sm-ds{font-size:12px!important}
+.bm-it{font-size:14px!important}
+.bm-si{font-size:13px!important}
+.pm-hdr,.pm-it{font-size:13px!important}
+.pe-name{font-size:15px!important}
+.pe-ti{font-size:16px!important}
+.pe-tl,.pe-sl{font-size:11px!important}
+.pe-ol-text,.pe-ol-edit,.pe-ai{font-size:13px!important}
+.pe-del-btn,.pe-db,.cfm-cancel,.cfm-ok{font-size:13px!important}
+.cfg-title{font-size:22px!important}
+.cfg-sl{font-size:11px!important}
+.cfg-opt,.t-btn{font-size:13px!important}
+.cfg-font-opt{font-size:17px!important}
+.cfg-cl{font-size:12px!important}
+.dp-dh{font-size:11px!important}
+.dp-d,.dp-mo,.dp-hdr{font-size:13px!important}
+.chip{font-size:calc(12px*var(--idb-scale,1))!important}
+.idb-tbl td,.idb-card-t{font-size:calc(14px*var(--idb-scale,1))!important}
+.idb-tbl th{font-size:11px!important}
+.idb-title{font-size:calc(19px*var(--idb-scale,1))!important}
+.idb-viewsel,.idb-toolbar,.idb-tb-btn,.idb-fchip,.idb-foot,.idb-sel,.idb-note,.idb-bcol-h,.idb-dd-it{font-size:12px!important}
+.idb-cal-ev,.idb-card-d{font-size:calc(11px*var(--idb-scale,1))!important}
+.idb-cal-num{font-size:11px!important}
+.idb-cev-t{font-size:calc(13px*var(--idb-scale,1))!important}
+.idb-cev-chip{font-size:calc(11px*var(--idb-scale,1))!important}
+.idb-open-row,.idb-rowmenu .idb-dd-it{font-size:13px!important}
+.bk-db-title,.bk-db-tbl td{font-size:14px!important}
+.bk-db-open,.bk-db-tbl th,.bk-db-foot{font-size:12px!important}
+.ptp-it{font-size:14px!important}
+.pe-or,.pe-opt-check,.gutter-btn{font-size:13px!important}
+.dc-del,.row-del{font-size:13px!important}
+

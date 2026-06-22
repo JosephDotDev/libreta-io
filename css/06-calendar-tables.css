@@ -1,0 +1,188 @@
+/* ── TASKS (unified kanban) ──────────────────── */
+.tk-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.tk-bar{display:flex;align-items:center;gap:10px;padding:14px 32px;border-bottom:1px solid var(--bd);flex-shrink:0}
+.tk-title{font-size:18px;font-weight:500;color:var(--tx);font-family:var(--fs)}
+/* Group-by control (Status | Database) */
+.tk-tools{display:flex;align-items:center;gap:8px;margin-left:auto}
+.tk-tools-lbl{font-size:11px;color:var(--mu);font-family:var(--fm);text-transform:uppercase;letter-spacing:.06em}
+.tk-seg{display:inline-flex;border:1px solid var(--bd2);border-radius:var(--r-md);overflow:hidden}
+.tk-seg-b{background:none;border:none;color:var(--mu);cursor:pointer;font-family:var(--fm);font-size:12px;padding:5px 12px;transition:background var(--t-fast),color var(--t-fast)}
+.tk-seg-b+.tk-seg-b{border-left:1px solid var(--bd2)}
+.tk-seg-b:hover{color:var(--tx)}
+.tk-seg-b.on{background:var(--acs);color:var(--ac)}
+.tk-empty{color:var(--mu);font-size:13px;padding:8px 4px}
+.tk-legend{display:flex;align-items:center;flex-wrap:wrap;gap:8px 14px;padding:11px 32px;border-bottom:1px solid var(--bd);flex-shrink:0}
+.tk-board{flex:1;display:flex;align-items:flex-start;gap:14px;overflow-x:auto;overflow-y:auto;padding:18px 32px}
+.tk-col{flex:0 0 268px;max-width:268px;background:var(--sur);border:1px solid var(--bd);border-radius:var(--r-lg);display:flex;flex-direction:column;max-height:100%}
+/* Split-by-database: stack a horizontal section per database, each a row of status
+   lanes. The board scrolls horizontally to the widest section; section headers stay
+   pinned at the left edge so you always know which database you're looking at. */
+.tk-board.tk-sectioned{flex-direction:column;align-items:flex-start;gap:22px}
+.tk-sectioned .tk-col{max-height:none}
+.tk-sec{display:flex;flex-direction:column;gap:10px;min-width:100%}
+.tk-sec-h{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:500;color:var(--tx);position:sticky;left:0;width:max-content;cursor:grab}
+.tk-sec-h:active{cursor:grabbing}
+.tk-sec-chev{background:none;border:none;color:var(--mu);cursor:pointer;font-size:11px;line-height:1;padding:2px;border-radius:var(--r-sm);transition:transform var(--t-fast),color var(--t-fast)}
+.tk-sec-chev:hover{color:var(--tx)}
+.tk-sec-chev.collapsed{transform:rotate(-90deg)}
+.tk-sec-grip{color:var(--mu);opacity:0;cursor:grab;font-size:13px;letter-spacing:-2px;transition:opacity var(--t-fast);margin-left:2px}
+.tk-sec-h:hover .tk-sec-grip{opacity:.5}
+.tk-sec.tk-sec-dragover{box-shadow:0 -2px 0 var(--ac)}
+.tk-sec-collapsed{opacity:.92}
+.tk-sec-nm{font-family:var(--fs)}
+.tk-sec-del{margin-left:4px;background:none;border:none;color:var(--mu);cursor:pointer;font-size:12px;line-height:1;padding:3px 7px;border-radius:var(--r-sm);opacity:0;transition:opacity var(--t-fast),color var(--t-fast),background var(--t-fast)}
+.tk-sec-h:hover .tk-sec-del{opacity:1}
+.tk-sec-del:hover{color:var(--re);background:var(--sur2)}
+.tk-sec-cols{display:flex;align-items:flex-start;gap:14px}
+.tk-col-h{display:flex;align-items:center;gap:8px;padding:11px 13px;border-bottom:1px solid var(--bd);flex-shrink:0}
+.tk-col-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.tk-col-nm{font-size:13px;font-weight:500;color:var(--tx);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tk-col-ct{font-size:11px;color:var(--mu);background:var(--sur2);border-radius:var(--r-lg);padding:1px 8px;flex-shrink:0}
+.tk-col-add{width:20px;height:20px;border:none;background:var(--sur2);color:var(--mu);border-radius:var(--r-sm);font-size:14px;line-height:1;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:color var(--t-fast),background var(--t-fast)}
+.tk-col-add:hover{color:var(--ac);background:var(--acs)}
+/* quick-add box: title field + destination picker */
+.tk-addbox{display:flex;flex-direction:column;gap:6px;background:var(--bg);border:1px solid var(--ac);border-radius:var(--r-lg);padding:7px;margin-bottom:2px}
+.tk-addbox .tk-add-input{border:none;padding:3px 2px;background:none}
+.tk-add-dest{background:var(--sur);border:1px solid var(--bd);border-radius:var(--r-md);color:var(--mu);font-family:var(--fm);font-size:11px;padding:4px 6px;outline:none;cursor:pointer}
+.tk-add-dest:focus{border-color:var(--ac)}
+/* standalone task cards read slightly quieter than database-backed ones */
+.tk-card-std{border-style:dashed}
+.tk-card-std .tk-card-meta{font-style:italic}
+.tk-col-b{padding:8px;display:flex;flex-direction:column;gap:7px;overflow-y:auto}
+.tk-card{position:relative;background:var(--bg);border:1px solid var(--bd);border-radius:var(--r-md);padding:9px 11px;cursor:pointer;transition:border-color var(--t-fast),transform var(--t-fast),box-shadow var(--t-fast)}
+.tk-card:hover{border-color:var(--bd2);transform:translateY(-1px);box-shadow:0 3px 10px rgba(0,0,0,.18)}
+.tk-card-del{position:absolute;top:5px;right:5px;width:18px;height:18px;border:none;background:var(--sur2);color:var(--mu);
+  border-radius:var(--r-sm);font-size:11px;line-height:1;cursor:pointer;opacity:0;transition:opacity var(--t-fast),color var(--t-fast),background var(--t-fast);display:flex;align-items:center;justify-content:center}
+.tk-card:hover .tk-card-del{opacity:1}
+.tk-card-del:hover{color:var(--re);background:rgba(196,84,84,.14)}
+.tk-mu{color:var(--mu);font-style:italic}
+.tk-add{margin-top:4px;padding:7px 9px;font-family:var(--fm);font-size:11.5px;color:var(--mu);border-radius:var(--r-md);cursor:pointer;
+  border:1px dashed transparent;transition:color var(--t-fast),background var(--t-fast),border-color var(--t-fast)}
+.tk-add:hover{color:var(--tx);background:var(--bg);border-color:var(--bd)}
+.tk-add-plus{font-size:13px}
+.tk-add-input{width:100%;background:var(--bg);border:1px solid var(--ac);border-radius:var(--r-md);color:var(--tx);font-family:var(--fn);font-size:13px;padding:7px 9px;outline:none}
+.tk-card-title{font-size:13px;color:var(--tx);line-height:1.35;margin-bottom:6px;word-break:break-word}
+.tk-card-meta{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--mu)}
+.tk-board-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.tk-empty{padding:48px 32px;color:var(--mu);font-size:14px;text-align:center;line-height:1.7}
+.tk-empty span{font-size:12px;opacity:.8}
+
+/* ── CALENDAR ────────────────────────────────── */
+.cal-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.cal-bar{display:flex;align-items:center;gap:10px;padding:14px 32px;border-bottom:1px solid var(--bd);flex-shrink:0}
+.cal-mo{font-family:var(--fs);font-size:22px;font-weight:300}
+.cal-nb{background:none;border:1px solid var(--bd);border-radius:var(--r-sm);color:var(--mu);padding:5px 10px;font-size:13px;cursor:pointer;transition:border-color var(--t-fast)}
+.cal-nb:hover{border-color:var(--mu);color:var(--tx)}
+.cal-tod{background:none;border:1px solid var(--bd);border-radius:var(--r-sm);color:var(--mu);padding:5px 12px;font-size:11px;cursor:pointer;margin-left:auto;font-family:var(--fm);transition:border-color var(--t-fast)}
+.cal-tod:hover{border-color:var(--mu);color:var(--tx)}
+/* Month / Week / Day segmented toggle */
+.cal-viewseg{display:inline-flex;border:1px solid var(--bd);border-radius:var(--r-md);overflow:hidden}
+.cal-viewseg button{background:none;border:none;color:var(--mu);font-family:var(--fm);font-size:11px;padding:5px 12px;cursor:pointer;transition:background var(--t-fast),color var(--t-fast)}
+.cal-viewseg button.on{background:color-mix(in srgb,var(--go) 13%,transparent);color:var(--go)}
+.cal-viewseg button:hover:not(.on){color:var(--tx)}
+/* delete (✕) on calendar events */
+.cal-ev{position:relative}
+.cal-ev-del{position:absolute;top:1px;right:1px;width:15px;height:15px;border:none;background:var(--sur);color:var(--mu);border-radius:var(--r-xs);font-size:9px;line-height:1;cursor:pointer;opacity:0;display:none;align-items:center;justify-content:center;transition:opacity var(--t-fast),color var(--t-fast)}
+.cal-ev:hover .cal-ev-del{display:flex;opacity:1}
+.cal-ev-del:hover{color:var(--re);background:rgba(196,84,84,.16)}
+/* ── WEEK VIEW ── */
+.cal-grid.cal-week{grid-template-columns:repeat(7,1fr);border-left:1px solid var(--bd);border-top:1px solid var(--bd)}
+.calw-col{min-height:62vh;border-right:1px solid var(--bd);border-bottom:1px solid var(--bd);display:flex;flex-direction:column;cursor:pointer;transition:background var(--t-fast)}
+.calw-col:hover{background:var(--sur)}
+.calw-col.tod{background:color-mix(in srgb,var(--go) 11%,transparent)}
+.calw-col.cal-drop{background:var(--acs);box-shadow:inset 0 0 0 2px var(--ac)}
+.calw-h{display:flex;align-items:baseline;gap:7px;padding:9px 11px;border-bottom:1px solid var(--bd);position:sticky;top:0;background:inherit}
+.calw-wd{font-family:var(--fm);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--mu)}
+.calw-dn{font-family:var(--fs);font-size:20px;font-weight:600;color:var(--tx)}
+.calw-dn.tod{color:var(--go)}
+.calw-body{flex:1;padding:9px;display:flex;flex-direction:column;gap:6px;overflow-y:auto}
+.calw-body .cal-ev{white-space:normal;font-size:12px;padding:7px 9px;border-radius:var(--r-md)}
+/* ── DAY VIEW ── */
+.cal-grid.cal-day{display:block;border:1px solid var(--bd);border-radius:var(--r-lg);overflow:hidden;max-width:760px;margin:0 auto}
+.cald-col{display:flex;flex-direction:column;min-height:64vh}
+.cald-col.tod .cald-body{background:color-mix(in srgb,var(--go) 11%,transparent)}
+.cald-body{flex:1;padding:18px;display:flex;flex-direction:column;gap:9px;overflow-y:auto}
+.cald-body .cal-ev{white-space:normal;font-size:14px;padding:11px 14px;border-radius:var(--r-lg)}
+.cald-empty{color:var(--mu);font-style:italic;font-size:13px;text-align:center;padding:40px 0}
+.cald-add{padding:12px 18px;border-top:1px solid var(--bd);cursor:pointer;color:var(--mu);font-size:12px;font-family:var(--fm)}
+.cald-add:hover{color:var(--tx);background:var(--sur)}
+/* Sub-calendar legend: colour swatch + show/hide toggle per source */
+.cal-legend{display:flex;align-items:center;flex-wrap:wrap;gap:8px 14px;padding:11px 32px;border-bottom:1px solid var(--bd);flex-shrink:0}
+.cal-leg{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--tx);user-select:none}
+.cal-leg.off{opacity:.4}
+.cal-leg-dot{position:relative;width:12px;height:12px;border-radius:50%;cursor:pointer;flex-shrink:0;border:none;padding:0;overflow:hidden;box-shadow:0 0 0 1px rgba(0,0,0,.15) inset}
+.cal-leg-dot input[type=color]{position:absolute;inset:-4px;width:calc(100% + 8px);height:calc(100% + 8px);opacity:0;cursor:pointer;border:none;padding:0;background:none}
+.cal-leg.off .cal-leg-dot{box-shadow:0 0 0 1px var(--bd2) inset;background:transparent!important}
+.cal-leg-nm{cursor:pointer;letter-spacing:.02em}
+.cal-leg-nm:hover{text-decoration:underline}
+.cal-leg.off .cal-leg-nm{text-decoration:line-through}
+/* Delete-database affordance on Tasks legend chips (appears on hover) */
+.cal-leg-del{background:none;border:none;color:var(--mu);cursor:pointer;font-size:11px;line-height:1;padding:2px 4px;border-radius:var(--r-sm);opacity:0;transition:opacity var(--t-fast),color var(--t-fast),background var(--t-fast)}
+.cal-leg:hover .cal-leg-del{opacity:.65}
+.cal-leg-del:hover{opacity:1;color:var(--re);background:color-mix(in srgb,var(--re) 16%,transparent)}
+.cal-leg-all{background:none;border:1px solid var(--bd);border-radius:var(--r-sm);color:var(--mu);font-family:var(--fm);font-size:10px;letter-spacing:.04em;padding:3px 9px;cursor:pointer;transition:border-color var(--t-fast),color var(--t-fast)}
+.cal-leg-all:hover{border-color:var(--mu);color:var(--tx)}
+.cal-leg-empty{font-size:11px;color:var(--mu)}
+.cal-sc{flex:1;overflow-y:auto}
+.cal-gw{padding:0 32px 32px}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);border-left:1px solid var(--bd);border-top:1px solid var(--bd)}
+.cal-dh{padding:8px;font-size:10px;letter-spacing:var(--ls-label);text-transform:uppercase;color:var(--mu);text-align:center;border-right:1px solid var(--bd);border-bottom:1px solid var(--bd)}
+/* min-width:0 keeps the 7 columns equal — without it a long (nowrap) event title
+   forces its column wider and the whole grid balloons. */
+.cal-cell{min-width:0;min-height:110px;border-right:1px solid var(--bd);border-bottom:1px solid var(--bd);padding:8px 8px 6px;transition:background var(--t-fast)}
+.cal-cell:hover{background:var(--sur)}
+/* per-cell create "+" (replaces click-anywhere-to-create) */
+.cal-numrow{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+.cal-add{width:18px;height:18px;border:none;background:var(--sur2);color:var(--mu);border-radius:var(--r-sm);font-size:13px;line-height:1;cursor:pointer;opacity:0;display:flex;align-items:center;justify-content:center;transition:opacity var(--t-fast),color var(--t-fast),background var(--t-fast)}
+.cal-cell:hover .cal-add{opacity:1}
+.cal-add:hover{color:var(--ac);background:var(--acs)}
+.calw-add{background:none;border:none;cursor:pointer;text-align:left;padding:3px 2px;opacity:.6;transition:opacity var(--t-fast)}
+.calw-col:hover .calw-add{opacity:1}
+.calw-add .np-pill{font-size:11px}
+/* Adjacent-month days are dimmed but still show events that peek in. */
+.cal-cell.om{opacity:.4}
+.cal-cell.om:hover{opacity:.65}
+.cal-cell.tod{background:color-mix(in srgb,var(--go) 7%,transparent)}
+.cal-num{font-size:11px;color:var(--mu);margin-bottom:4px}
+.cal-cell.tod .cal-num{color:var(--go);font-weight:600}
+.cal-ev{display:block;padding:2px 6px;border-radius:var(--r-xs);font-size:10px;margin-bottom:2px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cal-ev:hover{opacity:.75}
+/* Native calendar (undated-doc) events carry the gold Calendar identity; events
+   pulled from a database row keep the lime --gr. Both tints track their token. */
+.cal-ev.doc-ev{background:color-mix(in srgb,var(--go) 16%,transparent);color:var(--go)}
+.cal-ev.row-ev{background:color-mix(in srgb,var(--gr) 16%,transparent);color:var(--gr)}
+
+/* ── TABLES VIEW ─────────────────────────────── */
+.tbl-wrap{flex:1;display:flex;overflow:hidden}
+.tbl-sb{width:200px;flex-shrink:0;border-right:1px solid var(--bd);display:flex;flex-direction:column;padding:12px 0;overflow-y:auto}
+.tbl-sb-h{font-size:9px;letter-spacing:var(--ls-label);text-transform:uppercase;color:var(--mu);padding:0 12px 8px}
+.tbl-sb-new{display:block;width:calc(100% - 12px);margin:0 6px 8px;padding:7px 10px;background:none;border:1px dashed var(--bd2);border-radius:var(--r-md);color:var(--mu);font-family:var(--fm);font-size:12px;text-align:left;cursor:pointer;transition:color var(--t-fast),border-color var(--t-fast)}
+.tbl-sb-new:hover{color:var(--ac);border-color:var(--ac)}
+.tbl-sb-it{display:flex;align-items:center;gap:8px;padding:7px 12px;cursor:pointer;color:var(--mu);font-size:12px;border-radius:var(--r-sm);margin:1px 6px;transition:background var(--t-fast),color var(--t-fast)}
+.tbl-sb-it:hover{background:var(--bd);color:var(--tx)}
+.tbl-sb-it.active{background:var(--acs);color:var(--tx)}
+.tbl-main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.tbl-bar{display:flex;align-items:center;gap:8px;padding:12px 20px;border-bottom:1px solid var(--bd);flex-shrink:0}
+.tbl-nm{font-family:var(--fs);font-size:20px;font-weight:300;flex:1;border:none;background:none;color:var(--tx);outline:none}
+.tbl-fi{background:var(--sur);border:1px solid var(--bd);border-radius:var(--r-sm);color:var(--tx);padding:5px 10px;font-size:11px;outline:none;font-family:var(--fm);width:160px}
+.tbl-fi:focus{border-color:var(--ac)}
+.tbl-sc{flex:1;overflow:auto}
+table.dbt{width:100%;border-collapse:collapse;font-size:12px}
+.dbt th{background:var(--sur);padding:9px 14px;text-align:left;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--mu);font-weight:400;border-bottom:1px solid var(--bd);border-right:1px solid var(--bd);cursor:pointer;white-space:nowrap;user-select:none}
+.dbt th:last-child{cursor:default;color:var(--mu)}
+.dbt th:not(:last-child):hover{color:var(--tx)}
+.dbt th.sa::after{content:' ↑';color:var(--ac)}
+.dbt th.sd::after{content:' ↓';color:var(--ac)}
+.dbt td{padding:8px 14px;border-bottom:1px solid var(--bd);border-right:1px solid var(--bd);color:var(--tx);vertical-align:middle;min-width:100px}
+.dbt td:last-child{width:36px;min-width:36px;padding:4px;text-align:center;border-right:none}
+.dbt tr:hover td{background:var(--sur)}
+.dbt td.ed{outline:none;cursor:text}
+.dbt td.ed:focus{background:var(--sur2)}
+.tbl-add{padding:10px 14px;color:var(--mu);font-size:11px;cursor:pointer;border-bottom:1px solid var(--bd)}
+.tbl-add:hover{background:var(--sur);color:var(--tx)}
+.chip{display:inline-block;padding:2px 8px;border-radius:var(--r-2xl);font-size:10px}
+.tbl-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;color:var(--mu);gap:8px;font-size:13px}
+.row-del{background:none;border:none;color:transparent;cursor:pointer;font-size:12px;padding:2px 6px;border-radius:var(--r-xs);transition:color var(--t-fast),background var(--t-fast);width:28px}
+tr:hover .row-del{color:var(--mu)}
+.row-del:hover{color:var(--re) !important;background:rgba(196,84,84,.1)}
+

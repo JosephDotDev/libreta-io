@@ -1,0 +1,464 @@
+/* ── DATABASE BLOCK ── */
+.bk-db{background:var(--sur);border:1px solid var(--bd);border-radius:var(--r-lg);overflow:hidden;margin:4px 0}
+.bk-db-hdr{display:flex;align-items:center;justify-content:space-between;padding:8px 14px;background:var(--sur2);border-bottom:1px solid var(--bd)}
+.bk-db-title{font-size:12px;color:var(--tx);font-family:var(--fm);font-weight:400}
+.bk-db-open{background:none;border:none;color:var(--mu);font-size:11px;cursor:pointer;font-family:var(--fm);transition:color var(--t-fast)}
+.bk-db-open:hover{color:var(--ac)}
+.bk-db-tbl{width:100%;border-collapse:collapse;font-size:11px}
+.bk-db-tbl th{padding:5px 14px;text-align:left;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--mu);font-weight:400;border-bottom:1px solid var(--bd)}
+.bk-db-tbl td{padding:6px 14px;border-bottom:1px solid var(--bd);color:var(--tx)}
+.bk-db-tbl tr:last-child td{border-bottom:none}
+.bk-db-foot{padding:7px 14px;font-size:10px;color:var(--mu);background:var(--sur2);cursor:pointer;text-align:center}
+.bk-db-foot:hover{color:var(--tx)}
+/* ── INTERACTIVE INLINE DATABASE BLOCK ── */
+/* Seamless: the database reads as part of the page, not a boxed card. */
+.idb{background:none;border:none;border-radius:0;margin:10px 0;font-family:var(--fm)}
+.idb-hd{display:flex;align-items:center;gap:10px;padding:2px 0 6px;background:none;border:none}
+.idb-title{flex:0 1 auto;min-width:60px;max-width:50%;background:none;border:none;outline:none;color:var(--tx);font-family:var(--fs);font-size:18px;font-weight:600;padding:2px 4px;margin-left:-4px;border-radius:var(--r-sm);letter-spacing:.01em}
+.idb-title:hover,.idb-title:focus{background:var(--bd)}
+.idb-title-s{color:var(--mu);font-size:12px}
+.idb-hd-r{display:flex;align-items:center;gap:4px;margin-left:auto}
+/* Header icon slot */
+.idb-hd-icon{flex-shrink:0;width:28px;height:28px;display:flex;align-items:center;justify-content:center;background:none;border:none;border-radius:var(--r-md);cursor:pointer;font-size:18px;line-height:1;padding:0;transition:background var(--t-fast)}
+.idb-hd-icon:hover{background:var(--bd)}
+.idb-hd-icon img{width:20px;height:20px;border-radius:var(--r-sm);object-fit:cover}
+.idb-hd-icon-ph{color:var(--mu);font-size:18px;line-height:1;opacity:.6}
+.idb-hd-icon:not(.has){opacity:0;transition:opacity var(--t-fast),background var(--t-fast)}
+.idb:hover .idb-hd-icon,.idb-hd-icon.has,.idb-hd-icon:focus{opacity:1}
+/* Divider + destructive delete, set apart from the modifier icons */
+.idb-hd-sep{width:1px;align-self:stretch;background:var(--bd2);margin:3px 4px}
+.idb-hd-del{flex-shrink:0;display:flex;align-items:center;justify-content:center;width:26px;height:26px;background:none;border:none;border-radius:var(--r-sm);color:var(--mu);cursor:pointer;opacity:0;transition:opacity var(--t-fast),color var(--t-fast),background var(--t-fast)}
+.idb:hover .idb-hd-del{opacity:.7}
+.idb-hd-del:hover{opacity:1;color:var(--re);background:color-mix(in srgb,var(--re) 16%,transparent)}
+.idb-hd-del svg{width:14px;height:14px}
+/* One-row header (table/board): name + modifier buttons + view picker inline */
+.idb-onerow .idb-hd{flex-wrap:nowrap;padding-bottom:8px;border-bottom:1px solid var(--bd);margin-bottom:6px}
+.idb-onerow .idb-hd .idb-toolbar{flex:1;flex-wrap:nowrap;padding:0;min-width:0;overflow:hidden}
+.idb-onerow .idb-hd .idb-hd-r{margin-left:0;flex-shrink:0}
+.idb-viewsel{background:none;border:1px solid transparent;border-radius:var(--r-sm);color:var(--mu);font-family:var(--fm);font-size:11px;padding:4px 6px;cursor:pointer;outline:none;transition:border-color var(--t-fast),color var(--t-fast)}
+.idb-viewsel:hover{color:var(--tx);border-color:var(--bd)}
+.idb-open{background:none;border:none;color:var(--mu);font-size:13px;cursor:pointer;padding:2px 6px;border-radius:var(--r-sm)}
+.idb-open:hover{color:var(--ac);background:var(--bd)}
+.idb-toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:0 0 7px;font-size:11px;color:var(--tx)}
+.idb-tb-lbl{color:var(--mu)}
+.idb-tb-grow{flex:1}
+.idb-tb-btn{background:none;border:1px solid var(--bd);border-radius:var(--r-sm);color:var(--mu);font-family:var(--fm);font-size:11px;padding:4px 9px;cursor:pointer;transition:border-color var(--t-fast),color var(--t-fast)}
+.idb-tb-btn:hover{color:var(--tx);border-color:var(--bd2)}
+/* icon-only toolbar buttons */
+.idb-tb-ic{background:none;border:1px solid transparent;border-radius:var(--r-md);color:var(--mu);cursor:pointer;width:28px;height:26px;display:inline-flex;align-items:center;justify-content:center;padding:0;transition:color var(--t-fast),background var(--t-fast),border-color var(--t-fast)}
+.idb-tb-ic svg{width:15px;height:15px;display:block}
+.idb-tb-ic:hover{color:var(--tx);background:var(--bd)}
+.idb-tb-ic.on{color:var(--ac);border-color:var(--ac);background:var(--acs)}
+/* toolbar popover (group/sort/properties) */
+.idb-pop{position:fixed;z-index:760;background:var(--sur);border:1px solid var(--bd2);border-radius:var(--r-lg);box-shadow:var(--elev-2);min-width:210px;padding:6px;display:none;font-family:var(--fm)}
+.idb-pop.open{display:block}
+.idb-pop-lbl{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--mu);padding:5px 8px 4px}
+.idb-pop-it{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:var(--r-md);cursor:pointer;font-size:12px;color:var(--tx)}
+.idb-pop-it:hover{background:var(--sur2)}
+.idb-pop-it.on{color:var(--ac)}
+.idb-pop-ico{width:16px;text-align:center;color:var(--mu)}
+.idb-pop-arrow{margin-left:auto;color:var(--ac)}
+.idb-pop-add{color:var(--ac);border-top:1px solid var(--bd);margin-top:3px}
+.idb-prop-it.dimmed .idb-prop-nm{color:var(--mu)}
+.idb-prop-grip{color:var(--mu);opacity:.45;cursor:grab;font-size:11px;letter-spacing:-1px;width:12px;flex-shrink:0}
+.idb-prop-it:hover .idb-prop-grip{opacity:.85}
+.idb-prop-nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.idb-prop-nm .idb-th-ico{margin-right:7px}
+.idb-prop-eye{background:none;border:none;color:var(--mu);cursor:pointer;padding:3px;border-radius:var(--r-sm);display:inline-flex;align-items:center;flex-shrink:0;transition:color var(--t-fast),background var(--t-fast)}
+.idb-prop-eye svg{width:15px;height:15px}
+.idb-prop-eye:hover{color:var(--tx);background:var(--bd)}
+.idb-prop-eye.off{color:var(--bd2)}
+.idb-prop-del{background:none;border:none;color:var(--mu);cursor:pointer;padding:3px;border-radius:var(--r-sm);display:inline-flex;align-items:center;flex-shrink:0;opacity:.5;transition:color var(--t-fast),background var(--t-fast),opacity var(--t-fast)}
+.idb-prop-del svg{width:15px;height:15px}
+.idb-prop-it:hover .idb-prop-del{opacity:.85}
+.idb-prop-del:hover{opacity:1;color:var(--re);background:rgba(196,84,84,.12)}
+/* column / row drag-reorder cues */
+.idb-tbl th.idb-col-drop{box-shadow:inset 2px 0 0 var(--ac)}
+.idb-tbl tr.idb-row-drop td{box-shadow:inset 0 2px 0 var(--ac)}
+.idb-tbl th[draggable=true]{cursor:grab}
+.idb-rowhandle[draggable=true]{cursor:grab}
+.idb-fchip{display:inline-flex;align-items:center;gap:5px;background:var(--acs);color:var(--ac);border-radius:var(--r-xl);padding:3px 5px 3px 9px;font-size:10px}
+.idb-fchip b{font-weight:500}
+.idb-fchip button{background:none;border:none;color:var(--ac);cursor:pointer;opacity:.6;font-size:10px;padding:0 2px}
+.idb-fchip button:hover{opacity:1}
+.idb-sc{overflow-x:auto}
+.idb-tbl{width:100%;border-collapse:collapse;font-size:12px;border-top:1px solid var(--bd)}
+.idb-tbl th{padding:6px 10px;text-align:left;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--mu);font-weight:400;border-bottom:1px solid var(--bd);white-space:nowrap;cursor:pointer;user-select:none}
+.idb-tbl th:first-child,.idb-tbl td:first-child{padding-left:2px}
+.idb-tbl th:hover{color:var(--tx)}
+.idb-tbl th.idb-addcol{width:30px;text-align:center;color:var(--mu)}
+.idb-tbl td{padding:6px 10px;border-bottom:1px solid var(--bd);color:var(--tx);vertical-align:middle;min-width:60px}
+.idb-tbl tbody tr:hover td{background:rgba(255,255,255,.014)}
+/* minimal group header: chevron + a pill for the value + count */
+.idb-grp td{background:none!important;padding:14px 6px 6px;border-bottom:none}
+.idb-grp-cols th{padding-top:2px;padding-bottom:7px}
+.idb-grp-h{display:flex;align-items:center;gap:9px}
+.idb-grp-chev{background:none;border:none;display:inline-flex;align-items:center;justify-content:center;color:var(--mu);cursor:pointer;font-size:15px;width:24px;height:24px;border-radius:var(--r-sm);flex-shrink:0;transition:transform var(--t-med),background var(--t-fast),color var(--t-fast)}
+.idb-grp-chev.collapsed{transform:rotate(-90deg)}
+.idb-grp-chev:hover{color:var(--tx);background:var(--bd)}
+.idb-grp-count{color:var(--mu);font-size:12px}
+.idb-grp-none{display:inline-flex;align-items:center;background:var(--sur2);border:1px solid var(--bd);border-radius:var(--r-xl);padding:2px 11px;font-size:12px;color:var(--mu)}
+/* Group header action buttons (⋯ menu and + New) — revealed on hover */
+.idb-grp-more,.idb-grp-h-new{background:none;border:1px solid transparent;border-radius:var(--r-sm);cursor:pointer;opacity:0;color:var(--mu);transition:opacity var(--t-med),color var(--t-fast),background var(--t-fast),border-color var(--t-fast);flex-shrink:0;font-family:var(--fm)}
+.idb-grp-more{font-size:15px;padding:0 5px;line-height:1.6;letter-spacing:.05em}
+.idb-grp-h-new{font-size:12px;padding:2px 8px}
+.idb-grp:hover .idb-grp-more,.idb-grp:hover .idb-grp-h-new{opacity:1}
+.idb-grp-more:hover,.idb-grp-h-new:hover{background:var(--sur2);border-color:var(--bd);color:var(--tx)}
+/* Hidden-groups indicator row */
+.idb-grp-hidden-row td{padding:6px 8px;border-bottom:1px solid var(--bd)}
+.idb-grp-hidden-lbl{color:var(--mu);font-size:12px;margin-right:8px}
+.idb-grp-show-all{background:none;border:1px solid var(--bd);border-radius:var(--r-sm);color:var(--mu);cursor:pointer;font-size:12px;padding:2px 8px;font-family:var(--fm)}
+.idb-grp-show-all:hover{background:var(--sur2);color:var(--tx)}
+/* Danger item in idb-pop */
+.idb-pop-danger{color:#e05252}
+.idb-pop-danger:hover{background:rgba(224,82,82,.07)!important;color:#e05252}
+/* Conditional color rules popup */
+.idb-cr-row{display:flex;align-items:center;gap:6px;padding:5px 10px}
+.idb-cr-sel{flex:1;min-width:0;background:var(--sur2);border:1px solid var(--bd);border-radius:var(--r-sm);color:var(--tx);font-family:var(--fm);font-size:12px;padding:3px 5px;cursor:pointer}
+.idb-cr-color{width:28px;height:22px;border:1px solid var(--bd);border-radius:var(--r-sm);cursor:pointer;padding:0;background:none;flex-shrink:0}
+.idb-cr-del{background:none;border:none;color:var(--mu);cursor:pointer;font-size:15px;line-height:1;padding:0 2px;flex-shrink:0}
+.idb-cr-del:hover{color:var(--tx)}
+/* per-group "New entry" row, under the group's last entry */
+.idb-grp-newrow td{border-bottom:1px solid var(--bd);padding:0}
+/* Per-group pagination controls (Show more / all / less) */
+.idb-grp-morerow td{border-bottom:1px solid var(--bd);padding:4px 8px}
+.idb-grp-more-in{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.idb-grp-more-ct{color:var(--mu);font-size:11px;font-family:var(--fm);margin-right:2px}
+.idb-grp-more-b{background:none;border:none;color:var(--ac);cursor:pointer;font-family:var(--fm);font-size:12px;padding:3px 9px;border-radius:var(--r-md);transition:background var(--t-fast),color var(--t-fast)}
+.idb-grp-more-b:hover{background:var(--acs)}
+.idb-grp-more-b.sec{color:var(--mu)}
+.idb-grp-more-b.sec:hover{color:var(--tx);background:var(--sur2)}
+.idb-grp-add{background:none;border:none;color:var(--mu);cursor:pointer;font-family:var(--fm);font-size:12px;padding:5px 8px;width:100%;text-align:left;border-radius:0}
+/* Shared pill for every "+ New Page" affordance — only the pill highlights, never the whole row. */
+.np-pill{display:inline-flex;align-items:center;gap:4px;padding:4px 11px;border-radius:var(--r-md);color:var(--mu);transition:background var(--t-fast),color var(--t-fast)}
+.idb-grp-add:hover .np-pill,.idb-foot:hover .np-pill,.idb-bcard-add:hover .np-pill{background:var(--sur2);color:var(--tx)}
+/* property type icon in headers */
+.idb-th-in{display:inline-flex;align-items:center;gap:5px;min-width:0}
+.idb-th-ico{color:#A89F8E;font-size:12px;opacity:1;flex-shrink:0;width:14px;text-align:center}
+/* resizable columns */
+.idb-tbl th{position:relative}
+.idb-col-rz{position:absolute;top:0;right:-4px;width:9px;height:100%;cursor:col-resize;z-index:3}
+.idb-col-rz:hover::after,body.idb-col-resizing .idb-col-rz::after{content:'';position:absolute;top:0;right:4px;width:2px;height:100%;background:var(--ac)}
+body.idb-col-resizing{cursor:col-resize;user-select:none}
+.idb-tbl.fixed{table-layout:fixed}
+.idb-tbl.fixed td:not(.idb-imgcell){overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.idb-tbl.fixed .idb-title-cell{overflow:hidden}
+.idb-tbl.fixed .idb-title-ed{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.idb-cg-handle{width:24px}
+.idb-cg-add{width:30px}
+.idb-grp .idb-dd-dot{margin-right:6px}
+.idb-ed{outline:none}
+/* Editing a cell shows a faint fill, not a border — the old inset ring felt like it
+   constricted the cell. */
+.idb-ed:focus{background:rgba(255,255,255,.05);border-radius:var(--r-xs)}
+/* Inline-editable titles on board cards / calendar events show a placeholder when empty. */
+.idb-card-title-ed,.idb-cev-title-ed{cursor:text;border-radius:var(--r-xs)}
+.idb-card-title-ed:empty::after,.idb-cev-title-ed:empty::after{content:attr(data-ph);color:var(--mu);pointer-events:none}
+.idb-title-cell{font-weight:500;position:relative}
+.idb-title-inner{display:flex;align-items:center;gap:7px;min-width:0;overflow:hidden}
+.idb-title-cell .idb-row-ico{font-size:15px;line-height:1}
+.idb-title-ed{flex:1;min-width:0;outline:none}
+.idb-click{cursor:pointer}
+.idb-mu{color:var(--mu)}
+.idb-empty{text-align:center;color:var(--mu);padding:16px!important;font-style:italic}
+/* leading row handle (left gutter) — only as wide as the button needs */
+.idb-lead-th,.idb-rowhandle{width:24px!important;min-width:24px!important;max-width:24px!important;white-space:nowrap;padding:0!important;text-align:center}
+.idb-rowend{width:6px!important;min-width:6px!important;max-width:6px!important;padding:0!important}
+.idb-rowmenu-btn{background:none;border:none;color:var(--mu);cursor:pointer;font-size:17px;line-height:1;padding:1px 2px;border-radius:var(--r-sm);opacity:0;transition:opacity var(--t-fast),color var(--t-fast),background var(--t-fast)}
+.idb-tbl tbody tr:hover .idb-rowmenu-btn{opacity:.5}
+.idb-rowmenu-btn:hover{opacity:1!important;color:var(--tx);background:var(--bd)}
+/* Open button at the far end of the title cell */
+.idb-open-row{position:absolute;right:6px;top:50%;transform:translateY(-50%);background:var(--sur);border:1px solid var(--bd);color:var(--mu);cursor:pointer;font-family:var(--fm);font-size:11px;padding:3px 9px;border-radius:var(--r-sm);opacity:0;pointer-events:none;display:inline-flex;align-items:center;gap:4px;box-shadow:-8px 0 8px -4px var(--bg);transition:opacity var(--t-fast),color var(--t-fast),border-color var(--t-fast)}
+.idb-tbl tbody tr:hover .idb-open-row{pointer-events:auto}
+.idb-tbl tbody tr:hover .idb-open-row{opacity:.85}
+.idb-open-row:hover{opacity:1!important;color:var(--ac);border-color:var(--ac)}
+.idb-rowmenu{position:fixed;z-index:760;background:var(--sur);border:1px solid var(--bd2);border-radius:var(--r-lg);box-shadow:var(--elev-2);min-width:180px;padding:6px;display:none;font-family:var(--fm)}
+.idb-rowmenu.open{display:block}
+.idb-rowmenu .idb-dd-it{border-radius:var(--r-sm);font-size:13px;padding:9px 10px;gap:4px}
+.idb-mi{font-size:17px;width:24px;display:inline-block;text-align:center;flex-shrink:0}
+.idb-rm-del{color:var(--re)}
+.idb-rm-del:hover{background:rgba(196,84,84,.1)!important}
+/* document peek (side / centered) */
+.doc-peek{position:fixed;inset:0;z-index:800;display:none}
+.doc-peek.open{display:block}
+.doc-peek-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.45)}
+.doc-peek-panel{position:absolute;background:var(--bg);display:flex;flex-direction:column;overflow:hidden}
+.doc-peek.mode-side .doc-peek-panel{top:0;right:0;bottom:0;width:clamp(380px,42vw,640px);border-left:1px solid var(--bd2);box-shadow:-10px 0 44px rgba(0,0,0,.5);animation:peekSlide var(--t-slow) ease}
+.doc-peek.mode-center .doc-peek-panel{top:50%;left:50%;transform:translate(-50%,-50%);width:min(760px,92vw);height:min(80vh,860px);border-radius:var(--r-xl);border:1px solid var(--bd2);box-shadow:var(--elev-3);animation:peekPop var(--t-med) ease}
+@keyframes peekSlide{from{transform:translateX(34px);opacity:.3}to{transform:translateX(0);opacity:1}}
+@keyframes peekPop{from{transform:translate(-50%,-48%) scale(.97);opacity:.4}to{transform:translate(-50%,-50%) scale(1);opacity:1}}
+.doc-peek-bar{display:flex;align-items:center;gap:6px;padding:10px 14px;border-bottom:1px solid var(--bd);flex-shrink:0}
+.doc-peek-btn{background:none;border:1px solid var(--bd);color:var(--mu);cursor:pointer;font-family:var(--fm);font-size:12px;padding:5px 11px;border-radius:var(--r-md);display:inline-flex;align-items:center;gap:5px;transition:color var(--t-fast),border-color var(--t-fast)}
+.doc-peek-btn:hover{color:var(--ac);border-color:var(--ac)}
+.doc-peek-scroll{flex:1;overflow-y:auto;padding:20px 24px 90px}
+.doc-peek-title{width:100%;font-family:var(--fs);font-size:34px;font-weight:600;background:none;border:none;outline:none;color:var(--tx);padding:0;margin-bottom:12px;letter-spacing:.01em}
+.doc-peek-title::placeholder{color:var(--mu)}
+/* Block layout (like the main editor's .props-row) so the full-width text-property
+   column actually stretches to the panel edge instead of shrinking to its content. */
+.doc-peek-props{display:block;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--bd);min-height:30px}
+.doc-peek-scroll .blocks-ct{max-width:none;padding:0}
+/* Peek cover + icon (compact versions of the editor's) */
+.peek-actions-row{display:flex;gap:6px;margin-bottom:6px;opacity:0;transition:opacity var(--t-fast)}
+.doc-peek-scroll:hover .peek-actions-row{opacity:1}
+.peek-cover{position:relative;border-radius:var(--r-lg);overflow:hidden;margin-bottom:12px}
+/* Override the base .cover-wrap height (280px) so the wrap matches the peek image —
+   otherwise the wrap leaves ~120px of empty surface below the cover. */
+.cover-wrap.peek-cover{height:160px}
+.peek-cover .cover-img-el{width:100%;height:100%;object-fit:cover;display:block}
+.peek-cover .cover-actions{position:absolute;top:8px;right:8px;display:flex;gap:4px;opacity:0;transition:opacity var(--t-med)}
+.peek-cover:hover .cover-actions{opacity:1}
+.peek-title-main{display:flex;align-items:center;gap:8px}
+.peek-title-main .doc-peek-title{flex:1;margin-bottom:0}
+#peek-icon-area:empty{display:none}
+/* Side-peek icon: larger + bolder line so a recoloured icon reads clearly in the
+   narrow panel (was 30px / stroke 2 — too small and thin to make out). */
+.peek-title-main .icon-display{font-size:46px;line-height:1;cursor:pointer;flex-shrink:0}
+.peek-title-main .icon-display .li-svg{stroke-width:2.2}
+.peek-title-main .icon-display.has-img img{width:48px;height:48px;border-radius:var(--r-md);object-fit:cover;display:block}
+/* The peek is a compact reading/editing surface — run body text a touch smaller
+   than the full editor (18px) so more fits in the narrower panel. */
+.doc-peek-scroll .bk{font-size:16px}
+.doc-peek .doc-peek-title{font-size:30px}
+/* While the side-peek is open (z-index 800) the shared property / menu popovers
+   must lift above it — otherwise tapping a property in the peek opens its menu
+   *behind* the panel. Sub-popovers (colour palette, date picker) sit a notch higher
+   than the editor they belong to. */
+body.peek-open .prop-editor,
+body.peek-open .docprops-panel,
+body.peek-open .pm,
+body.peek-open .dp,
+body.peek-open .link-pop,
+body.peek-open .idb-pop,
+body.peek-open .idb-colpop,
+body.peek-open #tbl-dd,
+body.peek-open .idb-rowmenu,
+body.peek-open .slash-m,
+body.peek-open .bk-menu{z-index:900}
+/* The block-selection marquee (z-index 120) would otherwise render BEHIND the peek
+   panel (z 800) — lift it so the selection shape is visible inside the peek. */
+body.peek-open .ms-marquee{z-index:900}
+/* The click-catcher overlay must sit ABOVE the peek (so a click outside a popover,
+   anywhere over the peek, reaches it and closes the menu) but BELOW the popovers. */
+body.peek-open .ovl{z-index:850}
+body.peek-open #color-pal,
+body.peek-open .color-pal,
+body.peek-open #pm-dp{z-index:920}
+/* Base layer for the select dropdown (moved off an inline style so the peek-open
+   boost above can win — inline styles outrank stylesheet rules). */
+#tbl-dd{z-index:700}
+.idb-foot{padding:5px 0;font-size:11px;color:var(--mu);cursor:pointer;border-bottom:1px solid var(--bd)}
+/* Cross-database drop affordance: dragging a row from another table over the
+   "+ New Page" footer (the only drop target an EMPTY table offers) highlights it. */
+.idb-foot.idb-foot-drop{background:var(--acs);color:var(--ac);box-shadow:inset 0 0 0 1px var(--ac);border-radius:var(--r-sm)}
+.idb-note{padding:22px 16px;text-align:center;color:var(--mu);font-size:12px;border-top:1px solid var(--bd)}
+.idb-note b{color:var(--tx);font-weight:500}
+.idb-sel{background:var(--bg);border:1px solid var(--bd);border-radius:var(--r-sm);color:var(--tx);font-family:var(--fm);font-size:11px;padding:3px 6px;outline:none;cursor:pointer}
+.idb-navbtn{background:none;border:1px solid var(--bd);border-radius:var(--r-sm);color:var(--mu);width:24px;height:22px;cursor:pointer;font-size:13px;line-height:1}
+.idb-navbtn:hover{color:var(--tx);border-color:var(--bd2)}
+.idb-dd-it{display:flex;align-items:center;gap:8px;padding:7px 12px;cursor:pointer;font-size:12px;color:var(--tx)}
+.idb-dd-it:hover{background:var(--sur2)}
+.idb-dd-sep{height:1px;background:var(--bd);margin:5px 0}
+.idb-dd-cap{padding:4px 12px 2px;font-size:11px;font-weight:600;letter-spacing:.03em;color:var(--mu);text-transform:uppercase}
+.idb-dd-dot{width:9px;height:9px;border-radius:50%;display:inline-block;flex-shrink:0;cursor:pointer}
+.idb-dd-add{color:var(--ac);border-top:1px solid var(--bd)}
+/* in-place select editor — roomier, drag-reorder, big swatches */
+.idb-seldd{min-width:288px!important}
+.idb-dd-opts{max-height:300px;overflow-y:auto;padding:3px}
+.idb-dd-opt{gap:9px;padding:9px 10px;border-radius:var(--r-md);user-select:none}
+.idb-dd-opt:hover{background:var(--sur2)}
+.idb-dd-grip{color:var(--mu);opacity:.4;cursor:grab;font-size:12px;letter-spacing:-1px;flex-shrink:0}
+.idb-dd-opt:hover .idb-dd-grip{opacity:.8}
+.idb-dd-opt:active .idb-dd-grip{cursor:grabbing}
+.idb-dd-opt .idb-dd-lbl{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.idb-dd-chk{color:var(--ac)}
+.idb-dd-cb{width:16px;height:16px;border:1.5px solid var(--bd2);border-radius:var(--r-sm);display:inline-flex;align-items:center;justify-content:center;font-size:11px;color:#fff;flex-shrink:0;transition:background var(--t-fast),border-color var(--t-fast)}
+.idb-dd-cb.on{background:var(--ac);border-color:var(--ac)}
+.idb-dd-opt.sel{background:var(--sur2)}
+.idb-mscell{white-space:normal;line-height:1.5}
+.idb-mscell .chip{margin:1px 3px 1px 0;vertical-align:middle}
+.idb-dd-more{background:none;border:none;color:var(--mu);cursor:pointer;font-size:15px;opacity:0;padding:0 4px;border-radius:var(--r-sm);transition:opacity var(--t-fast),color var(--t-fast),background var(--t-fast);flex-shrink:0}
+.idb-dd-optwrap.open .idb-dd-more,.idb-dd-opt:hover .idb-dd-more{opacity:.7}
+.idb-dd-more:hover{opacity:1!important;color:var(--tx);background:var(--bd)}
+.idb-dd-edit{padding:4px 12px 12px 12px;background:var(--sur2);border-radius:0 0 var(--r-md) var(--r-md);margin:-2px 3px 4px}
+.idb-dd-swatches{display:flex;flex-wrap:wrap;gap:8px;padding:4px 0 9px}
+.idb-dd-sw{width:24px;height:24px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:transform var(--t-fast)}
+.idb-dd-sw:hover{transform:scale(1.12)}
+.idb-dd-sw.on{border-color:var(--tx)}
+.idb-dd-delbtn{width:100%;background:none;border:1px solid var(--bd);color:var(--re);border-radius:var(--r-sm);padding:7px;font-family:var(--fm);font-size:11px;cursor:pointer;transition:background var(--t-fast),border-color var(--t-fast)}
+.idb-dd-delbtn:hover{background:rgba(196,84,84,.1);border-color:var(--re)}
+.idb-dd-hint{padding:8px 12px 4px;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--mu)}
+.idb-dd-dot.ring{box-shadow:0 0 0 2px var(--sur),0 0 0 3px currentColor}
+.idb-dd-empty{padding:12px;color:var(--mu);font-size:11px;font-style:italic}
+.idb-dd-addrow{border-top:1px solid var(--bd);padding:7px}
+.idb-dd-newinput{width:100%;background:var(--bg);border:1px solid var(--bd);border-radius:var(--r-sm);color:var(--tx);font-family:var(--fm);font-size:12px;padding:8px 9px;outline:none}
+.idb-dd-newinput:focus{border-color:var(--ac)}
+.idb-dd-clear{border-top:1px solid var(--bd)}
+.idb-filterpop{width:230px;padding:7px}
+.idb-filterpop .idb-dd-it{border-radius:var(--r-sm)}
+.idb-fdate-ops{display:flex;gap:4px;margin-bottom:8px}
+.idb-fop{flex:1;background:none;border:1px solid var(--bd);border-radius:var(--r-sm);color:var(--mu);font-family:var(--fm);font-size:11px;padding:5px;cursor:pointer;transition:border-color var(--t-fast),color var(--t-fast),background var(--t-fast)}
+.idb-fop:hover{color:var(--tx);border-color:var(--bd2)}
+.idb-fop.on{background:var(--acs);border-color:var(--ac);color:var(--ac)}
+.idb-fdate-input{color-scheme:dark;cursor:text}
+/* rounded checkbox */
+.idb-cbcell{text-align:left}
+.idb-cb{display:inline-flex;align-items:center;justify-content:center;width:21px;height:21px;border-radius:var(--r-md);border:2px solid var(--bd2);color:transparent;font-size:13px;font-weight:700;line-height:1;cursor:pointer;transition:background var(--t-fast),border-color var(--t-fast),color var(--t-fast);vertical-align:middle}
+.idb-cb:hover{border-color:var(--mu)}
+.idb-cb.on{background:var(--gr);border-color:var(--gr);color:#fff}
+/* status pill */
+.idb-status{display:inline-flex;align-items:center;gap:6px;background:var(--sur2);border:1px solid var(--bd);border-radius:var(--r-xl);padding:2px 9px 2px 7px;font-size:11px;color:var(--tx)}
+.idb-status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+/* image cell */
+.idb-imgcell{padding:3px 6px!important}
+.idb-imgcell img{width:64px;height:38px;border-radius:var(--r-sm);object-fit:cover;display:block;cursor:zoom-in}
+.idb-covercell{font-size:11px;font-style:italic;opacity:.7}
+/* Image lightbox overlay */
+.imglb{position:fixed;inset:0;z-index:4000;display:flex;align-items:center;justify-content:center;background:rgba(8,7,5,.82);backdrop-filter:blur(3px);opacity:0;transition:opacity var(--t-med) ease;cursor:zoom-out;pointer-events:none}
+.imglb.open{opacity:1;pointer-events:auto}
+.imglb-stage{position:relative;max-width:90vw;max-height:90vh;display:flex;align-items:center;justify-content:center;transform:scale(.97);transition:transform var(--t-med) ease}
+.imglb.open .imglb-stage{transform:scale(1)}
+.imglb-img{max-width:90vw;max-height:90vh;border-radius:var(--r-lg);box-shadow:var(--elev-3);cursor:default;display:block}
+.imglb-bar{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);display:flex;gap:8px;opacity:0;transition:opacity var(--t-med)}
+.imglb-stage:hover .imglb-bar{opacity:1}
+.imglb-btn{background:rgba(20,18,16,.9);border:1px solid var(--bd2);color:var(--tx);font-family:var(--fm);font-size:11px;padding:6px 13px;border-radius:var(--r-md);cursor:pointer;backdrop-filter:blur(4px)}
+.imglb-btn:hover{border-color:var(--ac);color:var(--ac)}
+.imglb-btn.danger:hover{border-color:var(--re);color:var(--re)}
+.idb-card-cover{margin:-9px -10px 8px;height:96px;overflow:hidden;border-radius:var(--r-md) var(--r-md) 0 0}
+.idb-card-cover img{width:100%;height:100%;object-fit:cover;display:block}
+.idb-seldd .idb-dd-dot{width:15px;height:15px}
+/* column / property type picker popover */
+.idb-colpop{position:fixed;z-index:760;background:var(--sur);border:1px solid var(--bd2);border-radius:var(--r-lg);box-shadow:var(--elev-2);width:248px;padding:11px;display:none;font-family:var(--fm)}
+.idb-colpop.open{display:block}
+.idb-cp-lbl{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--mu);margin:2px 2px 6px}
+.idb-cp-name{width:100%;background:var(--bg);border:1px solid var(--bd);border-radius:var(--r-sm);color:var(--tx);font-family:var(--fm);font-size:12px;padding:8px 9px;outline:none;margin-bottom:9px}
+.idb-cp-name:focus{border-color:var(--ac)}
+.idb-cp-types{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.idb-cp-type{display:flex;align-items:center;gap:7px;padding:7px 9px;border:1px solid var(--bd);border-radius:var(--r-sm);color:var(--mu);background:none;cursor:pointer;font-family:var(--fm);font-size:11px;transition:border-color var(--t-fast),color var(--t-fast),background var(--t-fast);text-align:left}
+.idb-cp-type:hover{border-color:var(--bd2);color:var(--tx)}
+.idb-cp-type.on{border-color:var(--ac);color:var(--ac);background:var(--acs)}
+.idb-cp-actions{display:flex;gap:6px;margin-top:11px}
+.idb-cp-btn{flex:1;padding:8px;border:none;border-radius:var(--r-sm);background:var(--ac);color:#1a0810;font-family:var(--fm);font-size:11px;cursor:pointer;transition:opacity var(--t-fast)}
+.idb-cp-btn:hover{opacity:.88}
+.idb-cp-btn.sec{background:none;border:1px solid var(--bd);color:var(--mu)}
+.idb-cp-btn.sec:hover{color:var(--tx);border-color:var(--bd2)}
+.idb-cp-btn.danger{background:none;border:1px solid var(--re);color:var(--re);flex:0 0 auto;padding:8px 11px}
+/* board */
+.idb-board{display:flex;gap:10px;padding:12px;overflow-x:auto;align-items:flex-start}
+.idb-bcol{flex:0 0 220px;background:var(--bg);border:1px solid var(--bd);border-radius:var(--r-md);overflow:hidden}
+.idb-bcol-h{display:flex;align-items:center;gap:7px;padding:8px 11px;font-size:11px;color:var(--tx);border-bottom:1px solid var(--bd);background:var(--sur2)}
+.idb-bcol-b{padding:8px;display:flex;flex-direction:column;gap:7px;min-height:24px}
+.idb-card{background:var(--sur2);border:1px solid var(--bd);border-radius:var(--r-md);padding:9px 10px;cursor:pointer;transition:border-color var(--t-fast),transform var(--t-fast)}
+.idb-card:hover{border-color:var(--bd2);transform:translateY(-1px)}
+.idb-card[draggable=true]{cursor:grab}
+.idb-card.idb-card-dragging{opacity:.4}
+.idb-card{position:relative}
+/* Hover delete on board cards and calendar events. */
+.idb-card-del,.idb-cev-del{position:absolute;top:4px;right:4px;width:18px;height:18px;border:none;background:var(--sur);
+  color:var(--mu);border-radius:var(--r-sm);font-size:11px;line-height:1;cursor:pointer;opacity:0;z-index:2;
+  display:flex;align-items:center;justify-content:center;transition:opacity var(--t-fast),color var(--t-fast),background var(--t-fast)}
+.idb-card:hover .idb-card-del,.idb-cal-ev:hover .idb-cev-del{opacity:1}
+.idb-card-del:hover,.idb-cev-del:hover{color:var(--re);background:rgba(196,84,84,.16)}
+.idb-cal-ev{position:relative}
+/* Highlighted destination lane while dragging a card across swim lanes. */
+.idb-bcol.idb-bcol-drop{border-color:var(--ac);box-shadow:inset 0 0 0 1px var(--ac)}
+.idb-bcol.idb-bcol-drop .idb-bcol-b{background:var(--acs)}
+.idb-card-t{font-size:12px;color:var(--card-title);margin-bottom:4px;font-family:var(--fs);font-weight:600}
+.idb-card-m{display:flex;flex-wrap:wrap;gap:4px}
+.idb-card-d{font-size:10px;color:var(--mu)}
+.idb-bcard-add{font-size:11px;color:var(--mu);cursor:pointer;padding:3px 0}
+/* calendar */
+/* timeline view */
+.idb-timeline{position:relative;padding:6px 4px 8px}
+.idb-timeline::before{content:'';position:absolute;left:131px;top:6px;bottom:8px;width:1px;background:var(--bd)}
+.idb-tl-month{font-family:var(--fs);font-size:15px;color:var(--mu);margin:14px 0 6px;padding-left:150px}
+.idb-tl-month:first-child{margin-top:4px}
+.idb-tl-item{display:flex;align-items:flex-start;padding:8px 0;cursor:pointer;position:relative;border-radius:var(--r-md)}
+.idb-tl-item:hover{background:var(--sur2)}
+.idb-tl-item.past{opacity:.55}
+.idb-tl-date{width:120px;flex-shrink:0;text-align:right;padding-right:22px;font-size:11px;color:var(--mu);line-height:1.5}
+.idb-tl-item.today .idb-tl-date{color:var(--ac)}
+.idb-tl-tod{display:block;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--ac)}
+.idb-tl-dot{position:absolute;left:127px;top:12px;width:9px;height:9px;border-radius:50%;background:var(--bd2);border:2px solid var(--bg);z-index:1}
+.idb-tl-item.today .idb-tl-dot{background:var(--ac)}
+.idb-tl-card{flex:1;min-width:0;padding-left:30px}
+.idb-tl-title{display:flex;align-items:center;gap:6px;font-family:var(--fs);font-size:15px;color:var(--card-title);font-weight:600}
+.idb-tl-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px}
+.idb-cal{padding:10px 12px 14px}
+.idb-cal-month{font-family:var(--fs);font-size:16px;color:var(--tx)}
+.idb-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--bd);border:1px solid var(--bd);border-radius:var(--r-md);overflow:hidden}
+.idb-cal-dow{background:var(--sur2);color:var(--mu);font-size:9px;letter-spacing:.06em;text-align:center;padding:5px 0;text-transform:uppercase}
+/* min-width:0 keeps the 7 columns equal — a long (nowrap) title would otherwise
+   widen its column and balloon the grid. */
+.idb-cal-cell{min-width:0;background:var(--bg);min-height:74px;padding:4px 5px;font-size:11px;display:flex;flex-direction:column;gap:3px;transition:background var(--t-fast),opacity var(--t-fast)}
+/* Adjacent-month days are dimmed but still show events that peek in. */
+.idb-cal-out{opacity:.5}
+.idb-cal-out:hover{opacity:.78}
+.idb-cal-out .idb-cal-num{opacity:.32}
+.idb-cal-drop{background:var(--acs)!important;box-shadow:inset 0 0 0 2px var(--ac)}
+/* dim ghost left behind at the original spot while dragging an event */
+.idb-cal-dragging{opacity:.32;outline:1.5px dashed var(--bd2);outline-offset:-1px}
+/* Translucent clone that follows the cursor during a calendar drag (rendered off-screen
+   only so the browser can snapshot it for the drag image). */
+.idb-cal-ghost{position:fixed;top:-2000px;left:-2000px;pointer-events:none;opacity:.9;box-shadow:var(--elev-2);z-index:-1}
+body.idb-cal-dragging-active .idb-cal-cell{cursor:copy}
+.idb-cal-num{font-size:10px;color:var(--mu);align-self:flex-start}
+.idb-cal-num.tod{background:var(--go);color:#1a0810;border-radius:50%;width:17px;height:17px;display:flex;align-items:center;justify-content:center}
+/* month-cell header row with a hover "+" to create on that day */
+.idb-cal-numrow{display:flex;align-items:center;justify-content:space-between}
+.idb-cal-add{width:16px;height:16px;border:none;background:var(--sur2);color:var(--mu);border-radius:var(--r-sm);font-size:12px;line-height:1;cursor:pointer;opacity:0;display:flex;align-items:center;justify-content:center;transition:opacity var(--t-fast),color var(--t-fast),background var(--t-fast)}
+.idb-cal-cell:hover .idb-cal-add{opacity:1}
+.idb-cal-add:hover{color:var(--ac);background:var(--acs)}
+/* inline-calendar Month/Week/Day toggle + Today button */
+.idb-calviewseg{display:inline-flex;border:1px solid var(--bd);border-radius:var(--r-sm);overflow:hidden;margin-left:6px}
+.idb-calviewseg button{background:none;border:none;color:var(--mu);font-family:var(--fm);font-size:10.5px;padding:3px 9px;cursor:pointer;transition:background var(--t-fast),color var(--t-fast)}
+.idb-calviewseg button.on{background:var(--acs);color:var(--ac)}
+.idb-calviewseg button:hover:not(.on){color:var(--tx)}
+.idb-cal-today{font-size:9px!important;color:var(--mu)}
+/* inline WEEK view */
+.idb-calw{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--bd);border:1px solid var(--bd);border-radius:var(--r-md);overflow:hidden}
+.idb-calw-col{background:var(--bg);min-height:300px;display:flex;flex-direction:column}
+.idb-calw-col.tod{background:var(--acs)}
+.idb-calw-col.idb-cal-drop{box-shadow:inset 0 0 0 2px var(--ac)}
+.idb-calw-h{display:flex;align-items:baseline;gap:6px;padding:7px 8px;border-bottom:1px solid var(--bd)}
+.idb-calw-wd{font-family:var(--fm);font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--mu)}
+.idb-calw-dn{font-family:var(--fs);font-size:16px;font-weight:600;color:var(--tx)}
+.idb-calw-dn.tod{color:var(--ac)}
+.idb-calw-body{flex:1;padding:7px;display:flex;flex-direction:column;gap:6px}
+.idb-calw-add{background:none;border:none;cursor:pointer;text-align:left;padding:2px}
+.idb-calw-add .np-pill{font-size:10px}
+/* inline DAY view */
+.idb-cald{background:var(--bg);border:1px solid var(--bd);border-radius:var(--r-lg);max-width:620px;margin:0 auto;min-height:320px;overflow:hidden}
+.idb-cald.tod .idb-cald-body{background:var(--acs)}
+.idb-cald-body{padding:16px;display:flex;flex-direction:column;gap:9px;min-height:320px}
+.idb-cald-empty{color:var(--mu);font-style:italic;font-size:12px;text-align:center;padding:30px 0}
+.idb-cal-ev{display:flex;align-items:center;gap:3px;background:var(--acs);color:var(--ac);border-radius:var(--r-sm);padding:2px 5px;font-size:10px;cursor:pointer;overflow:hidden}
+.idb-cal-ev .idb-cev-t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.idb-cal-ev:hover{background:var(--go);color:#1a0810}
+.idb-cal-grip{cursor:grab;opacity:.0;flex-shrink:0;font-size:9px;letter-spacing:-1px}
+.idb-cal-ev:hover .idb-cal-grip{opacity:.7}
+.idb-cal-grip:active{cursor:grabbing}
+.idb-row-ico{flex-shrink:0;display:inline-flex;align-items:center}
+.idb-row-ico img{width:1.05em;height:1.05em;border-radius:var(--r-xs);object-fit:cover;vertical-align:-2px}
+/* detailed calendar events: cover + chips */
+.idb-cal.detailed .idb-cal-cell{min-height:104px}
+.idb-cev{display:block!important;background:var(--sur2);border:1px solid var(--bd);border-radius:var(--r-md);padding:0;overflow:hidden;color:var(--tx)}
+.idb-cev:hover{background:var(--sur2);color:var(--tx);border-color:var(--bd2)}
+.idb-cev-cover{height:48px;overflow:hidden}
+.idb-cev-cover img{width:100%;height:100%;object-fit:cover;display:block}
+.idb-cev-row{display:flex;align-items:center;gap:4px;padding:5px 6px 2px}
+.idb-cev-t{display:flex;align-items:center;gap:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;font-size:12px;font-weight:600;color:var(--card-title)}
+.idb-cev-chips{display:flex;flex-wrap:wrap;gap:4px;padding:1px 6px 6px}
+.idb-cev-chip{display:inline-flex;align-items:center;gap:4px;font-size:11px;border-radius:var(--r-lg);padding:2px 9px;cursor:pointer;line-height:1.4;background:var(--sur);color:var(--mu)}
+.idb-cev-chip:hover{filter:brightness(1.18)}
+.idb-cev-chip.status{background:var(--bg);border:1px solid var(--bd);color:var(--tx)}
+.idb-cev-chip.status .idb-status-dot{width:8px;height:8px;border-radius:50%}
+.idb-cev-chip.empty{background:none;border:1px dashed var(--bd2);color:var(--mu)}
+.prop-tag.prop-db .prop-tag-l::before{content:'⊞';color:var(--ac);opacity:.7;margin-right:5px}
+/* full-page database (Databases page reuses the inline component) */
+.pagedb-wrap{padding:20px 28px;max-width:1100px;margin:0 auto}
+.pagedb-wrap .idb{margin:0}
+/* ── DOC LINK IN TABLES ── */
+.doc-link{background:none;border:none;cursor:pointer;font-size:11px;font-family:var(--fm);padding:2px 0;color:var(--mu);transition:color var(--t-fast);text-decoration:underline;text-underline-offset:2px}
+.doc-link:hover,.doc-link.has-doc{color:var(--ac)}
+
+
