@@ -151,8 +151,10 @@ body.idb-col-resizing{cursor:col-resize;user-select:none}
 /* Editing a cell shows a faint fill, not a border — the old inset ring felt like it
    constricted the cell. */
 .idb-ed:focus{background:rgba(255,255,255,.05);border-radius:var(--r-xs)}
-/* Inline-editable titles on board cards / calendar events show a placeholder when empty. */
-.idb-card-title-ed,.idb-cev-title-ed{cursor:text;border-radius:var(--r-xs)}
+/* Inline-editable titles on board cards / calendar events. inline-block + min-width
+   gives an empty contenteditable a line box so the caret actually renders (an empty
+   inline span has no box to draw the cursor in). */
+.idb-card-title-ed,.idb-cev-title-ed{display:inline-block;min-width:40px;cursor:text;border-radius:var(--r-xs)}
 .idb-card-title-ed:empty::after,.idb-cev-title-ed:empty::after{content:attr(data-ph);color:var(--mu);pointer-events:none}
 .idb-title-cell{font-weight:500;position:relative}
 .idb-title-inner{display:flex;align-items:center;gap:7px;min-width:0;overflow:hidden}
