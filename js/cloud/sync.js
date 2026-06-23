@@ -177,6 +177,9 @@ const Cloud = (()=>{
         already has local data, seed the cloud from local instead of wiping it. */
   async function pull(){
     setStatus('syncing');
+    // Per-record mode: boot reconcile (seeds the cloud on first run, adopts remote
+    // otherwise). The in-memory cache is already hydrated (DB.load runs before boot).
+    if(_syncMode()==='records'){ try{ await reconcileRecords(); setStatus('synced'); }catch(e){ console.warn('[cloud] reconcile (boot) failed',e); setStatus('error'); } return; }
     try{
       const txt = await dlText(STATE_PATH());
       if(!txt){
@@ -280,6 +283,9 @@ const Cloud = (()=>{
     if(_busy){ _dirtyWhileBusy=true; return; }   // coalesce: don't overlap uploads
     _busy=true; setStatus('syncing');
     try{
+      const _mode=_syncMode();
+      // Per-record mode: a two-way reconcile replaces the whole-snapshot upload.
+      if(_mode==='records'){ await reconcileRecords(); setStatus('synced'); return; }
       // ── Stale-push guard ──────────────────────────────────────────────────
       // If the cloud moved ahead since we last synced and the user is NOT actively
       // typing here, this device is stale — pull the newer data instead of
@@ -317,6 +323,9 @@ const Cloud = (()=>{
         if(_realtimeChannel){
           try{ _realtimeChannel.send({ type:'broadcast', event:'push', payload:{ updatedAt:snap.updatedAt } }); }catch(e){}
         }
+        // Dual-write: also shadow the per-record layout so a real device accumulates it
+        // for verification, without changing what anyone reads (mono stays authoritative).
+        if(_mode==='dual'){ try{ await reconcileRecords(); }catch(e){ console.warn('[cloud] dual-write reconcile failed',e); } }
       }
     }catch(e){ console.warn('[cloud] push error',e); setStatus('error'); }
     finally{
@@ -341,8 +350,10 @@ const Cloud = (()=>{
     // ride the next content push but never trigger one on their own, so browsing on
     // a stale device can't overwrite newer work, and keeps the device eligible to
     // live-pull (a non-dirty device pulls; a dirty one pushes).
-    _proto.setItem = function(k,v){ _rawSet.call(this,k,v); if(!_pulling&&typeof k==='string'&&CONTENT_RE.test(k)) scheduleUpload(); };
-    _proto.removeItem = function(k){ _rawRemove.call(this,k); if(typeof k==='string'&&CONTENT_RE.test(k)) scheduleUpload(); };
+    // CONTENT_RE keys are now all kv-bundle singletons (docs/tables moved to IDB), so a
+    // write to one is a kv change → bump the kv mtime (per-record sync's LWW signal).
+    _proto.setItem = function(k,v){ _rawSet.call(this,k,v); if(!_pulling&&typeof k==='string'&&CONTENT_RE.test(k)){ _bumpKvMtime(); scheduleUpload(); } };
+    _proto.removeItem = function(k){ _rawRemove.call(this,k); if(typeof k==='string'&&CONTENT_RE.test(k)){ _bumpKvMtime(); scheduleUpload(); } };
     // Docs + tables live in IndexedDB now, so their writes never hit the patched
     // setItem above — the DB facade emits this signal instead. Same gate (skip while
     // applying a pulled snapshot) so it can't echo a download back up.
@@ -374,6 +385,7 @@ const Cloud = (()=>{
   async function pullInPlace(){
     if(activelyEditing()||_busy) return;
     setStatus('syncing');
+    if(_syncMode()==='records'){ try{ await reconcileRecords(); setStatus('synced'); }catch(e){ console.warn('[cloud] reconcile (pull-in-place) failed',e); setStatus('error'); } return; }
     try{
       const stamp = await remoteInfo();
       const txt = await dlText(STATE_PATH());
@@ -754,5 +766,109 @@ const Cloud = (()=>{
     location.reload();
   }
 
-  return { boot, push, signOut, deleteEverything, get user(){ return user; } };
+  /* ═══════════════════════════════════════════════════════════════════════
+     PER-RECORD SYNC (Phase 4) — flag-gated, two-way, per-record last-write-wins.
+     Mode lives in localStorage 'libreta_sync_mode' (NOT synced; device-local):
+       'mono'    (default) — the proven whole-snapshot state.json sync, unchanged.
+       'dual'    — mono stays authoritative AND each push also writes the per-record
+                   objects + manifest, so a real device accumulates the new layout for
+                   verification without changing read behaviour. (Use this first.)
+       'records' — two-way per-record reconcile is authoritative: upload only changed
+                   records, download remote-newer ones, propagate deletes via tombstones.
+                   Two devices editing DIFFERENT pages both survive. Enable only after
+                   verifying on two real devices. Recommended rollout: mono → dual → records.
+     Cloud layout (additive to the monolith):
+       <uid>/rec/manifest.json  { v, updatedAt, recs:{ "<key>":updatedAt }, deleted:{ "<key>":ts } }
+       <uid>/rec/doc/<id>.json, <uid>/rec/tbl/<id>.json, <uid>/rec/kv.json
+     <key> ∈ { "doc:<id>", "tbl:<id>", "kv" }. The small content singletons (cfg,
+     trash, versions, …) ride together in the kv record; docs+tables are per-record.
+  ═══════════════════════════════════════════════════════════════════════ */
+  function _syncMode(){ try{ return localStorage.getItem('libreta_sync_mode')||'mono'; }catch(e){ return 'mono'; } }
+  function setSyncMode(m){ try{ localStorage.setItem('libreta_sync_mode', m); }catch(e){} return _syncMode(); }
+  const RECMAN = ()=> `${user.id}/rec/manifest.json`;
+  const RECKV  = ()=> `${user.id}/rec/kv.json`;
+  function _recPath(key){ const i=key.indexOf(':'); return `${user.id}/rec/${key.slice(0,i)}/${key.slice(i+1)}.json`; }
+  const _SYNC_KV_KEYS = ['folio_cfg','folio_home_cfg','folio_home_doc','folio_doc_cols','folio_tasks','folio_trash','folio_versions'];
+  function _kvBundle(){ const o={}; _SYNC_KV_KEYS.forEach(k=>{ const v=localStorage.getItem(k); if(v!=null) o[k]=v; }); return o; }
+  // The kv bundle (small singletons) is one record; LWW needs a comparable timestamp,
+  // not a content hash, so we track when any kv key last changed locally (bumped from
+  // the Storage patch). ISO strings sort lexicographically == chronologically.
+  function _kvMtime(){ try{ return localStorage.getItem('libreta_kv_mtime')||'0'; }catch(e){ return '0'; } }
+  function _bumpKvMtime(){ try{ _rawSet.call(localStorage,'libreta_kv_mtime', new Date().toISOString()); }catch(e){} }
+  function _applyKv(kv){ if(!kv) return; DB._suppress=true; try{ for(const [k,v] of Object.entries(kv)){ if(typeof v==='string') _rawSet.call(localStorage,k,v); } }finally{ DB._suppress=false; } }
+  function localManifest(){
+    const recs={};
+    try{ DB.getDocs().forEach(d=> recs['doc:'+d.id]= d.updatedAt||'0'); }catch(e){}
+    try{ DB.getTbls().forEach(t=> recs['tbl:'+t.id]= t.updatedAt||'0'); }catch(e){}
+    recs['kv']=_kvMtime();
+    return recs;
+  }
+  function _getBase(){ try{ return JSON.parse(localStorage.getItem('libreta_sync_manifest')||'{}'); }catch(e){ return {}; } }
+  function _setBase(m){ try{ _rawSet.call(localStorage,'libreta_sync_manifest', JSON.stringify(m)); }catch(e){} }
+
+  /* PURE (no IO): decide the sync plan from the local manifest, the remote manifest,
+     and the last-synced base (used to tell "I deleted X" apart from "they added X").
+     Per-key last-write-wins by updatedAt; remote tombstones win unless we hold a newer
+     copy. Unit-tested locally. */
+  function planReconcile(local, remote, base){
+    local = local||{}; remote = remote||{recs:{},deleted:{}}; base = base||{};
+    const rrec=remote.recs||{}, rdel=remote.deleted||{}, brec=base.recs||{};
+    const plan={ download:[], upload:[], delLocal:[], tombstone:[] };
+    const keys=new Set([...Object.keys(local), ...Object.keys(rrec), ...Object.keys(rdel), ...Object.keys(brec)]);
+    for(const k of keys){
+      const lt=local[k]||null, rt=rrec[k]||null, dt=rdel[k]||null, bt=brec[k]||null;
+      const localDeleted = !lt && !!bt;     // present at last sync, gone now → deleted here
+      if(dt && (!lt || String(dt)>=String(lt))){ if(lt) plan.delLocal.push(k); continue; } // remote tombstone wins
+      if(localDeleted && !rt){ plan.tombstone.push(k); continue; }                           // propagate our delete
+      if(rt && (!lt || String(rt)>String(lt))){ plan.download.push(k); continue; }           // remote newer
+      if(lt && (!rt || String(lt)>String(rt))){ plan.upload.push(k); continue; }             // local newer / new
+      // else: in sync
+    }
+    return plan;
+  }
+  async function _uploadJson(path,obj){ try{ const b=new Blob([JSON.stringify(obj)],{type:'application/json'}); const {error}=await sb.storage.from(SUPABASE_BUCKET).upload(path,b,{upsert:true,contentType:'application/json',cacheControl:'0'}); return !error; }catch(e){ return false; } }
+  async function _dlJson(path){ const t=await dlText(path); if(!t) return null; try{ return JSON.parse(t); }catch(e){ return null; } }
+
+  /* Two-way per-record reconcile. Downloads remote-newer records, applies remote
+     deletions, uploads local-newer records, propagates local deletions as tombstones,
+     then writes the merged manifest + meta pointer. Returns the executed plan. */
+  async function reconcileRecords(){
+    if(!sb||!user) return null;
+    const remote = (await _dlJson(RECMAN())) || {recs:{},deleted:{}};
+    const plan = planReconcile(localManifest(), remote, _getBase());
+    let dataChanged=false;
+    for(const k of plan.download){
+      if(k==='kv'){ const kv=await _dlJson(RECKV()); if(kv){ _applyKv(kv); try{ _rawSet.call(localStorage,'libreta_kv_mtime', (remote.recs&&remote.recs['kv'])||new Date().toISOString()); }catch(e){} if(typeof applyCfg==='function') applyCfg(); } continue; }
+      const obj=await _dlJson(_recPath(k)); if(!obj) continue;
+      DB._suppress=true; try{ if(k.startsWith('doc:')) await Persist.putDoc(obj); else if(k.startsWith('tbl:')) await Persist.putTbl(obj); } finally{ DB._suppress=false; }
+      dataChanged=true;
+    }
+    for(const k of plan.delLocal){
+      DB._suppress=true; try{ if(k.startsWith('doc:')) await Persist.delDoc(k.slice(4)); else if(k.startsWith('tbl:')) await Persist.delTbl(k.slice(4)); } finally{ DB._suppress=false; }
+      dataChanged=true;
+    }
+    if(dataChanged) await DB.load();   // refresh cache before reading it for uploads / re-render
+    const localNow = localManifest();
+    for(const k of plan.upload){
+      if(k==='kv'){ await _uploadJson(RECKV(), _kvBundle()); continue; }
+      if(k.startsWith('doc:')){ const d=DB.getDoc(k.slice(4)); if(d) await _uploadJson(_recPath(k), d); }
+      else if(k.startsWith('tbl:')){ const t=DB.getTbl(k.slice(4)); if(t) await _uploadJson(_recPath(k), t); }
+    }
+    const merged={ v:1, updatedAt:new Date().toISOString(), recs:Object.assign({},remote.recs), deleted:Object.assign({},remote.deleted) };
+    plan.upload.forEach(k=>{ merged.recs[k]=localNow[k]; });
+    const tnow=String(Date.now());
+    plan.tombstone.forEach(k=>{ merged.deleted[k]=tnow; delete merged.recs[k]; });
+    plan.delLocal.forEach(k=>{ delete merged.recs[k]; });
+    if(plan.upload.length||plan.tombstone.length){
+      await _uploadJson(RECMAN(), merged); await writeMeta(merged.updatedAt);
+      _remoteStamp=merged.updatedAt; setCloudTs(merged.updatedAt);
+      if(_realtimeChannel){ try{ _realtimeChannel.send({type:'broadcast',event:'push',payload:{updatedAt:merged.updatedAt}}); }catch(e){} }
+    } else if(remote.updatedAt){ _remoteStamp=remote.updatedAt; setCloudTs(remote.updatedAt); }
+    _setBase({ recs:localManifest(), deleted:merged.deleted });
+    _syncedSig = contentSig(); clearDirty();
+    if(dataChanged && typeof rerenderView==='function' && !activelyEditing()){ if(typeof preloadBlobs==='function') await preloadBlobs(); rerenderView(); }
+    return plan;
+  }
+
+  return { boot, push, signOut, deleteEverything, reconcileRecords, planReconcile, localManifest, setSyncMode, get user(){ return user; } };
 })();

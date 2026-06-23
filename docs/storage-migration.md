@@ -15,8 +15,18 @@ Related: media efficiency (WebP + content-dedup, shipped in `js/core/storage.js`
 - **Phase 3 — SHIPPED.** `compactColdDocs(days)` gzip-compresses docs untouched > 30 days
   (`{id,updatedAt,_z}`); `loadDocs` inflates transparently; editing re-saves hot (plain).
   Runs idle at boot. ~5–10× on real prose.
+- **Phase 4 — BUILT, flag-gated (default OFF).** Two-way per-record reconcile in
+  `js/cloud/sync.js`: per-record objects (`<uid>/rec/doc/<id>.json`, `tbl/<id>.json`,
+  `kv.json`) + a `manifest.json` ({recs, deleted}). Mode is `localStorage.libreta_sync_mode`:
+  `mono` (default, unchanged whole-snapshot), `dual` (mono authoritative + shadow-writes
+  per-record), `records` (per-record reconcile authoritative). Per-record LWW by
+  `updatedAt` (ISO strings sort chronologically); deletions propagate via tombstones; the
+  `CONTENT_RE` allowlist + `activelyEditing()` stale-push guard are preserved. The pure
+  decision function `planReconcile(local, remote, base)` is unit-tested
+  (`Cloud.planReconcile`); the cloud I/O paths are implemented but NOT yet validated on
+  real devices. **Rollout: mono → dual (verify the layout accumulates) → records (verify
+  two devices editing different pages both survive, deletes propagate). See §6.**
 - **Phase 2 — DEFERRED** (see §6).
-- **Phase 4 — DEFERRED** (see §6).
 
 ---
 
