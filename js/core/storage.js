@@ -119,6 +119,10 @@ async function preloadBlobs(){
   try{const all=await IDB.all();all.forEach(({id,blob})=>{if(blob&&!imgCache.has(id))imgCache.set(id,URL.createObjectURL(blob))})}catch(e){}
 }
 function compressToBlob(file,maxW,maxH,quality){
+  // GIFs are usually animated — re-encoding them through a canvas flattens them to a
+  // single still frame, so store the original bytes untouched (every call site —
+  // image blocks, carousel, covers, URL fetches — inherits GIF support this way).
+  if(file&&file.type==='image/gif') return Promise.resolve(file);
   return new Promise(resolve=>{
     const img=new Image(); const url=URL.createObjectURL(file);
     img.onload=()=>{URL.revokeObjectURL(url);let w=img.width,h=img.height;if(w>maxW||h>maxH){const r=Math.min(maxW/w,maxH/h);w=Math.round(w*r);h=Math.round(h*r)}

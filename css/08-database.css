@@ -378,6 +378,13 @@ body.peek-open #pm-dp{z-index:920}
 .idb-card-m{display:flex;flex-wrap:wrap;gap:4px}
 .idb-card-d{font-size:10px;color:var(--mu)}
 .idb-bcard-add{font-size:11px;color:var(--mu);cursor:pointer;padding:3px 0}
+/* board "show more" footer (per swim lane) */
+.idb-bmore{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:2px 0 1px}
+.idb-bmore-ct{font-size:10px;color:var(--mu);margin-right:2px}
+.idb-bmore-b{background:none;border:none;color:var(--ac);cursor:pointer;font-family:var(--fm);font-size:11px;padding:2px 7px;border-radius:var(--r-md);transition:background var(--t-fast),color var(--t-fast)}
+.idb-bmore-b:hover{background:var(--acs)}
+.idb-bmore-b.sec{color:var(--mu)}
+.idb-bmore-b.sec:hover{color:var(--tx);background:var(--sur2)}
 /* calendar */
 /* timeline view */
 .idb-timeline{position:relative;padding:6px 4px 8px}

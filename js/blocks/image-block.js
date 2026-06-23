@@ -131,6 +131,30 @@ window.addEventListener('drop',e=>{
   const row=e.target.closest&&e.target.closest('.bk-row');
   insertImageBlocksFromFiles(files,row?row.dataset.id:null);
 },true);
+/* ── PASTE an image from the clipboard (copied from a webpage, screenshot, etc.) ──
+   Runs in the capture phase so it claims the paste before the plain-text fallback
+   (multiselect.js) or a block's own paste handler can swallow it. Only fires when an
+   actual image is on the clipboard AND the caret is in an editor surface. */
+function _pasteImageFiles(e){
+  const cd=e.clipboardData; if(!cd) return [];
+  const out=[];
+  // Prefer .items (covers copied-from-web images and screenshots); fall back to .files.
+  if(cd.items&&cd.items.length){
+    for(const it of cd.items){ if(it.kind==='file'&&it.type&&it.type.startsWith('image/')){ const f=it.getAsFile(); if(f) out.push(f); } }
+  }
+  if(!out.length&&cd.files&&cd.files.length){ for(const f of cd.files){ if(f.type&&f.type.startsWith('image/')) out.push(f); } }
+  return out;
+}
+window.addEventListener('paste',e=>{
+  const imgs=_pasteImageFiles(e);
+  if(!imgs.length) return;                       // no image on the clipboard → let normal paste run
+  const surface=_imgEditorSurface(e.target)||_imgEditorSurface(document.activeElement);
+  if(!surface) return;                           // not pasting into the editor → leave it alone
+  e.preventDefault(); e.stopImmediatePropagation();
+  const row=(e.target&&e.target.closest&&e.target.closest('.bk-row'))
+    ||(document.activeElement&&document.activeElement.closest&&document.activeElement.closest('.bk-row'));
+  insertImageBlocksFromFiles(imgs,row?row.dataset.id:null);
+},true);
 /* ── #4 IMAGE FROM A URL (download + cache to IndexedDB) ── */
 function blkImgFromUrl(e,blkId){
   e.stopPropagation();

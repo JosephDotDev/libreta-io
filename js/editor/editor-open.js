@@ -81,6 +81,7 @@ function openEditor(id,opts){
   renderBlocks(); renderProps();
   const _d=DB.getDoc(id);if(_d)renderFmtBar(_d);
   if(typeof renderOutline==='function') renderOutline();   // rebuild the sections rail for this page
+  if(typeof renderBacklinks==='function') renderBacklinks(id);   // pages that link here
   if(opts.keepScroll) return; // live refresh: leave scroll, focus, and history untouched
   snapshotVersion(doc,{force:true}); // baseline: the saved state at open (de-duped if unchanged)
   initHistory();

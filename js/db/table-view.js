@@ -119,8 +119,41 @@ function idbCell(blk,tbl,row,col,isTitle){
     return v?`<td class="idb-click" onclick="idbEditLink(event,'${bid}','${row.id}','${col.id}')">${tblMentionHtml(v)}</td>`
             :`<td class="idb-click idb-mu" onclick="idbEditLink(event,'${bid}','${row.id}','${col.id}')">+ Link</td>`;
   if(isTitle)
-    return `<td class="idb-title-cell"><div class="idb-title-inner">${idbRowIcon(row)}<span class="idb-ed idb-title-ed" contenteditable="true" onblur="idbSetCell('${bid}','${row.id}','${col.id}',this.innerText)">${escHtml(v)}</span><button class="idb-open-row" onclick="event.stopPropagation();idbOpenRow('${bid}','${row.id}')" data-tip="Open as page"><span class="idb-mi">⤢</span> Open</button></div></td>`;
-  return `<td class="idb-ed" contenteditable="true" onblur="idbSetCell('${bid}','${row.id}','${col.id}',this.innerText)">${escHtml(v)}</td>`;
+    return `<td class="idb-title-cell"><div class="idb-title-inner">${idbRowIcon(row)}<span class="idb-ed idb-title-ed" contenteditable="true" onkeydown="idbCellKey(event,this)" onblur="idbSetCell('${bid}','${row.id}','${col.id}',this.innerText)">${escHtml(v)}</span><button class="idb-open-row" onclick="event.stopPropagation();idbOpenRow('${bid}','${row.id}')" data-tip="Open as page"><span class="idb-mi">⤢</span> Open</button></div></td>`;
+  return `<td class="idb-ed" contenteditable="true" onkeydown="idbCellKey(event,this)" onblur="idbSetCell('${bid}','${row.id}','${col.id}',this.innerText)">${escHtml(v)}</td>`;
+}
+/* Spreadsheet-style keyboard nav for editable table cells:
+   Tab → next editable cell, Shift+Tab → previous, Enter → commit + drop to the cell
+   below (same visual column), wrapping across rows. Non-text columns (select/date/
+   checkbox) open on click, so Tab simply skips over them to the next text cell. */
+function idbCellKey(e,el){
+  if(e.key==='Enter'){
+    e.preventDefault();
+    const cell=el.closest('td'), tr=el.closest('tr');
+    const idx=cell?[...tr.children].indexOf(cell):-1;
+    // look for an editable cell in the same column on following rows
+    let row=tr, target=null;
+    while(row=row.nextElementSibling){
+      const td=row.children[idx]; const ed=td&&td.querySelector&&td.querySelector('.idb-ed');
+      if(ed){ target=ed; break; }
+    }
+    el.blur();
+    if(target) _idbFocusCell(target);
+    return;
+  }
+  if(e.key!=='Tab') return;
+  e.preventDefault();
+  const table=el.closest('.idb-tbl'); if(!table) return;
+  const cells=[...table.querySelectorAll('.idb-ed')];
+  const i=cells.indexOf(el);
+  const ni=e.shiftKey?i-1:i+1;
+  el.blur();
+  if(ni>=0&&ni<cells.length) _idbFocusCell(cells[ni]);
+}
+function _idbFocusCell(el){
+  el.focus();
+  const r=document.createRange(); r.selectNodeContents(el);
+  const s=getSelection(); s.removeAllRanges(); s.addRange(r);
 }
 /* A row's linked-doc icon, shown in the title cell / cards / calendar. */
 function idbRowIcon(row){

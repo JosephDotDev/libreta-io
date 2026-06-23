@@ -36,7 +36,7 @@ function mkPageLinkHtml(blk){
       </div></div>`;
   }
   const ico=child.meta?.icon?iconHtml(child.meta.icon,'18px'):'📄';
-  return `<div class="bk-page" onclick="nav('editor','${blk.pageId}')"><span class="bk-page-ico">${ico}</span><span class="bk-page-title">${escHtml(child.title||'Untitled')}</span><span class="bk-page-arrow">&#8599;</span></div>`;
+  return `<div class="bk-page" data-page-id="${blk.pageId}" onclick="nav('editor','${blk.pageId}')"><span class="bk-page-ico">${ico}</span><span class="bk-page-title">${escHtml(child.title||'Untitled')}</span><span class="bk-page-arrow">&#8599;</span></div>`;
 }
 /* Toggle a linked-page block between the inline link and the preview card. */
 function setPageDisplay(id,mode){ const b=findBlock(id); if(!b) return; b.display=mode; reRenderBlock(id); sched(); }
@@ -148,7 +148,10 @@ async function fetchLinkMeta(url){
     const tt=html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
     const title=(metaProp('og:title')||metaProp('twitter:title')||(tt&&tt[1])||host||u).trim();
     const site=metaProp('og:site_name')||host;
-    return{url:u,title:decodeEntities(title),site:decodeEntities(site),favicon};
+    const desc=metaProp('og:description')||metaProp('twitter:description')||metaProp('description')||'';
+    const image=metaProp('og:image')||metaProp('twitter:image')||'';
+    return{url:u,title:decodeEntities(title),site:decodeEntities(site),favicon,
+      desc:desc?decodeEntities(desc.trim()).slice(0,240):'',image:image||''};
   }
   return {url:u,title:host||u,site:host,favicon};
 }

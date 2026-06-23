@@ -140,3 +140,18 @@ td .mention{font-size:11px}
 .onb-done-ico{font-size:40px;margin-bottom:14px;animation:onbPop .5s cubic-bezier(.2,1.4,.4,1)}
 @keyframes onbPop{from{opacity:0;transform:scale(.5)}to{opacity:1;transform:scale(1)}}
 .onb-done .onb-h{font-size:24px}
+
+/* ── LINK HOVER PREVIEW ── */
+.link-hover{position:fixed;z-index:1200;display:none;width:300px;max-width:88vw;background:var(--sur);border:1px solid var(--bd2);border-radius:var(--r-lg);box-shadow:0 16px 44px rgba(0,0,0,.55);overflow:hidden;font-family:var(--fm);animation:lhIn .12s ease}
+@keyframes lhIn{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}
+.link-hover .lh-cover{height:128px;background-size:cover;background-position:center;background-color:var(--sur2);border-bottom:1px solid var(--bd)}
+.link-hover .lh-cover img{width:100%;height:100%;object-fit:cover;display:block}
+.link-hover .lh-body{padding:11px 13px 12px}
+.link-hover .lh-kicker{display:flex;align-items:center;gap:6px;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--mu);margin-bottom:5px}
+.link-hover .lh-fav{width:14px;height:14px;border-radius:3px;flex-shrink:0}
+.link-hover .lh-title{font-size:14px;font-weight:600;color:var(--tx);line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.link-hover .lh-desc{margin-top:6px;font-size:11.5px;line-height:1.5;color:var(--mu);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.link-hover .lh-desc.lh-muted{opacity:.55;font-style:italic}
+.link-hover .lh-url{margin-top:7px;font-size:10.5px;color:var(--mu);opacity:.7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.link-hover .lh-chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
+.link-hover .lh-chip{font-size:10px;padding:2px 8px;border-radius:var(--r-pill)}

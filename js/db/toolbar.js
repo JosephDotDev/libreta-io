@@ -121,7 +121,11 @@ function idbGroupMenu(e,blockId){
   // increment at a time (with Show more / all / less in each group).
   const ps=blk.groupPageSize||0;
   const sizeRow=n=>`<div class="idb-pop-it${ps===n?' on':''}" onclick="idbSetGroupPageSize('${blockId}',${n});idbPopClose()">${n===0?'Show all':('First '+n)}</div>`;
-  const limitSec=blk.groupCol?`<div class="idb-pop-lbl" style="margin-top:6px">Rows per group</div>${[0,5,10,25].map(sizeRow).join('')}`:'';
+  // Board lanes always group (by the select column), so offer the per-lane limit there
+  // too — not just when an explicit table Group-by is set.
+  const isBoard=blk.view==='board';
+  const showLimit=blk.groupCol||isBoard;
+  const limitSec=showLimit?`<div class="idb-pop-lbl" style="margin-top:6px">${isBoard?'Cards per lane':'Rows per group'}</div>${[0,5,10,15,20].map(sizeRow).join('')}`:'';
   const html=`<div class="idb-pop-lbl">Group by</div>
     <div class="idb-pop-it${!blk.groupCol?' on':''}" onclick="idbSetGroup('${blockId}','');idbPopClose()">None</div>
     ${sel.length?sel.map(c=>`<div class="idb-pop-it${blk.groupCol===c.id?' on':''}" onclick="idbSetGroup('${blockId}','${c.id}');idbPopClose()"><span class="idb-pop-ico">${c.type==='status'?'\u25d0':'\u25c9'}</span>${escHtml(c.name)}</div>`).join(''):'<div class="idb-dd-empty">Add a Select or Status property first.</div>'}${limitSec}`;

@@ -13,7 +13,10 @@ function idbBoardView(blk,tbl){
   const groups=[...(groupCol.options||[]).filter(o=>o.l).map(o=>({key:o.l,color:o.c,label:o.l})),{key:'',color:'var(--bd2)',label:'No '+groupCol.name}];
   const colsH=groups.map(g=>{
     const rows=allRows.filter(r=>(r.cells[groupCol.id]||'')===g.key);
-    const cards=rows.map(r=>{
+    const gk=g.key||'__none__';
+    const lim=idbGrpLim(blk,gk);
+    const shownRows=lim===Infinity?rows:rows.slice(0,lim);
+    const cards=shownRows.map(r=>{
       const rawTitle=escHtml(titleColId&&r.cells[titleColId]!=null?r.cells[titleColId]:'');
       const _dref=r.docId?DB.getDoc(r.docId):null;
       const _csrc=(imgCol&&r.cells[imgCol.id]&&srcFor(r.cells[imgCol.id]))||((_dref&&_dref.meta&&_dref.meta.cover)?srcFor(_dref.meta.cover):'');
@@ -27,9 +30,24 @@ function idbBoardView(blk,tbl){
         : `<span class="idb-card-title">${rawTitle||'<span class="idb-mu">Untitled</span>'}</span>`;
       return `<div class="idb-card" data-rid="${r.id}" draggable="true" ondragstart="idbCardDragStart(event,'${blk.id}','${r.id}')" ondragend="idbCardDragEnd()" onclick="idbOpenRow('${blk.id}','${r.id}')"><button class="idb-card-del" onclick="event.stopPropagation();idbDelRow('${blk.id}','${r.id}')" data-tip="Delete">&#10005;</button>${cover}<div class="idb-card-t">${idbRowIcon(r)}${titleEd}</div>${meta?`<div class="idb-card-m">${meta}</div>`:''}</div>`;
     }).join('');
-    return `<div class="idb-bcol" ondragover="idbCardDragOverCol(event)" ondragleave="idbBcolDragLeave(event)" ondrop="idbCardDropToCol(event,'${blk.id}','${escAttr(g.key)}')"><div class="idb-bcol-h"><span class="idb-dd-dot" style="background:${g.color}"></span>${escHtml(g.label)}<span class="idb-mu" style="margin-left:auto">${rows.length}</span></div><div class="idb-bcol-b">${cards}<div class="idb-bcard-add" onclick="idbBoardAddRow('${blk.id}','${groupCol.id}','${escAttr(g.key)}')"><span class="np-pill">+ New Page</span></div></div></div>`;
+    const more=idbBoardMore(blk,gk,rows.length,shownRows.length);
+    return `<div class="idb-bcol" ondragover="idbCardDragOverCol(event)" ondragleave="idbBcolDragLeave(event)" ondrop="idbCardDropToCol(event,'${blk.id}','${escAttr(g.key)}')"><div class="idb-bcol-h"><span class="idb-dd-dot" style="background:${g.color}"></span>${escHtml(g.label)}<span class="idb-mu" style="margin-left:auto">${rows.length}</span></div><div class="idb-bcol-b">${cards}${more}<div class="idb-bcard-add" onclick="idbBoardAddRow('${blk.id}','${groupCol.id}','${escAttr(g.key)}')"><span class="np-pill">+ New Page</span></div></div></div>`;
   }).join('');
   return `<div class="idb-board">${colsH}</div>`;
+}
+/* "Show more / all / less" footer for a paginated swim lane (shares groupPageSize /
+   groupShown with the grouped table view, so the increment is set in one place). */
+function idbBoardMore(blk,gk,total,shown){
+  const ps=blk.groupPageSize||0; if(!ps||total<=ps) return '';
+  const parts=[];
+  if(shown<total){
+    const next=Math.min(ps,total-shown);
+    parts.push(`<button class="idb-bmore-b" onclick="idbGrpShowMore('${blk.id}','${escAttr(gk)}')">Show ${next} more</button>`);
+    parts.push(`<button class="idb-bmore-b sec" onclick="idbGrpShowAll('${blk.id}','${escAttr(gk)}')">All ${total}</button>`);
+  }
+  if(shown>ps) parts.push(`<button class="idb-bmore-b sec" onclick="idbGrpShowLess('${blk.id}','${escAttr(gk)}')">Show less</button>`);
+  if(!parts.length) return '';
+  return `<div class="idb-bmore"><span class="idb-bmore-ct">${Math.min(shown,total)} of ${total}</span>${parts.join('')}</div>`;
 }
 /* Commit the name-on-creation title, leave edit mode, and re-render the board so the
    title becomes plain (non-editable) text. */
