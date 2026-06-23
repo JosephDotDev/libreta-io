@@ -42,7 +42,7 @@ td .mention{font-size:11px}
 .nav-btn:disabled{opacity:.32;cursor:default}
 /* Sidebar toggle reads as "active" while the sidebar is collapsed. */
 #sb-toggle.collapsed{color:var(--ac);border-color:color-mix(in srgb,var(--ac) 40%,var(--bd))}
-.breadcrumbs{display:flex;align-items:center;gap:6px;font-family:var(--fs);font-size:17px;font-weight:300;letter-spacing:.04em;min-width:0;overflow:hidden;white-space:nowrap}
+.breadcrumbs{display:flex;align-items:center;gap:6px;font-family:var(--fs);font-size:17px;font-weight:var(--dw);letter-spacing:.04em;min-width:0;overflow:hidden;white-space:nowrap}
 .bc-sep{color:var(--mu);font-size:13px;opacity:.6;flex-shrink:0}
 .bc-link{color:var(--mu);cursor:pointer;transition:color var(--t-fast);flex-shrink:0}
 .bc-link:hover{color:var(--tx)}

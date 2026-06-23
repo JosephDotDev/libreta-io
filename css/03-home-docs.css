@@ -7,7 +7,7 @@
 .home-c{padding:40px 48px 80px;max-width:900px;margin:0 auto}
 .hero{margin-bottom:44px;animation:fadeUp .45s ease both}
 .hero-ey{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--ac);margin-bottom:10px}
-.hero-h{font-family:var(--fs);font-size:54px;font-weight:300;line-height:1.1;margin-bottom:14px}
+.hero-h{font-family:var(--fs);font-size:54px;font-weight:var(--dw);line-height:1.1;margin-bottom:14px}
 .hero-h em{font-style:italic;color:var(--go)}
 .hero-d{font-size:13px;color:var(--mu);line-height:1.75;max-width:480px}
 .cg{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:44px;animation:fadeUp .45s var(--t-fast) ease both}
@@ -30,7 +30,7 @@
 
 /* ── DOCS LIST ───────────────────────────────── */
 .dl-hdr{display:flex;align-items:center;justify-content:space-between;padding:28px 40px 20px;flex-shrink:0}
-.dl-title{font-family:var(--fs);font-size:32px;font-weight:300}
+.dl-title{font-family:var(--fs);font-size:32px;font-weight:var(--dw)}
 .dl-body{flex:1;overflow-y:auto;padding:0 40px 40px}
 .dl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
 /* ── DOCUMENTS ROWS VIEW ── */
@@ -72,6 +72,6 @@
 .dc-del:hover{color:var(--re)}
 .empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 40px;text-align:center;color:var(--mu);grid-column:1/-1}
 .empty svg{width:56px;height:56px;stroke:var(--bd);fill:none;stroke-width:1;margin-bottom:16px}
-.empty h3{font-family:var(--fs);font-size:22px;font-weight:300;margin-bottom:8px}
+.empty h3{font-family:var(--fs);font-size:22px;font-weight:var(--dw);margin-bottom:8px}
 .empty p{font-size:12px;line-height:1.7;margin-bottom:20px}
 

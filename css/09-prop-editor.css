@@ -98,7 +98,7 @@ input.cp-ci{width:28px;height:22px;border:1px solid var(--bd);border-radius:var(
 .cfm-box{background:var(--sur);border:1px solid var(--bd2);border-radius:var(--r-xl);padding:28px 28px 22px;width:340px;max-width:90vw;box-shadow:var(--elev-3);animation:cfmIn var(--t-med) ease}
 @keyframes cfmIn{from{opacity:0;transform:scale(.95) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}
 .cfm-ico{font-size:26px;margin-bottom:10px;line-height:1}
-.cfm-title{font-family:var(--fs);font-size:22px;font-weight:300;color:var(--tx);margin-bottom:6px}
+.cfm-title{font-family:var(--fs);font-size:22px;font-weight:var(--dw);color:var(--tx);margin-bottom:6px}
 .cfm-msg{font-size:13px;color:var(--mu);line-height:1.75;margin-bottom:22px}
 .cfm-btns{display:flex;gap:8px;justify-content:flex-end}
 .cfm-cancel{padding:8px 18px;border:1px solid var(--bd);border-radius:var(--r-md);background:none;color:var(--mu);cursor:pointer;font-family:var(--fm);font-size:12px;transition:border-color var(--t-fast),color var(--t-fast)}

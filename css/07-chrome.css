@@ -22,7 +22,7 @@
 .cfg-panel{position:fixed;top:0;right:0;bottom:0;width:280px;background:var(--sur);border-left:1px solid var(--bd2);z-index:800;display:none;flex-direction:column;box-shadow:-12px 0 40px rgba(0,0,0,.55)}
 .cfg-panel.open{display:flex}
 .cfg-hdr{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--bd);flex-shrink:0}
-.cfg-title{font-family:var(--fs);font-size:18px;font-weight:300;letter-spacing:.04em}
+.cfg-title{font-family:var(--fs);font-size:18px;font-weight:var(--dw);letter-spacing:.04em}
 .cfg-x{background:none;border:none;color:var(--mu);font-size:16px;cursor:pointer;padding:3px 7px;border-radius:var(--r-xs)}
 .cfg-x:hover{color:var(--tx);background:var(--bd)}
 /* Scope tabs — This page | Workspace */
@@ -39,6 +39,12 @@
 .cfg-sl-chev{font-size:8px;transition:transform var(--t-fast)}
 .cfg-sec.collapsed .cfg-sl-chev{transform:rotate(-90deg)}
 .cfg-sec.collapsed{margin-bottom:10px}
+/* Soft, non-blocking contrast warning shown while customizing theme colours. */
+.cfg-contrast{display:none;gap:8px;align-items:flex-start;margin-top:10px;padding:8px 11px;
+  font-size:11px;line-height:1.5;color:var(--go);
+  background:color-mix(in srgb,var(--go) 11%,transparent);
+  border:1px solid color-mix(in srgb,var(--go) 30%,transparent);border-radius:var(--r-md)}
+.cfg-contrast .cfg-cw-ico{flex-shrink:0;line-height:1.4}
 .cfg-sec.collapsed > :not(.cfg-sl){display:none!important}
 .cfg-sec.collapsed .cfg-sl{margin-bottom:0;border-bottom-color:transparent}
 .cfg-chip-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px}

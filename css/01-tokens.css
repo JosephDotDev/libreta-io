@@ -4,9 +4,9 @@
      colours (rose / blue / lime / gold) read as vivid panels, Parra-style.
      These are the static fallbacks; applyCfg() in config.js overrides them
      live from the active theme + any per-key user customisation. */
-  --bg:#0D0C0F;--sur:#17161B;--sur2:#1E1C22;
-  --bd:#221F2A;--bd2:#2E2A38;
-  --tx:#E2DCD4;--mu:#706870;
+  --bg:#0D0C0F;--sur:#1A1822;--sur2:#242031;
+  --bd:#332E40;--bd2:#423C52;
+  --tx:#ECE6DE;--mu:#8B8498;
   /* Card titles: ~85% of the text brightness, blended toward the card surface so a bold
      title complements the dark background instead of reading as a stark block. */
   --card-title:color-mix(in srgb, var(--tx) 85%, var(--sur2));
@@ -23,6 +23,10 @@
   --ls-label:.13em;
   /* Heading weights — overridden per-typeface in applyCfg() so each font reads as "bold" correctly */
   --hw1:700;--hw2:600;--hw3:600;
+  /* Body + display weights — per-typeface in applyCfg() so reading text and the
+     light serif titles render at a consistent perceived weight (serifs need a
+     higher numeric weight than sans to look as solid). Notion-ish, not thin. */
+  --bw:500;--dw:500;
   /* ── Border-radius scale ── anchored to the dominant in-use values; near-neighbours
      snap to the nearest step (≤2px shift). Use --r-pill for chips, 50% stays literal for circles. */
   --r-xs:3px;--r-sm:4px;--r-md:6px;--r-lg:8px;--r-xl:12px;--r-2xl:16px;--r-pill:999px;

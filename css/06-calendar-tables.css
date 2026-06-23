@@ -70,7 +70,7 @@
 /* ── CALENDAR ────────────────────────────────── */
 .cal-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden}
 .cal-bar{display:flex;align-items:center;gap:10px;padding:14px 32px;border-bottom:1px solid var(--bd);flex-shrink:0}
-.cal-mo{font-family:var(--fs);font-size:22px;font-weight:300}
+.cal-mo{font-family:var(--fs);font-size:22px;font-weight:var(--dw)}
 .cal-nb{background:none;border:1px solid var(--bd);border-radius:var(--r-sm);color:var(--mu);padding:5px 10px;font-size:13px;cursor:pointer;transition:border-color var(--t-fast)}
 .cal-nb:hover{border-color:var(--mu);color:var(--tx)}
 .cal-tod{background:none;border:1px solid var(--bd);border-radius:var(--r-sm);color:var(--mu);padding:5px 12px;font-size:11px;cursor:pointer;margin-left:auto;font-family:var(--fm);transition:border-color var(--t-fast)}
@@ -163,7 +163,7 @@
 .tbl-sb-it.active{background:var(--acs);color:var(--tx)}
 .tbl-main{flex:1;display:flex;flex-direction:column;overflow:hidden}
 .tbl-bar{display:flex;align-items:center;gap:8px;padding:12px 20px;border-bottom:1px solid var(--bd);flex-shrink:0}
-.tbl-nm{font-family:var(--fs);font-size:20px;font-weight:300;flex:1;border:none;background:none;color:var(--tx);outline:none}
+.tbl-nm{font-family:var(--fs);font-size:20px;font-weight:var(--dw);flex:1;border:none;background:none;color:var(--tx);outline:none}
 .tbl-fi{background:var(--sur);border:1px solid var(--bd);border-radius:var(--r-sm);color:var(--tx);padding:5px 10px;font-size:11px;outline:none;font-family:var(--fm);width:160px}
 .tbl-fi:focus{border-color:var(--ac)}
 .tbl-sc{flex:1;overflow:auto}

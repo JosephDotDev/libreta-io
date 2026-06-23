@@ -3,27 +3,32 @@ const CFG_KEY='folio_cfg';
    ac (rose/primary+Home), c_docs (Documents), gr (lime/Tasks), go (gold/Calendar).
    Presets without an explicit c_docs/gr fall back to sensible values in applyCfg(). */
 const THEMES={
-  'parra'        :{bg:'#0D0C0F',sur:'#17161B',sur2:'#1E1C22',bd:'#221F2A',bd2:'#2E2A38',tx:'#E2DCD4',mu:'#706870',ac:'#E05572',c_docs:'#4D88E8',gr:'#5DC27A',go:'#D4A83C'},
+  /* Surface ramps are tuned for layering on dark UI: gentle bg→sur lift (~1.1:1)
+     plus a clearly lighter border (sur→bd ~1.35:1) so cards/components read as
+     distinct, and a brighter --mu so muted text clears ~5:1 on a card. */
+  'parra'        :{bg:'#0D0C0F',sur:'#1A1822',sur2:'#242031',bd:'#332E40',bd2:'#423C52',tx:'#ECE6DE',mu:'#8B8498',ac:'#E05572',c_docs:'#4D88E8',gr:'#5DC27A',go:'#D4A83C'},
   /* The two sibling Parra directions, kept as one-click presets. --gr stays in the
      green family in every theme so the success/done semantic (checkboxes, etc.)
      never turns a non-green colour. */
-  'night-garden' :{bg:'#0B0B10',sur:'#16161F',sur2:'#1C1C28',bd:'#23222E',bd2:'#2E2D3C',tx:'#E0DAD8',mu:'#6A6878',ac:'#C44B90',c_docs:'#3CB8A4',gr:'#5DC27A',go:'#D4A83C'},
-  'warm-spectrum':{bg:'#0C0B08',sur:'#141210',sur2:'#1A1814',bd:'#252219',bd2:'#332E26',tx:'#E4DDD0',mu:'#756E62',ac:'#D45A50',c_docs:'#4ABBA0',gr:'#6FB87A',go:'#D4A83C'},
-  'dark-warm'  :{bg:'#0C0B08',sur:'#141210',sur2:'#1A1814',bd:'#252219',bd2:'#332E26',tx:'#E4DDD0',mu:'#756E62',ac:'#C47D32',c_docs:'#4E7EC4',gr:'#4E9E72',go:'#C9A84C'},
-  'dark-cool'  :{bg:'#080C10',sur:'#0F1520',sur2:'#131C28',bd:'#1B2D3D',bd2:'#253648',tx:'#CEE0EE',mu:'#5A7A8A',ac:'#4E9E72',c_docs:'#4E9EC4',gr:'#6FC48E',go:'#7EC4B8'},
-  'dark-ink'   :{bg:'#0A0A0A',sur:'#121212',sur2:'#1A1A1A',bd:'#242424',bd2:'#303030',tx:'#E8E8E8',mu:'#666666',ac:'#E8C547',c_docs:'#5B9BD5',gr:'#5DC27A',go:'#C47D32'},
+  'night-garden' :{bg:'#0B0B10',sur:'#191824',sur2:'#232234',bd:'#322F45',bd2:'#403C55',tx:'#E8E2E4',mu:'#8C8799',ac:'#C44B90',c_docs:'#3CB8A4',gr:'#5DC27A',go:'#D4A83C'},
+  'warm-spectrum':{bg:'#0C0B08',sur:'#19160F',sur2:'#231F16',bd:'#352F22',bd2:'#453D2C',tx:'#EFE7D8',mu:'#988B72',ac:'#D45A50',c_docs:'#4ABBA0',gr:'#6FB87A',go:'#D4A83C'},
+  'dark-warm'  :{bg:'#0C0B08',sur:'#18150F',sur2:'#221D15',bd:'#332C20',bd2:'#43392A',tx:'#EDE5D6',mu:'#988C74',ac:'#C47D32',c_docs:'#4E7EC4',gr:'#4E9E72',go:'#C9A84C'},
+  'dark-cool'  :{bg:'#080C10',sur:'#111B28',sur2:'#1A2738',bd:'#2B3D50',bd2:'#3A4E63',tx:'#D6E6F2',mu:'#7E9EB2',ac:'#4E9E72',c_docs:'#4E9EC4',gr:'#6FC48E',go:'#7EC4B8'},
+  'dark-ink'   :{bg:'#0A0A0A',sur:'#181818',sur2:'#232323',bd:'#343434',bd2:'#444444',tx:'#ECECEC',mu:'#8E8E8E',ac:'#E8C547',c_docs:'#5B9BD5',gr:'#5DC27A',go:'#C47D32'},
   'light-warm' :{bg:'#F5F0E8',sur:'#EDE8DC',sur2:'#E5DDD0',bd:'#D4CCBC',bd2:'#C4BAA8',tx:'#1C1917',mu:'#8B7E6E',ac:'#8B4A2B',c_docs:'#2E5FA8',gr:'#3B7D53',go:'#7A5C20'},
   'light-clean':{bg:'#FAFAFA',sur:'#F0F0F0',sur2:'#E8E8E8',bd:'#E0E0E0',bd2:'#D0D0D0',tx:'#1A1A1A',mu:'#888888',ac:'#2962FF',c_docs:'#1976D2',gr:'#2E9E5B',go:'#FF6D00'},
 };
 /* Curated content typefaces. `hw` = heading weights [h1,h2,h3] tuned so each reads as bold without faux-bolding.
+   `bw` = body (reading) weight, `dw` = display/title weight. Serifs (esp. Cormorant) carry a higher numeric
+   weight than sans so every face reads at a similar, solid perceived weight — no thin/washed-out text.
    `grp` groups them in the picker so the choice feels structured, not a soup of fonts. */
 const FONTS={
-  cormorant :{lbl:'Cormorant', grp:'Serif', stack:"'Cormorant',Georgia,serif",      hw:[700,600,600]},
-  newsreader:{lbl:'Newsreader',grp:'Serif', stack:"'Newsreader',Georgia,serif",     hw:[600,600,600]},
-  lora      :{lbl:'Lora',      grp:'Serif', stack:"'Lora',Georgia,serif",           hw:[600,600,600]},
-  dmsans    :{lbl:'DM Sans',   grp:'Sans',  stack:"'DM Sans',system-ui,sans-serif", hw:[700,600,600]},
-  inter     :{lbl:'Inter',     grp:'Sans',  stack:"'Inter',system-ui,sans-serif",   hw:[700,600,600]},
-  dmmono    :{lbl:'DM Mono',   grp:'Mono',  stack:"'DM Mono',ui-monospace,monospace",hw:[500,500,500]},
+  cormorant :{lbl:'Cormorant', grp:'Serif', stack:"'Cormorant',Georgia,serif",      hw:[700,600,600], bw:500, dw:500},
+  newsreader:{lbl:'Newsreader',grp:'Serif', stack:"'Newsreader',Georgia,serif",     hw:[600,600,600], bw:400, dw:500},
+  lora      :{lbl:'Lora',      grp:'Serif', stack:"'Lora',Georgia,serif",           hw:[600,600,600], bw:400, dw:500},
+  dmsans    :{lbl:'DM Sans',   grp:'Sans',  stack:"'DM Sans',system-ui,sans-serif", hw:[700,600,600], bw:400, dw:500},
+  inter     :{lbl:'Inter',     grp:'Sans',  stack:"'Inter',system-ui,sans-serif",   hw:[700,600,600], bw:400, dw:500},
+  dmmono    :{lbl:'DM Mono',   grp:'Mono',  stack:"'DM Mono',ui-monospace,monospace",hw:[500,500,500], bw:400, dw:500},
 };
 /* Map legacy/short config values onto the new keys */
 function normFontKey(v){
@@ -53,6 +58,7 @@ function applyCfg(){
   const f=FONTS[normFontKey(c.font)]||FONTS.cormorant;
   r.setProperty('--fs',f.stack);
   r.setProperty('--hw1',f.hw[0]); r.setProperty('--hw2',f.hw[1]); r.setProperty('--hw3',f.hw[2]);
+  r.setProperty('--bw',f.bw||400); r.setProperty('--dw',f.dw||500);
   // UI scale via CSS zoom. Expose the factor as --zoom so the app shell can
   // divide its viewport height by it — otherwise zoom>1 scales the 100dvh shell
   // taller than the screen and clips the sidebar foot (collapse button).
@@ -197,6 +203,27 @@ function confirmDeleteAllData(){
     'Continue','Delete all data');
 }
 function closeCfg(){document.getElementById('cfg-panel').classList.remove('open');document.getElementById('cfg-ovl').classList.remove('open')}
+/* WCAG relative-luminance contrast ratio between two #rgb/#rrggbb colours, used to
+   softly warn when a customised theme's text/surface pairing is getting unreadable. */
+function _cfgLum(hex){
+  hex=String(hex||'').replace('#',''); if(hex.length===3) hex=hex.split('').map(x=>x+x).join('');
+  if(!/^[0-9a-fA-F]{6}$/.test(hex)) return 0;
+  const v=[0,2,4].map(i=>{ let c=parseInt(hex.substr(i,2),16)/255; return c<=0.03928?c/12.92:Math.pow((c+0.055)/1.055,2.4); });
+  return 0.2126*v[0]+0.7152*v[1]+0.0722*v[2];
+}
+function cfgContrast(a,b){ const la=_cfgLum(a),lb=_cfgLum(b); return (Math.max(la,lb)+0.05)/(Math.min(la,lb)+0.05); }
+/* Render soft contrast warnings into #cfg-contrast for the effective theme colours. */
+function updContrastWarn(c,t){
+  const cw=document.getElementById('cfg-contrast'); if(!cw) return;
+  const bg=c.bg||t.bg, sur=c.sur||t.sur, tx=c.tx||t.tx, mu=c.mu||t.mu, bd=c.bd||t.bd;
+  const w=[];
+  if(cfgContrast(tx,bg)<4.5) w.push('Body text is hard to read on the background.');
+  else if(cfgContrast(tx,sur)<4.5) w.push('Text is hard to read on cards.');
+  if(cfgContrast(mu,sur)<2.3) w.push('Muted text is too faint on cards.');
+  if(cfgContrast(sur,bd)<1.1 && cfgContrast(bg,sur)<1.05) w.push('Cards barely separate from the background.');
+  if(w.length){ cw.style.display='flex'; cw.innerHTML='<span class="cfg-cw-ico">&#9888;&#65039;</span><span>'+w.map(m=>escHtml(m)).join(' ')+'</span>'; }
+  else{ cw.style.display='none'; cw.innerHTML=''; }
+}
 function updCfgUI(){
   const c=getCfg(); const tn=c.theme||'parra';
   const t=(tn==='custom'&&c.customSnapshot)?c.customSnapshot:(THEMES[tn]||THEMES['parra']);
@@ -221,6 +248,7 @@ function updCfgUI(){
   sv('cfg-docs',docsC); sv('cfg-docs-hex',docsC);
   sv('cfg-tasks',tasksC); sv('cfg-tasks-hex',tasksC);
   sv('cfg-cal',calC); sv('cfg-cal-hex',calC);
+  updContrastWarn(c,t);
   // (Typeface / default width / default size are per-page now — they live in the
   // "This page" tab via renderPageSettings, not in this Workspace pane.)
   const om=c.openMode||'peek';
@@ -258,7 +286,7 @@ function applyDocFmt(doc){
   // Home only carries a per-page typeface (width lives in its own toggle) — scope it to #view-home.
   if(doc.id===HOME_ID){
     const hv=document.getElementById('view-home');
-    if(hv){ hv.style.setProperty('--fs',f.stack); hv.style.setProperty('--hw1',f.hw[0]); hv.style.setProperty('--hw2',f.hw[1]); hv.style.setProperty('--hw3',f.hw[2]); }
+    if(hv){ hv.style.setProperty('--fs',f.stack); hv.style.setProperty('--hw1',f.hw[0]); hv.style.setProperty('--hw2',f.hw[1]); hv.style.setProperty('--hw3',f.hw[2]); hv.style.setProperty('--bw',f.bw||400); hv.style.setProperty('--dw',f.dw||500); }
     return;
   }
   const w=fmt.width||cfg.defWidth||'focused';
@@ -270,7 +298,7 @@ function applyDocFmt(doc){
   }
   // Per-page typeface — scope --fs to the editor view so other surfaces keep the global font.
   const ev=document.getElementById('view-editor');
-  if(ev){ ev.style.setProperty('--fs',f.stack); ev.style.setProperty('--hw1',f.hw[0]); ev.style.setProperty('--hw2',f.hw[1]); ev.style.setProperty('--hw3',f.hw[2]); }
+  if(ev){ ev.style.setProperty('--fs',f.stack); ev.style.setProperty('--hw1',f.hw[0]); ev.style.setProperty('--hw2',f.hw[1]); ev.style.setProperty('--hw3',f.hw[2]); ev.style.setProperty('--bw',f.bw||400); ev.style.setProperty('--dw',f.dw||500); }
 }
 function setDocWidth(w){ const doc=getActiveDoc(); if(!doc) return; doc.fmt=doc.fmt||{}; doc.fmt.width=w; saveActiveDoc(doc); renderFmtBar(doc); }
 function setDocSize(s){ const doc=getActiveDoc(); if(!doc) return; doc.fmt=doc.fmt||{}; doc.fmt.size=s; saveActiveDoc(doc); renderFmtBar(doc); }

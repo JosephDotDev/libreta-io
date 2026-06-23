@@ -119,7 +119,7 @@ body.bk-ptr-dragging .bk,body.bk-ptr-dragging .gb.drag{cursor:grabbing!important
 /* Reveal the selection tint (see .bk-wrap::before). */
 .bk-row.bk-row-sel > .bk-wrap::before{ opacity:1 }
 /* Base block */
-.bk{outline:none;width:100%;min-height:1.65em;padding:2px 0;line-height:1.75;font-family:var(--fs);font-size:18px;font-weight:300;caret-color:var(--ac);color:var(--tx);white-space:pre-wrap;word-wrap:break-word}
+.bk{outline:none;width:100%;min-height:1.65em;padding:2px 0;line-height:1.75;font-family:var(--fs);font-size:18px;font-weight:var(--bw);caret-color:var(--ac);color:var(--tx);white-space:pre-wrap;word-wrap:break-word}
 /* Placeholder uses ::after so it never collides with list markers (which use ::before) */
 .bk:focus:empty::after{content:attr(data-ph);color:var(--mu);pointer-events:none;font-style:normal}
 /* Block types */
