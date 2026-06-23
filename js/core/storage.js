@@ -2,33 +2,120 @@
    STORAGE
 ═══════════════════════════════════════════════ */
 /* ── PERSISTENCE ADAPTER ──────────────────────────────────────────────────
-   The ONE place that knows WHERE documents + tables are stored. Today that's
-   localStorage (synchronous). To add a backend (accounts, sync) later you only
-   implement these four methods against your API and swap the adapter via
-   setPersistenceAdapter() — nothing else in the app changes, because everything
-   reads/writes through the synchronous in-memory DB below, never storage directly.
+   The ONE place that knows WHERE documents + tables are stored. As of the storage
+   restructure that's IndexedDB (`folio_data`), one record per doc/table — so saving
+   one page writes one record instead of re-serialising the whole workspace, and the
+   ~5 MB localStorage cap no longer bounds how much you can write. The small singleton
+   keys (cfg, sidebar, trash, versions, …) still live in localStorage.
 
-   load* may be async (a network adapter fetches here); persist* may be async
-   too (fire-and-forget / queued). The app stays synchronous because reads are
-   served from the in-memory cache that load*() hydrates at boot.
-─────────────────────────────────────────────────────────────────────────── */
-const LocalStorageAdapter = {
-  name:'localStorage',
-  loadDocs(){ try{return JSON.parse(localStorage.getItem('folio_docs')||'[]')}catch{return[]} },
-  loadTbls(){ try{return JSON.parse(localStorage.getItem('folio_tables')||'[]')}catch{return[]} },
-  persistDocs(docs){ localStorage.setItem('folio_docs',JSON.stringify(docs)); },   // throws on quota → surfaced as a toast
-  persistTbls(tbls){ localStorage.setItem('folio_tables',JSON.stringify(tbls)); },
+   The adapter API is per-record + bulk. Reads are async (load* hydrates the cache at
+   boot); writes are fire-and-forget. The app itself stays SYNCHRONOUS because every
+   getDoc/getTbl is served from the in-memory cache the adapter hydrates. Swap the
+   adapter via setPersistenceAdapter() to point at a different backend. */
+
+/* Low-level IndexedDB handle for structured data (separate DB from media blobs). */
+const IDBData = {
+  _db:null,
+  open(){
+    if(this._db) return Promise.resolve(this._db);
+    return new Promise((res,rej)=>{
+      const r=indexedDB.open('folio_data',1);
+      r.onupgradeneeded=e=>{ const db=e.target.result;
+        if(!db.objectStoreNames.contains('docs'))   db.createObjectStore('docs');
+        if(!db.objectStoreNames.contains('tables')) db.createObjectStore('tables');
+      };
+      r.onsuccess=e=>{ this._db=e.target.result; res(this._db); };
+      r.onerror=e=>rej(e.target.error);
+    });
+  },
+  async getAll(store){ const db=await this.open(); return new Promise((res,rej)=>{ const tx=db.transaction(store,'readonly'); const rq=tx.objectStore(store).getAll(); rq.onsuccess=()=>res(rq.result||[]); rq.onerror=()=>rej(rq.error); }); },
+  async put(store,val,key){ const db=await this.open(); return new Promise((res,rej)=>{ const tx=db.transaction(store,'readwrite'); tx.objectStore(store).put(val,key); tx.oncomplete=()=>res(true); tx.onerror=()=>rej(tx.error); }); },
+  async del(store,key){ const db=await this.open(); return new Promise((res,rej)=>{ const tx=db.transaction(store,'readwrite'); tx.objectStore(store).delete(key); tx.oncomplete=()=>res(true); tx.onerror=()=>rej(tx.error); }); },
+  async clear(store){ const db=await this.open(); return new Promise((res,rej)=>{ const tx=db.transaction(store,'readwrite'); tx.objectStore(store).clear(); tx.oncomplete=()=>res(true); tx.onerror=()=>rej(tx.error); }); },
+  async count(store){ const db=await this.open(); return new Promise((res)=>{ const tx=db.transaction(store,'readonly'); const rq=tx.objectStore(store).count(); rq.onsuccess=()=>res(rq.result||0); rq.onerror=()=>res(0); }); },
+  async putAll(store,arr,keyFn){ const db=await this.open(); return new Promise((res,rej)=>{ const tx=db.transaction(store,'readwrite'); const os=tx.objectStore(store); (arr||[]).forEach(v=>os.put(v,keyFn(v))); tx.oncomplete=()=>res(true); tx.onerror=()=>rej(tx.error); }); },
 };
-let Persist = LocalStorageAdapter;
-function setPersistenceAdapter(adapter){ Persist = adapter; }  // swap-in point for a future backend
+/* One-time, idempotent: if the IDB store is empty but the legacy monolithic
+   localStorage key still holds data (a pre-restructure workspace, or an offline
+   device that hasn't pulled), move it into IDB and drop the legacy key. */
+async function _maybeMigrate(store, legacyKey){
+  try{
+    if((await IDBData.count(store))>0){ if(localStorage.getItem(legacyKey)) localStorage.removeItem(legacyKey); return; } // already in IDB; drop any stale legacy copy
+    const raw=localStorage.getItem(legacyKey); if(!raw) return;
+    const arr=JSON.parse(raw)||[]; if(arr.length) await IDBData.putAll(store, arr, v=>v.id);
+    localStorage.removeItem(legacyKey);
+  }catch(e){ console.warn('[storage] migrate failed for',store,e); }
+}
+/* ── COLD-BODY COMPRESSION (Phase 3) ──
+   A doc untouched for a while is gzip-compressed on disk and inflated transparently
+   on load. A "cold" record is { id, updatedAt, _z:Uint8Array(gzip(JSON(doc))) }; a hot
+   record is the plain doc object. Editing a doc re-saves it plain (putDoc), so opening
+   anything decompresses it automatically. gzip on text is ~5-10×. Falls back to no-op
+   where CompressionStream is unavailable. */
+const _hasCompression = typeof CompressionStream!=='undefined' && typeof DecompressionStream!=='undefined';
+async function _gzip(str){
+  if(!_hasCompression) return null;
+  try{ const stream=new Blob([str]).stream().pipeThrough(new CompressionStream('gzip')); return new Uint8Array(await new Response(stream).arrayBuffer()); }
+  catch(e){ return null; }
+}
+async function _gunzip(bytes){
+  const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
+  return await new Response(stream).text();
+}
+function _isCold(rec){ return rec && rec._z; }
+async function _inflateDoc(rec){ return _isCold(rec) ? JSON.parse(await _gunzip(rec._z)) : rec; }
+/* Background pass: compress docs whose updatedAt is older than `days`. Idempotent —
+   skips already-cold records and never touches the in-memory cache (which holds the
+   full doc); it only shrinks what's on disk. Returns how many it compressed. */
+async function compactColdDocs(days){
+  if(!_hasCompression) return 0;
+  const cutoff=Date.now()-((days||30)*864e5);
+  let recs; try{ recs=await IDBData.getAll('docs'); }catch(e){ return 0; }
+  let n=0;
+  for(const r of recs){
+    if(!r || r._z) continue;
+    const t=Date.parse(r.updatedAt||'')||0;
+    if(t && t<cutoff){
+      const bytes=await _gzip(JSON.stringify(r));
+      if(bytes){ try{ await IDBData.put('docs', { id:r.id, updatedAt:r.updatedAt, _z:bytes }, r.id); n++; }catch(e){} }
+    }
+  }
+  return n;
+}
 
-/* ── DB ── in-memory source of truth + a thin persistence flush.
+const IdbDataAdapter = {
+  name:'idb',
+  async loadDocs(){ await _maybeMigrate('docs','folio_docs'); const recs=await IDBData.getAll('docs'); return Promise.all(recs.map(_inflateDoc)); },
+  async loadTbls(){ await _maybeMigrate('tables','folio_tables'); return IDBData.getAll('tables'); },
+  putDoc(d){ return IDBData.put('docs', d, d.id); },   // always stored hot (plain); compaction re-cools it later
+  delDoc(id){ return IDBData.del('docs', id); },
+  putTbl(t){ return IDBData.put('tables', t, t.id); },
+  delTbl(id){ return IDBData.del('tables', id); },
+  async putAllDocs(arr){ await IDBData.clear('docs');   return IDBData.putAll('docs', arr, d=>d.id); },
+  async putAllTbls(arr){ await IDBData.clear('tables'); return IDBData.putAll('tables', arr, t=>t.id); },
+};
+let Persist = IdbDataAdapter;
+function setPersistenceAdapter(adapter){ Persist = adapter; }  // swap-in point for a future backend
+/* Rollback escape hatch: re-serialise IDB back into the legacy localStorage keys.
+   (Manual recovery aid — not used in the normal flow.) */
+async function migrateBack(){
+  try{ localStorage.setItem('folio_docs',   JSON.stringify(await Persist.loadDocs())); }catch(e){}   // loadDocs inflates cold records
+  try{ localStorage.setItem('folio_tables', JSON.stringify(await Persist.loadTbls())); }catch(e){}
+}
+
+/* Doc/table writes no longer touch localStorage, so the Storage.setItem patch the
+   sync layer uses can't see them. Emit a content-changed signal the cloud layer
+   subscribes to (see installAutosync). Suppressed while a pulled snapshot is being
+   applied so we don't re-upload what we just downloaded. */
+function _emitContentChanged(){ if(DB._suppress) return; try{ document.dispatchEvent(new CustomEvent('libreta:content')); }catch(e){} }
+
+/* ── DB ── in-memory source of truth + per-record persistence.
    Public API is unchanged and synchronous: getDocs/getDoc/saveDoc/delDoc and
    the table equivalents. Reads hit the cache (no re-parsing); writes update the
-   cache and hand off to the adapter. `await DB.load()` hydrates at boot. */
+   cache and persist ONE record. `await DB.load()` hydrates at boot. */
 const DB = {
   DK:'folio_docs', TK:'folio_tables',   // kept for any legacy references
-  _docs:null, _tbls:null, _ready:false,
+  _docs:null, _tbls:null, _ready:false, _suppress:false,
 
   async load(){
     this._docs = await Promise.resolve(Persist.loadDocs());
@@ -36,31 +123,37 @@ const DB = {
     this._ready = true;
     return true;
   },
-  // Safety net: if anything reads before load() ran, hydrate synchronously once.
-  _ensure(){ if(this._ready) return; try{ this._docs=Persist.loadDocs(); this._tbls=Persist.loadTbls(); }catch{ this._docs=this._docs||[]; this._tbls=this._tbls||[]; } this._ready=true; },
-  _flushDocs(){ try{ Promise.resolve(Persist.persistDocs(this._docs)); if(typeof searchInvalidate==='function')searchInvalidate(); return true; }
-    catch(e){ if(typeof toast==='function')toast('Storage is full — change not saved. Try smaller images.'); return false; } },
-  _flushTbls(){ try{ Promise.resolve(Persist.persistTbls(this._tbls)); return true; }
-    catch(e){ if(typeof toast==='function')toast('Storage is full — change not saved.'); return false; } },
+  // Safety net: IDB can't be read synchronously, so if anything reads before load()
+  // resolved, serve empty arrays (load() is awaited at boot before the first render).
+  _ensure(){ if(this._ready) return; this._docs=this._docs||[]; this._tbls=this._tbls||[]; },
+  _persistDoc(d){ Promise.resolve(Persist.putDoc(d)).catch(e=>{ console.warn('[storage] putDoc failed',e); if(typeof toast==='function')toast('Storage error — change may not be saved.'); }); if(typeof searchInvalidate==='function')searchInvalidate(); _emitContentChanged(); },
+  _persistTbl(t){ Promise.resolve(Persist.putTbl(t)).catch(e=>{ console.warn('[storage] putTbl failed',e); if(typeof toast==='function')toast('Storage error — change may not be saved.'); }); _emitContentChanged(); },
 
   getDocs(){ this._ensure(); return this._docs; },
   getDoc(id){ this._ensure(); return this._docs.find(d=>d.id===id)||null; },
   saveDoc(doc){ this._ensure(); doc.updatedAt=new Date().toISOString();
     const i=this._docs.findIndex(d=>d.id===doc.id); if(i>=0)this._docs[i]=doc; else this._docs.unshift(doc);
-    return this._flushDocs(); },
+    this._persistDoc(doc); return true; },
   delDoc(id){ this._ensure(); const d=this.getDoc(id);
     if(d&&d.dbId){const t=this.getTbl(d.dbId);if(t){t.rows=t.rows.filter(r=>r.docId!==id);this.saveTbl(t);}}
-    this._docs=this._docs.filter(x=>x.id!==id); this._flushDocs();
+    this._docs=this._docs.filter(x=>x.id!==id);
+    Promise.resolve(Persist.delDoc(id)).catch(e=>console.warn('[storage] delDoc failed',e));
+    if(typeof searchInvalidate==='function')searchInvalidate(); _emitContentChanged();
     if(typeof deleteVersions==='function')deleteVersions(id); },
   getTbls(){ this._ensure(); return this._tbls; },
   getTbl(id){ this._ensure(); return this._tbls.find(t=>t.id===id)||null; },
   saveTbl(t){ this._ensure(); t.updatedAt=new Date().toISOString();
     const i=this._tbls.findIndex(x=>x.id===t.id); if(i>=0)this._tbls[i]=t; else this._tbls.unshift(t);
-    return this._flushTbls(); },
-  delTbl(id){ this._ensure(); this._tbls=this._tbls.filter(t=>t.id!==id); this._flushTbls(); },
+    this._persistTbl(t); return true; },
+  delTbl(id){ this._ensure(); this._tbls=this._tbls.filter(t=>t.id!==id);
+    Promise.resolve(Persist.delTbl(id)).catch(e=>console.warn('[storage] delTbl failed',e)); _emitContentChanged(); },
 
-  /* Bulk replace (used by Import) — refresh the cache + persist in one shot. */
-  replaceAll(docs,tables){ this._ensure(); if(docs)this._docs=docs; if(tables)this._tbls=tables; this._flushDocs(); this._flushTbls(); },
+  /* Bulk replace (used by Import + sync apply) — refresh the cache + persist in one shot.
+     `silent` skips the content-changed signal (used when applying a pulled snapshot). */
+  replaceAll(docs,tables,silent){ this._ensure(); if(docs)this._docs=docs; if(tables)this._tbls=tables;
+    Promise.resolve(Persist.putAllDocs(this._docs)).catch(e=>console.warn('[storage] putAllDocs failed',e));
+    Promise.resolve(Persist.putAllTbls(this._tbls)).catch(e=>console.warn('[storage] putAllTbls failed',e));
+    if(typeof searchInvalidate==='function')searchInvalidate(); if(!silent) _emitContentChanged(); },
 };
 /* Server-/multi-device-safe ids: prefer UUIDs, fall back for old browsers */
 function uuid(){ return (crypto&&crypto.randomUUID)?crypto.randomUUID():Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,10); }

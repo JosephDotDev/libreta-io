@@ -67,7 +67,10 @@ const Cloud = (()=>{
     return JSON.stringify({ d:nd, t:nt, c:cfg||'' });
   }
   function contentSig(){
-    return _sigFrom(_parseArr(localStorage.getItem('folio_docs')), _parseArr(localStorage.getItem('folio_tables')), localStorage.getItem('folio_cfg')||'');
+    // Docs/tables live in IndexedDB now → read them from the in-memory cache (hydrated
+    // at boot before any sync decision) rather than from localStorage.
+    let docs=[],tbls=[]; try{ docs=DB.getDocs(); tbls=DB.getTbls(); }catch(e){}
+    return _sigFrom(docs, tbls, localStorage.getItem('folio_cfg')||'');
   }
   function contentSigFromKeys(keys){
     if(!keys) return '';
@@ -207,15 +210,17 @@ const Cloud = (()=>{
   }
 
   function hasLocalData(){
-    try{ return (JSON.parse(localStorage.getItem('folio_docs')||'[]').length>0)
-              || (JSON.parse(localStorage.getItem('folio_tables')||'[]').length>0); }
+    try{ return DB.getDocs().length>0 || DB.getTbls().length>0; }
     catch{ return false; }
   }
 
-  /* Gather all folio_* localStorage keys + all IndexedDB media blobs. */
+  /* Gather all folio_* localStorage keys + all IndexedDB media blobs. Documents and
+     tables now live in IndexedDB (not localStorage), so inject them under their
+     canonical keys — the state.json shape stays identical for backward compatibility. */
   async function snapshot(){
     const keys={};
     for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(k&&k.indexOf('folio_')===0) keys[k]=localStorage.getItem(k); }
+    try{ keys['folio_docs']=JSON.stringify(DB.getDocs()); keys['folio_tables']=JSON.stringify(DB.getTbls()); }catch(e){}
     const images={};
     try{ const all=await IDB.all(); for(const {id,blob} of all){ if(blob){ const du=await blobToDataURL(blob); if(du) images[id]=du; } } }catch(e){}
     return { app:'libreta', kind:'sync', v:1, updatedAt:new Date().toISOString(), keys, images };
@@ -226,16 +231,26 @@ const Cloud = (()=>{
      here neither recurse into the uploader nor race the in-memory cache. */
   async function applySnapshot(snap){
     if(!snap || !snap.keys) return;
-    // Suppress autosync patch during apply so bulk localStorage writes don't
-    // schedule an upload of data we just downloaded.
-    _pulling=true;
+    // Suppress autosync (both the localStorage patch and the DB content signal) during
+    // apply so bulk writes don't schedule an upload of data we just downloaded.
+    _pulling=true; DB._suppress=true;
     try{
       const toRemove=[];
       for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(k&&k.indexOf('folio_')===0) toRemove.push(k); }
       toRemove.forEach(k=> _rawRemove.call(localStorage,k));
-      for(const [k,v] of Object.entries(snap.keys)) _rawSet.call(localStorage,k,v);
+      // docs + tables go to IndexedDB (per-record store); everything else is a small
+      // localStorage singleton. Parse the canonical keys out and route them to the adapter.
+      let docsArr=null, tblsArr=null;
+      for(const [k,v] of Object.entries(snap.keys)){
+        if(k==='folio_docs'){   try{ docsArr=JSON.parse(v)||[]; }catch(e){ docsArr=[]; } continue; }
+        if(k==='folio_tables'){ try{ tblsArr=JSON.parse(v)||[]; }catch(e){ tblsArr=[]; } continue; }
+        _rawSet.call(localStorage,k,v);
+      }
+      if(docsArr!==null) await Persist.putAllDocs(docsArr);
+      if(tblsArr!==null) await Persist.putAllTbls(tblsArr);
       if(snap.images){ for(const [id,du] of Object.entries(snap.images)){ try{ await IDB.put(id, dataURLtoBlob(du)); }catch(e){} } }
-    }finally{ _pulling=false; }
+      await DB.load();   // refresh the in-memory cache to match what we just wrote
+    }finally{ _pulling=false; DB._suppress=false; }
   }
 
   /* ── PUSH: debounced upload of the current snapshot. */
@@ -328,6 +343,10 @@ const Cloud = (()=>{
     // live-pull (a non-dirty device pulls; a dirty one pushes).
     _proto.setItem = function(k,v){ _rawSet.call(this,k,v); if(!_pulling&&typeof k==='string'&&CONTENT_RE.test(k)) scheduleUpload(); };
     _proto.removeItem = function(k){ _rawRemove.call(this,k); if(typeof k==='string'&&CONTENT_RE.test(k)) scheduleUpload(); };
+    // Docs + tables live in IndexedDB now, so their writes never hit the patched
+    // setItem above — the DB facade emits this signal instead. Same gate (skip while
+    // applying a pulled snapshot) so it can't echo a download back up.
+    document.addEventListener('libreta:content', ()=>{ if(!_pulling) scheduleUpload(); });
     // Track genuine user typing so the sync logic can tell "the user is editing
     // here right now" apart from passive re-renders. Capture phase + both events so
     // we never miss the first keystroke. Programmatic innerHTML updates (our own
@@ -729,7 +748,8 @@ const Cloud = (()=>{
       const ks=[]; for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(k&&(k.indexOf('folio_')===0||k===DIRTY_KEY)) ks.push(k); }
       ks.forEach(k=> _rawRemove.call(localStorage,k));
     }catch(e){}
-    try{ const keys=await IDB.keys(); for(const id of keys) await IDB.del(id); }catch(e){}
+    try{ await IDBData.clear('docs'); await IDBData.clear('tables'); }catch(e){}   // structured data store
+    try{ const keys=await IDB.keys(); for(const id of keys) await IDB.del(id); }catch(e){}   // media blobs
     try{ if(sb) await sb.auth.signOut(); }catch(e){}
     location.reload();
   }
