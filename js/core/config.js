@@ -298,7 +298,10 @@ function applyDocFmt(doc){
   }
   // Per-page typeface — scope --fs to the editor view so other surfaces keep the global font.
   const ev=document.getElementById('view-editor');
-  if(ev){ ev.style.setProperty('--fs',f.stack); ev.style.setProperty('--hw1',f.hw[0]); ev.style.setProperty('--hw2',f.hw[1]); ev.style.setProperty('--hw3',f.hw[2]); ev.style.setProperty('--bw',f.bw||400); ev.style.setProperty('--dw',f.dw||500); }
+  if(ev){ ev.style.setProperty('--fs',f.stack); ev.style.setProperty('--hw1',f.hw[0]); ev.style.setProperty('--hw2',f.hw[1]); ev.style.setProperty('--hw3',f.hw[2]); ev.style.setProperty('--bw',f.bw||400); ev.style.setProperty('--dw',f.dw||500);
+    // Mirror the width onto the view so the page-background card (which spans title +
+    // cover + props + body, not just .blocks-ct) can size itself to the width setting.
+    ev.classList.remove('pw-wide','pw-full'); if(w==='wide') ev.classList.add('pw-wide'); if(w==='full') ev.classList.add('pw-full'); }
 }
 function setDocWidth(w){ const doc=getActiveDoc(); if(!doc) return; doc.fmt=doc.fmt||{}; doc.fmt.width=w; saveActiveDoc(doc); renderFmtBar(doc); }
 function setDocSize(s){ const doc=getActiveDoc(); if(!doc) return; doc.fmt=doc.fmt||{}; doc.fmt.size=s; saveActiveDoc(doc); renderFmtBar(doc); }

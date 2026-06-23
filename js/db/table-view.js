@@ -165,22 +165,43 @@ function idbToggleCheck(blockId,rowId,colId){
    an inline input, delete, recolor) without prompts. Works for both inline
    table cells and the document's shared-property tags via a small context. */
 let _selCtx=null;
+let _selFilter='';   // live type-to-filter query
+let _selFocus=0;     // keyboard-highlighted index into the filtered list (+ create row)
 function idbSelEditor(ctx,rect){
-  _selCtx=ctx; const dd=document.getElementById('tbl-dd'); dd.classList.add('idb-seldd');
+  _selCtx=ctx; _selFilter=''; _selFocus=0;
+  const dd=document.getElementById('tbl-dd'); dd.classList.add('idb-seldd');
   renderSelDD(); idbDdPos(dd,rect); dd.style.display='block'; openOvl();
 }
+/* Build the dropdown shell: a search/add field on top + the (separately rendered)
+   options list. Typing only re-renders the list, so the field keeps focus + caret. */
 function renderSelDD(){
   if(!_selCtx) return;
-  const {tbl,colId,cur}=_selCtx;
+  const {tbl,colId}=_selCtx;
   const col=tbl.columns.find(c=>c.id===colId); if(!col)return;
   col.options=col.options||[];
-  const isStatus=col.type==='status';
-  const multi=!!_selCtx.multi;
+  const isStatus=col.type==='status', multi=!!_selCtx.multi;
+  document.getElementById('tbl-dd').innerHTML=
+    `<div class="idb-dd-searchrow"><input class="idb-dd-search" autocomplete="off" spellcheck="false" placeholder="Search or add ${isStatus?'a state':'an option'}\u2026" value="${escAttr(_selFilter)}" oninput="idbSelFilter(this.value)" onkeydown="idbSelSearchKey(event)"></div>
+     <div class="idb-dd-hint">\u2191\u2193 move \u00b7 Enter ${multi?'toggle':'select'}${isStatus?' \u00b7 drag \u283f reorders':''}</div>
+     <div class="idb-dd-opts">${renderSelOptsHtml()}</div>`;
+  // Focus the field so you can type immediately; place caret at the end.
+  setTimeout(()=>{ const s=document.querySelector('.idb-dd-search'); if(s&&document.activeElement!==s){ s.focus(); const n=s.value.length; try{s.setSelectionRange(n,n);}catch(_){} } },0);
+}
+/* Just the filtered option rows (+ "Create \u2026" row). Injected into .idb-dd-opts on
+   every keystroke without touching the search field. */
+function renderSelOptsHtml(){
+  const {tbl,colId,cur}=_selCtx;
+  const col=tbl.columns.find(c=>c.id===colId);
+  const isStatus=col.type==='status', multi=!!_selCtx.multi;
   const curArr=multi?(_selCtx.cur||[]):null;
   const isOn=(lbl)=>multi?curArr.includes(lbl):lbl===cur;
-  const opts=col.options.map((o,i)=>{
-    const editing=_selCtx._editing===i;
-    const on=isOn(o.l);
+  const q=_selFilter.trim().toLowerCase();
+  const filtered=col.options.map((o,i)=>({o,i})).filter(x=>!q||(x.o.l||'').toLowerCase().includes(q));
+  const canCreate=!!q && !col.options.some(o=>(o.l||'').toLowerCase()===q);
+  const navLen=filtered.length+(canCreate?1:0);
+  if(_selFocus>=navLen) _selFocus=Math.max(0,navLen-1);
+  let html=filtered.map((x,pos)=>{
+    const {o,i}=x; const editing=_selCtx._editing===i; const on=isOn(o.l); const foc=pos===_selFocus;
     const editPanel=editing?`<div class="idb-dd-edit">
         <div class="idb-dd-swatches">${PALETTE_COLORS.map(c=>`<span class="idb-dd-sw${c===o.c?' on':''}" style="background:${c}" onclick="event.stopPropagation();idbSelSetColor(${i},'${c}')"></span>`).join('')}</div>
         <button class="idb-dd-delbtn" onclick="event.stopPropagation();idbSelDelOpt(${i})">\ud83d\uddd1 Delete option</button>
@@ -189,7 +210,7 @@ function renderSelDD(){
       ? `<span class="idb-dd-cb${on?' on':''}">${on?'\u2713':''}</span>`
       : (on?'<span class="idb-dd-chk">\u2713</span>':'');
     return `<div class="idb-dd-optwrap${editing?' open':''}">
-      <div class="idb-dd-it idb-dd-opt${multi&&on?' sel':''}" draggable="true" ondragstart="idbSelDragStart(event,${i})" ondragover="idbSelDragOver(event)" ondrop="idbSelDrop(event,${i})" ondragend="idbSelDragEnd()" onclick="${multi?`idbSelToggle('${escAttr(o.l)}')`:`idbSelPick('${escAttr(o.l)}')`}">
+      <div class="idb-dd-it idb-dd-opt${multi&&on?' sel':''}${foc?' foc':''}" data-fpos="${pos}" draggable="${q?'false':'true'}" ondragstart="idbSelDragStart(event,${i})" ondragover="idbSelDragOver(event)" ondrop="idbSelDrop(event,${i})" ondragend="idbSelDragEnd()" onclick="${multi?`idbSelToggle('${escAttr(o.l)}')`:`idbSelPick('${escAttr(o.l)}')`}">
         <span class="idb-dd-grip" title="Drag to reorder">\u283f</span>
         ${multi?mark:''}
         <span class="idb-dd-dot${isStatus?' ring':''}" style="background:${o.c}" onclick="event.stopPropagation();idbSelToggleEdit(${i})" title="Edit color"></span>
@@ -197,12 +218,47 @@ function renderSelDD(){
         ${multi?'':mark}
         <button class="idb-dd-more" onclick="event.stopPropagation();idbSelToggleEdit(${i})" title="Edit / delete">\u22ef</button>
       </div>${editPanel}</div>`;}).join('');
+  if(canCreate){
+    const foc=_selFocus===filtered.length;
+    html+=`<div class="idb-dd-it idb-dd-create${foc?' foc':''}" data-fpos="${filtered.length}" onclick="idbSelCreatePick()"><span class="idb-dd-create-plus">+</span> Create <b>${escHtml(_selFilter.trim())}</b></div>`;
+  }
+  if(!filtered.length && !canCreate) html=`<div class="idb-dd-empty">No options yet \u2014 type to add one</div>`;
   const showClear=multi?(curArr.length>0):!!cur;
-  document.getElementById('tbl-dd').innerHTML=
-    `<div class="idb-dd-hint">${multi?'Click to toggle \u00b7 ':''}Drag \u283f to reorder${isStatus?' \u00b7 order = pipeline':''}</div>
-     <div class="idb-dd-opts">${opts||'<div class="idb-dd-empty">No options yet \u2014 add one below</div>'}</div>
-     <div class="idb-dd-addrow"><input class="idb-dd-newinput" placeholder="+ New ${isStatus?'state':'option'}, press Enter" onkeydown="if(event.key==='Enter'){event.preventDefault();idbSelAddOpt(this.value);this.value='';}"></div>
-     ${showClear?`<div class="idb-dd-it idb-mu idb-dd-clear" onclick="${multi?'idbSelClearMulti()':"idbSelPick('')"}">Clear ${multi?'all':'value'}</div>`:''}`;
+  if(showClear && !q) html+=`<div class="idb-dd-it idb-mu idb-dd-clear" onclick="${multi?'idbSelClearMulti()':"idbSelPick('')"}">Clear ${multi?'all':'value'}</div>`;
+  return html;
+}
+/* Live filter \u2014 re-render only the list so the search field keeps focus + caret. */
+function idbSelFilter(v){ if(!_selCtx)return; _selFilter=v; _selFocus=0; const c=document.querySelector('.idb-dd-opts'); if(c)c.innerHTML=renderSelOptsHtml(); }
+function _selRerenderOpts(){ const c=document.querySelector('.idb-dd-opts'); if(c)c.innerHTML=renderSelOptsHtml(); const f=c&&c.querySelector('.foc'); if(f&&f.scrollIntoView)f.scrollIntoView({block:'nearest'}); }
+/* Arrow keys move the highlight (caret stays put \u2014 preventDefault stops the field's
+   own up/down behaviour); Enter selects/creates the highlight; Esc closes. */
+function idbSelSearchKey(e){
+  if(!_selCtx)return;
+  const {tbl,colId}=_selCtx; const col=tbl.columns.find(c=>c.id===colId);
+  const q=_selFilter.trim().toLowerCase();
+  const filtered=col.options.filter(o=>!q||(o.l||'').toLowerCase().includes(q));
+  const canCreate=!!q && !col.options.some(o=>(o.l||'').toLowerCase()===q);
+  const navLen=filtered.length+(canCreate?1:0);
+  if(e.key==='ArrowDown'){ e.preventDefault(); _selFocus=navLen?Math.min(_selFocus+1,navLen-1):0; _selRerenderOpts(); }
+  else if(e.key==='ArrowUp'){ e.preventDefault(); _selFocus=Math.max(_selFocus-1,0); _selRerenderOpts(); }
+  else if(e.key==='Enter'){ e.preventDefault();
+    if(canCreate && _selFocus===filtered.length) idbSelCreatePick();
+    else if(filtered[_selFocus]) idbSelChoose(filtered[_selFocus].l);
+  }
+  else if(e.key==='Escape'){ e.preventDefault(); closeSelDD(); }
+}
+/* Assign (single) or toggle (multi) the chosen value. */
+function idbSelChoose(label){ if(_selCtx&&_selCtx.multi) idbSelToggle(label); else idbSelPick(label); }
+/* Create the typed option, then assign/toggle it. */
+function idbSelCreatePick(){
+  if(!_selCtx)return; const name=_selFilter.trim(); if(!name)return;
+  const col=idbSelCol(); col.options=col.options||[];
+  if(!col.options.some(o=>(o.l||'').toLowerCase()===name.toLowerCase())){
+    col.options.push({l:name,c:PALETTE_COLORS[col.options.length%PALETTE_COLORS.length]});
+    DB.saveTbl(_selCtx.tbl); _selCtx._dirty=true;
+  }
+  _selFilter=''; _selFocus=0;
+  idbSelChoose(name);
 }
 function idbSelLive(){ if(_selCtx&&_selCtx.rerender)_selCtx.rerender(); } // live-update the underlying view without closing
 function idbSelPick(val){ if(_selCtx&&_selCtx.onPick)_selCtx.onPick(val); closeSelDD(); }

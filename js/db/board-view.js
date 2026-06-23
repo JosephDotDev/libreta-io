@@ -1,3 +1,7 @@
+/* Row id whose board-card title is in the brief "name it on creation" edit mode.
+   Only that one card renders an editable title; every other card's title is plain
+   text, so once a card exists its title is renamed from the page view, not in place. */
+let _idbEditTitleRow=null;
 function idbBoardView(blk,tbl){
   const selCols=tbl.columns.filter(isSelectish);
   if(!selCols.length) return `<div class="idb-note">Add a <b>Select</b> or <b>Status</b> property to group entries on a board.</div>`;
@@ -15,13 +19,24 @@ function idbBoardView(blk,tbl){
       const _csrc=(imgCol&&r.cells[imgCol.id]&&srcFor(r.cells[imgCol.id]))||((_dref&&_dref.meta&&_dref.meta.cover)?srcFor(_dref.meta.cover):'');
       const cover=_csrc?`<div class="idb-card-cover"><img src="${_csrc}" alt=""></div>`:'';
       const meta=metaCols.slice(0,3).map(c=>idbCardMeta(r,c)).filter(Boolean).join('');
-      // Title is editable in place (click the title to rename; click elsewhere on the card to open).
-      const titleEd=`<span class="idb-ed idb-card-title-ed" contenteditable="true" data-ph="Untitled" onmousedown="event.stopPropagation()" onclick="event.stopPropagation()" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}" onblur="idbSetCell('${blk.id}','${r.id}','${titleColId}',this.innerText.trim())">${rawTitle}</span>`;
+      // Title is editable in place ONLY for the card just created (name-on-creation);
+      // for every existing card it's plain text and clicking it opens the page (where
+      // the title is renamed), so a stray click can't accidentally edit it inline.
+      const titleEd=_idbEditTitleRow===r.id
+        ? `<span class="idb-ed idb-card-title-ed" contenteditable="true" data-ph="Untitled" onmousedown="event.stopPropagation()" onclick="event.stopPropagation()" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}" onblur="idbBoardTitleCommit('${blk.id}','${r.id}','${titleColId}',this.innerText.trim())">${rawTitle}</span>`
+        : `<span class="idb-card-title">${rawTitle||'<span class="idb-mu">Untitled</span>'}</span>`;
       return `<div class="idb-card" data-rid="${r.id}" draggable="true" ondragstart="idbCardDragStart(event,'${blk.id}','${r.id}')" ondragend="idbCardDragEnd()" onclick="idbOpenRow('${blk.id}','${r.id}')"><button class="idb-card-del" onclick="event.stopPropagation();idbDelRow('${blk.id}','${r.id}')" data-tip="Delete">&#10005;</button>${cover}<div class="idb-card-t">${idbRowIcon(r)}${titleEd}</div>${meta?`<div class="idb-card-m">${meta}</div>`:''}</div>`;
     }).join('');
     return `<div class="idb-bcol" ondragover="idbCardDragOverCol(event)" ondragleave="idbBcolDragLeave(event)" ondrop="idbCardDropToCol(event,'${blk.id}','${escAttr(g.key)}')"><div class="idb-bcol-h"><span class="idb-dd-dot" style="background:${g.color}"></span>${escHtml(g.label)}<span class="idb-mu" style="margin-left:auto">${rows.length}</span></div><div class="idb-bcol-b">${cards}<div class="idb-bcard-add" onclick="idbBoardAddRow('${blk.id}','${groupCol.id}','${escAttr(g.key)}')"><span class="np-pill">+ New Page</span></div></div></div>`;
   }).join('');
   return `<div class="idb-board">${colsH}</div>`;
+}
+/* Commit the name-on-creation title, leave edit mode, and re-render the board so the
+   title becomes plain (non-editable) text. */
+function idbBoardTitleCommit(blockId,rowId,colId,val){
+  _idbEditTitleRow=null;
+  idbSetCell(blockId,rowId,colId,val);
+  const blk=findBlock(blockId); if(blk) idbSync(blockId,blk.tableId);
 }
 function idbCardMeta(r,c){
   const v=r.cells[c.id]; if(!v||(Array.isArray(v)&&!v.length))return'';

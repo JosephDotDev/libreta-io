@@ -58,19 +58,34 @@ body.outline-on .outline-panel{display:block}
 .ed-title::placeholder{color:var(--mu)}
 .blocks-sc{flex:1;overflow-y:auto;padding-bottom:120px}
 /* ── PAGE BACKGROUND (Craft-style centered card) ──
-   When a page has a background image/gradient (doc.meta.bg), the header + body become
-   one centered, frosted card floating over the full-bleed backdrop on .blocks-sc. */
+   When a page has a background image/gradient (doc.meta.bg), the cover + header + body
+   stack into ONE centered card floating over the full-bleed backdrop. Card width
+   follows the page-width setting (mirrored onto #view-editor as pw-*); the cover is
+   pulled into the card so it shares the rounded top instead of bleeding edge-to-edge. */
+#view-editor.has-pagebg{--page-w:792px;--page-pad:32px}
+#view-editor.has-pagebg.pw-wide{--page-w:1020px}
+#view-editor.has-pagebg.pw-full{--page-w:90%}   /* full = ~5% gutter each side */
+#view-editor.has-pagebg #ed-cover-wrap,
 #view-editor.has-pagebg .ed-title-row,
 #view-editor.has-pagebg .props-bar,
 #view-editor.has-pagebg .blocks-ct{
-  max-width:792px;margin-left:auto;margin-right:auto;
+  max-width:var(--page-w);margin-left:auto;margin-right:auto;
+}
+#view-editor.has-pagebg .ed-title-row,
+#view-editor.has-pagebg .props-bar,
+#view-editor.has-pagebg .blocks-ct{
   background:color-mix(in srgb,var(--bg) 90%,transparent);
   -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
   border-color:transparent;
 }
-#view-editor.has-pagebg .ed-title-row{margin-top:48px;padding:38px 40px 8px;border-radius:var(--r-2xl) var(--r-2xl) 0 0;box-shadow:0 -1px 0 rgba(0,0,0,.04)}
-#view-editor.has-pagebg .props-bar{padding-left:40px;padding-right:40px}
-#view-editor.has-pagebg .blocks-ct{padding:18px 40px 56px;border-radius:0 0 var(--r-2xl) var(--r-2xl);box-shadow:0 26px 70px rgba(0,0,0,.30)}
+/* Cover = the rounded top of the card (its own rounded box, card-width). */
+#view-editor.has-pagebg #ed-cover-wrap{margin-top:40px;border-radius:var(--r-2xl) var(--r-2xl) 0 0;overflow:hidden}
+/* No cover → the title-row is the card top: round it + give the top gutter. */
+#view-editor.has-pagebg .ed-title-row{margin-top:40px;padding:26px var(--page-pad) 6px;border-radius:var(--r-2xl) var(--r-2xl) 0 0}
+#view-editor.has-pagebg .props-bar{padding-left:var(--page-pad);padding-right:var(--page-pad)}
+#view-editor.has-pagebg .blocks-ct{padding:14px var(--page-pad) 46px;border-radius:0 0 var(--r-2xl) var(--r-2xl);box-shadow:0 26px 70px rgba(0,0,0,.30)}
+/* Cover present → title-row joins flush below the cover (no second rounded top / gap). */
+#view-editor.has-pagebg:has(#ed-cover-wrap .cover-wrap) .ed-title-row{margin-top:0;border-top-left-radius:0;border-top-right-radius:0}
 /* Generous top padding (real CSS space, not an empty block) so writing starts
    well clear of the properties bar. */
 .blocks-ct{max-width:720px;margin:0 auto;padding:72px 0 8px}

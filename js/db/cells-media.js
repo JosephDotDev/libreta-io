@@ -58,7 +58,9 @@ function idbFocusCardTitle(blockId,rowId){
 function idbBoardAddRow(blockId,colId,val){
   const blk=findBlock(blockId),tbl=idbTbl(blk); if(!tbl)return;
   const cells={}; tbl.columns.forEach(c=>cells[c.id]=''); cells[colId]=val;
-  const row={id:mkId('r'),cells}; tbl.rows.push(row); DB.saveTbl(tbl); idbSync(blockId,tbl.id);
+  const row={id:mkId('r'),cells}; tbl.rows.push(row);
+  if(typeof _idbEditTitleRow!=='undefined') _idbEditTitleRow=row.id; // name-on-creation: only this card's title is editable
+  DB.saveTbl(tbl); idbSync(blockId,tbl.id);
   idbFocusCardTitle(blockId,row.id);
 }
 function idbAddCol(e,blockId){

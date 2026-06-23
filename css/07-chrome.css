@@ -71,7 +71,7 @@ body.gf-sans{--fs:'DM Sans',system-ui,sans-serif}
 body.gf-mono{--fs:'DM Mono',monospace}
 /* ── DOC WIDTHS ── */
 .blocks-ct.w-wide{max-width:960px}
-.blocks-ct.w-full{max-width:none;padding:0 24px}
+.blocks-ct.w-full{max-width:none;padding:0 5%}   /* full width keeps a ~5% gutter, not edge-to-edge */
 /* ── DOC FONT SIZES ── */
 .blocks-ct.fs-sm .bk{font-size:15px!important}
 .blocks-ct.fs-lg .bk{font-size:22px!important}
