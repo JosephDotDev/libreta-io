@@ -99,11 +99,28 @@ function srcFor(v){
   if(typeof v==='string'&&(v.startsWith('data:')||v.startsWith('http')||v.startsWith('blob:'))) return v;
   return '';
 }
+/* Content-addressed id: hash the bytes so identical media collapses to ONE stored
+   blob (and one ref) no matter how many times it's pasted/uploaded. Falls back to a
+   random id if SubtleCrypto is unavailable (e.g. a non-secure context) — still correct,
+   just no dedup. 160 bits is collision-safe for any personal workspace. */
+async function blobId(blob){
+  try{
+    const buf=await blob.arrayBuffer();
+    const h=await crypto.subtle.digest('SHA-256',buf);
+    const hex=[...new Uint8Array(h)].map(b=>b.toString(16).padStart(2,'0')).join('');
+    return 'img_'+hex.slice(0,40);
+  }catch(e){ return 'img_'+uuid(); }
+}
 async function storeBlob(blob){
   ensurePersistence(); // first real media write is a good moment to ask the browser not to evict us
-  const id='img_'+uuid();
-  await IDB.put(id,blob);
-  imgCache.set(id,URL.createObjectURL(blob));
+  const id=await blobId(blob);
+  // Dedup: if this exact content is already stored this session, reuse it (skip the
+  // IDB write and a redundant object URL). If it's in IDB from a prior session but not
+  // yet cached, the put is a harmless identical-bytes overwrite.
+  if(!imgCache.has(id)){
+    await IDB.put(id,blob);
+    imgCache.set(id,URL.createObjectURL(blob));
+  }
   return id;
 }
 /* Ask the browser to make storage durable (won't be evicted under disk pressure).
@@ -114,9 +131,30 @@ async function ensurePersistence(){
   _persistAsked=true;
   try{ if(!(await navigator.storage.persisted())) await navigator.storage.persist(); }catch(e){}
 }
-function freeBlob(ref){ if(isBlobRef(ref)){IDB.del(ref);const u=imgCache.get(ref);if(u)URL.revokeObjectURL(u);imgCache.delete(ref);} }
+/* Release a blob ref. Because blobs are now content-addressed and DEDUPED, the same
+   ref can be shared by several blocks/docs — so we must only reclaim it when NOTHING
+   still references it (otherwise removing one image would nuke an identical one
+   elsewhere). collectRefs() is the same workspace scan the GC uses; if it's not loaded
+   yet (very early boot) we keep the blob and let the boot GC reclaim it later. */
+function freeBlob(ref){
+  if(!isBlobRef(ref)) return;
+  try{ if(typeof collectRefs==='function' && collectRefs().has(ref)) return; }catch(e){ return; }
+  IDB.del(ref); const u=imgCache.get(ref); if(u)URL.revokeObjectURL(u); imgCache.delete(ref);
+}
 async function preloadBlobs(){
   try{const all=await IDB.all();all.forEach(({id,blob})=>{if(blob&&!imgCache.has(id))imgCache.set(id,URL.createObjectURL(blob))})}catch(e){}
+}
+/* Preferred re-encode format. WebP is ~25-35% smaller than JPEG at equal quality AND
+   keeps transparency (JPEG flattened alpha onto black — a real bug for PNG/screenshots).
+   Detected once; falls back to JPEG on the rare browser without WebP encoding. */
+let _imgEncodeType=null;
+function imgEncodeType(){
+  if(_imgEncodeType) return _imgEncodeType;
+  try{
+    const c=document.createElement('canvas'); c.width=c.height=1;
+    _imgEncodeType = c.toDataURL('image/webp').indexOf('data:image/webp')===0 ? 'image/webp' : 'image/jpeg';
+  }catch(e){ _imgEncodeType='image/jpeg'; }
+  return _imgEncodeType;
 }
 function compressToBlob(file,maxW,maxH,quality){
   // GIFs are usually animated — re-encoding them through a canvas flattens them to a
@@ -127,7 +165,7 @@ function compressToBlob(file,maxW,maxH,quality){
     const img=new Image(); const url=URL.createObjectURL(file);
     img.onload=()=>{URL.revokeObjectURL(url);let w=img.width,h=img.height;if(w>maxW||h>maxH){const r=Math.min(maxW/w,maxH/h);w=Math.round(w*r);h=Math.round(h*r)}
       const c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);
-      c.toBlob(b=>resolve(b||file),'image/jpeg',quality);
+      c.toBlob(b=>resolve(b||file),imgEncodeType(),quality);
     };
     img.onerror=()=>{URL.revokeObjectURL(url);resolve(file)};
     img.src=url;
