@@ -42,9 +42,14 @@ function trashDoc(rootId){
         if(row){ entry._trash.row={tableId:d.dbId, row:JSON.parse(JSON.stringify(row))};
           t.rows=t.rows.filter(r=>r.docId!==id); DB.saveTbl(t); } } }
     trash.unshift(entry);
-    DB._docs=DB._docs.filter(x=>x.id!==id);   // remove WITHOUT freeing versions/blobs
+    // Drop from the live set: remove from the in-memory cache AND the per-record IDB
+    // store (Phase-1 storage has no whole-array flush). Keep versions + media blobs so
+    // Restore works — that's why we don't call DB.delDoc (which would delete versions).
+    DB._docs=DB._docs.filter(x=>x.id!==id);
+    Promise.resolve(Persist.delDoc(id)).catch(e=>console.warn('[trash] per-record delete failed',e));
   });
-  DB._flushDocs();
+  if(typeof searchInvalidate==='function') searchInvalidate();
+  if(typeof _emitContentChanged==='function') _emitContentChanged();   // notify the sync layer the live set changed
   _saveTrash(trash);
   _pendingUndo=batch;
   // If the page currently open got trashed (e.g. you deleted one of its ancestors),

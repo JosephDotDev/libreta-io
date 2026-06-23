@@ -819,7 +819,15 @@ const Cloud = (()=>{
       const lt=local[k]||null, rt=rrec[k]||null, dt=rdel[k]||null, bt=brec[k]||null;
       const localDeleted = !lt && !!bt;     // present at last sync, gone now → deleted here
       if(dt && (!lt || String(dt)>=String(lt))){ if(lt) plan.delLocal.push(k); continue; } // remote tombstone wins
-      if(localDeleted && !rt){ plan.tombstone.push(k); continue; }                           // propagate our delete
+      if(localDeleted){
+        // We deleted it since our last sync. The remote almost always still lists it
+        // (rt present) — that's NOT a reason to re-download it. Propagate our delete as a
+        // tombstone, UNLESS the remote was edited AFTER our base (rt > bt), i.e. another
+        // device changed it after we last synced → their edit wins, so resurrect it.
+        if(rt && String(rt) > String(bt)) plan.download.push(k);
+        else plan.tombstone.push(k);
+        continue;
+      }
       if(rt && (!lt || String(rt)>String(lt))){ plan.download.push(k); continue; }           // remote newer
       if(lt && (!rt || String(lt)>String(rt))){ plan.upload.push(k); continue; }             // local newer / new
       // else: in sync
