@@ -864,7 +864,11 @@ const Cloud = (()=>{
     }
     const merged={ v:1, updatedAt:new Date().toISOString(), recs:Object.assign({},remote.recs), deleted:Object.assign({},remote.deleted) };
     plan.upload.forEach(k=>{ merged.recs[k]=localNow[k]; });
-    const tnow=String(Date.now());
+    // Tombstone timestamp MUST be the same ISO format as record updatedAt — they're
+    // compared lexicographically in planReconcile. (Epoch-ms strings like "1719…" sort
+    // BEFORE ISO strings like "2026…", so a numeric tombstone never wins and the other
+    // device resurrects the deleted page.)
+    const tnow=new Date().toISOString();
     plan.tombstone.forEach(k=>{ merged.deleted[k]=tnow; delete merged.recs[k]; });
     plan.delLocal.forEach(k=>{ delete merged.recs[k]; });
     if(plan.upload.length||plan.tombstone.length){
