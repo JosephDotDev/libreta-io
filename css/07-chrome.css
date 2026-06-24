@@ -75,14 +75,14 @@ body.gf-mono{--fs:'DM Mono',monospace}
 /* Full-width pages — one responsive edge gap (`--ed-edge`, a %) so spacing scales with
    the display instead of a fixed px gutter. Because a percentage padding-top resolves
    against WIDTH too, reusing the same value for the top keeps the top gap visually
-   consistent with the sides. The body rows carry a 56px gutter (drag handles), so the
-   header (icon + title) and the properties bar are inset by `edge + 56px` to line up
+   consistent with the sides. The body rows carry a 52px gutter (drag handles), so the
+   header (icon + title) and the properties bar are inset by `edge + 52px` to line up
    with where the body TEXT begins, not the page edge. The page-background "card" layout
    has its own gutter system, so it's left untouched. */
 #view-editor.pw-full:not(.has-pagebg){--ed-edge:1%}
-#view-editor.pw-full:not(.has-pagebg) .blocks-ct.w-full{padding:var(--ed-edge) var(--ed-edge) 8px}
-#view-editor.pw-full:not(.has-pagebg) .ed-title-row{padding-left:calc(var(--ed-edge) + 56px);padding-right:var(--ed-edge)}
-#view-editor.pw-full:not(.has-pagebg) .props-bar{padding-left:calc(var(--ed-edge) + 56px);padding-right:var(--ed-edge)}
+#view-editor.pw-full:not(.has-pagebg) .blocks-ct.w-full{padding:var(--ed-edge) var(--ed-edge) 4px}
+#view-editor.pw-full:not(.has-pagebg) .ed-title-row{padding-left:calc(var(--ed-edge) + 52px);padding-right:var(--ed-edge)}
+#view-editor.pw-full:not(.has-pagebg) .props-bar{padding-left:calc(var(--ed-edge) + 52px);padding-right:var(--ed-edge)}
 /* ── DOC FONT SIZES ── */
 /* Per-page font sizes. Normal is 18px (set in 10-scale.css); these are tuned so the
    S→M→L→XL steps feel even (≈ +4 / +4 / +6) instead of S→M jumping +5 while M→L was +2. */
