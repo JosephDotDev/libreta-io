@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>planReconcile tests</title>
+<style>
+  body{font:14px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;background:#0d0c0f;color:#e7e4ea;margin:0;padding:28px}
+  h1{font-size:18px;margin:0 0 4px}
+  .sub{color:#8b8792;margin-bottom:18px}
+  .bar{padding:10px 14px;border-radius:8px;margin-bottom:16px;font-weight:600}
+  .ok{background:#16351f;color:#7ee29a;border:1px solid #2c6b3f}
+  .bad{background:#3a1620;color:#f08aa0;border:1px solid #6b2c3c}
+  .row{display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-bottom:1px solid #211f26}
+  .tag{flex-shrink:0;width:46px;font-weight:700}
+  .pass{color:#7ee29a}.fail{color:#f08aa0}
+  .name{color:#cfc9d6}
+  pre{margin:6px 0 0;color:#b69cff;white-space:pre-wrap;font-size:12px}
+</style>
+</head>
+<body>
+  <h1>per-record sync · planReconcile truth table</h1>
+  <div class="sub">Loads the real <code>js/cloud/sync.js</code> and runs the suite against <code>Cloud.planReconcile</code>.</div>
+  <div id="out">running…</div>
+
+  <script src="../js/cloud/sync.js"></script>
+  <script src="sync-reconcile-tests.js"></script>
+  <script>
+    (function(){
+      const out=document.getElementById('out');
+      // NB: `const Cloud` in sync.js is a global LEXICAL binding, not a window property,
+      // so reference it as a bare identifier (window.Cloud would be undefined).
+      const fn = (typeof Cloud!=='undefined' && Cloud.planReconcile);
+      if(typeof fn!=='function'){ out.innerHTML='<div class="bar bad">Could not find Cloud.planReconcile — did js/cloud/sync.js load?</div>'; return; }
+      const r = runReconcileTests(fn);
+      const failByName = {}; r.failures.forEach(f=>failByName[f.name]=f);
+      const bar = `<div class="bar ${r.failed?'bad':'ok'}">${r.passed}/${r.total} passed${r.failed?` · ${r.failed} FAILED`:' · all green'}</div>`;
+      const rows = RECONCILE_TESTS.map(c=>{
+        const f = failByName[c.name];
+        const pass = !f;
+        return `<div class="row"><span class="tag ${pass?'pass':'fail'}">${pass?'PASS':'FAIL'}</span>`
+          + `<span class="name">${c.name}</span></div>`
+          + (f?`<pre>want ${JSON.stringify(f.want)}\n got ${JSON.stringify(f.got)}${f.err?'\n err '+f.err:''}</pre>`:'');
+      }).join('');
+      out.innerHTML = bar + rows;
+    })();
+  </script>
+</body>
+</html>
