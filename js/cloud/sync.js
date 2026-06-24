@@ -817,19 +817,28 @@ const Cloud = (()=>{
     const keys=new Set([...Object.keys(local), ...Object.keys(rrec), ...Object.keys(rdel), ...Object.keys(brec)]);
     for(const k of keys){
       const lt=local[k]||null, rt=rrec[k]||null, dt=rdel[k]||null, bt=brec[k]||null;
-      const localDeleted = !lt && !!bt;     // present at last sync, gone now → deleted here
-      if(dt && (!lt || String(dt)>=String(lt))){ if(lt) plan.delLocal.push(k); continue; } // remote tombstone wins
+      // Remote's EFFECTIVE state: it may list a record (rt) AND a tombstone (dt) at once —
+      // e.g. a page deleted then restored. The newer timestamp wins, so a record re-created
+      // AFTER its delete un-deletes it (and vice-versa). All timestamps are ISO → comparable.
+      const remoteDeleted = !!dt && (!rt || String(dt) >= String(rt));
+      if(remoteDeleted){
+        // Remote's latest action on this key is a delete (at dt).
+        if(lt && String(lt) > String(dt)) plan.upload.push(k);   // our copy is newer than the delete → resurrect it
+        else if(lt) plan.delLocal.push(k);                       // honor the remote delete locally
+        // else: neither side has it → nothing
+        continue;
+      }
+      // Remote has a live record (rt), or no knowledge of this key.
+      const localDeleted = !lt && !!bt;     // had it at last sync, gone now → we deleted it
       if(localDeleted){
-        // We deleted it since our last sync. The remote almost always still lists it
-        // (rt present) — that's NOT a reason to re-download it. Propagate our delete as a
-        // tombstone, UNLESS the remote was edited AFTER our base (rt > bt), i.e. another
-        // device changed it after we last synced → their edit wins, so resurrect it.
+        // Propagate our delete as a tombstone, UNLESS the remote was edited AFTER our base
+        // (rt > bt) — i.e. another device changed it after we last synced → their edit wins.
         if(rt && String(rt) > String(bt)) plan.download.push(k);
         else plan.tombstone.push(k);
         continue;
       }
-      if(rt && (!lt || String(rt)>String(lt))){ plan.download.push(k); continue; }           // remote newer
-      if(lt && (!rt || String(lt)>String(rt))){ plan.upload.push(k); continue; }             // local newer / new
+      if(rt && (!lt || String(rt) > String(lt))){ plan.download.push(k); continue; }   // remote newer
+      if(lt && (!rt || String(lt) > String(rt))){ plan.upload.push(k); continue; }     // local newer / new
       // else: in sync
     }
     return plan;
@@ -846,7 +855,7 @@ const Cloud = (()=>{
     const plan = planReconcile(localManifest(), remote, _getBase());
     let dataChanged=false;
     for(const k of plan.download){
-      if(k==='kv'){ const kv=await _dlJson(RECKV()); if(kv){ _applyKv(kv); try{ _rawSet.call(localStorage,'libreta_kv_mtime', (remote.recs&&remote.recs['kv'])||new Date().toISOString()); }catch(e){} if(typeof applyCfg==='function') applyCfg(); } continue; }
+      if(k==='kv'){ const kv=await _dlJson(RECKV()); if(kv){ _applyKv(kv); try{ _rawSet.call(localStorage,'libreta_kv_mtime', (remote.recs&&remote.recs['kv'])||new Date().toISOString()); }catch(e){} if(typeof applyCfg==='function') applyCfg(); dataChanged=true; } continue; }
       const obj=await _dlJson(_recPath(k)); if(!obj) continue;
       DB._suppress=true; try{ if(k.startsWith('doc:')) await Persist.putDoc(obj); else if(k.startsWith('tbl:')) await Persist.putTbl(obj); } finally{ DB._suppress=false; }
       dataChanged=true;
@@ -863,7 +872,9 @@ const Cloud = (()=>{
       else if(k.startsWith('tbl:')){ const t=DB.getTbl(k.slice(4)); if(t) await _uploadJson(_recPath(k), t); }
     }
     const merged={ v:1, updatedAt:new Date().toISOString(), recs:Object.assign({},remote.recs), deleted:Object.assign({},remote.deleted) };
-    plan.upload.forEach(k=>{ merged.recs[k]=localNow[k]; });
+    // Uploading a record un-deletes it: drop any stale tombstone so a restored/re-created
+    // page doesn't stay shadowed by an old delete on other devices.
+    plan.upload.forEach(k=>{ merged.recs[k]=localNow[k]; delete merged.deleted[k]; });
     // Tombstone timestamp MUST be the same ISO format as record updatedAt — they're
     // compared lexicographically in planReconcile. (Epoch-ms strings like "1719…" sort
     // BEFORE ISO strings like "2026…", so a numeric tombstone never wins and the other
@@ -878,7 +889,10 @@ const Cloud = (()=>{
     } else if(remote.updatedAt){ _remoteStamp=remote.updatedAt; setCloudTs(remote.updatedAt); }
     _setBase({ recs:localManifest(), deleted:merged.deleted });
     _syncedSig = contentSig(); clearDirty();
-    if(dataChanged && typeof rerenderView==='function' && !activelyEditing()){ if(typeof preloadBlobs==='function') await preloadBlobs(); rerenderView(); }
+    if(dataChanged){
+      if(typeof updateTrashBadge==='function') updateTrashBadge();   // trash count may have changed via the kv bundle
+      if(typeof rerenderView==='function' && !activelyEditing()){ if(typeof preloadBlobs==='function') await preloadBlobs(); rerenderView(); }
+    }
     return plan;
   }
 
