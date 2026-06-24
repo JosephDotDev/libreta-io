@@ -280,6 +280,13 @@ function setListTags(v){
 /* Width / Size / Typeface are PER-PAGE (doc.fmt) and live in the ribbon's
    Page-settings menu — the old inline fmt bar just applies them now. */
 function renderFmtBar(doc){ applyDocFmt(doc); if(document.getElementById('cfg-panel')?.classList.contains('open') && document.getElementById('cfg-tab-page')?.classList.contains('on')) renderPageSettings(); if(typeof renderBreadcrumbs==='function') renderBreadcrumbs(S.view,S.docId); }
+/* Font size is remembered PER DEVICE: stored under a non-folio_ key so the cloud
+   snapshot (which only carries folio_* keys) never syncs it — a phone can run small
+   text while a desktop runs large, and each remembers its own across reloads. Once a
+   device sets a size it wins over any legacy per-page size. */
+const DEV_SIZE_KEY='libreta_devsize';
+function getDevSize(){ try{ return localStorage.getItem(DEV_SIZE_KEY)||''; }catch(e){ return ''; } }
+function setDevSize(s){ try{ localStorage.setItem(DEV_SIZE_KEY, s||'normal'); }catch(e){} }
 function applyDocFmt(doc){
   const fmt=doc.fmt||{}; const cfg=getCfg();
   const f=FONTS[normFontKey(fmt.font||cfg.font)]||FONTS.cormorant;
@@ -290,7 +297,7 @@ function applyDocFmt(doc){
     return;
   }
   const w=fmt.width||cfg.defWidth||'focused';
-  const s=fmt.size||cfg.defSize||'normal';
+  const s=getDevSize()||fmt.size||cfg.defSize||'normal';
   const ct=document.getElementById('blocks-ct');
   if(ct){
     ct.classList.remove('w-wide','w-full'); if(w==='wide') ct.classList.add('w-wide'); if(w==='full') ct.classList.add('w-full');
@@ -304,7 +311,9 @@ function applyDocFmt(doc){
     ev.classList.remove('pw-wide','pw-full'); if(w==='wide') ev.classList.add('pw-wide'); if(w==='full') ev.classList.add('pw-full'); }
 }
 function setDocWidth(w){ const doc=getActiveDoc(); if(!doc) return; doc.fmt=doc.fmt||{}; doc.fmt.width=w; saveActiveDoc(doc); renderFmtBar(doc); }
-function setDocSize(s){ const doc=getActiveDoc(); if(!doc) return; doc.fmt=doc.fmt||{}; doc.fmt.size=s; saveActiveDoc(doc); renderFmtBar(doc); }
+/* Size is a per-device preference (not per-page), so it does NOT write to doc.fmt /
+   sync — it's stored locally and re-applied to whatever page is open on this device. */
+function setDocSize(s){ setDevSize(s); const doc=getActiveDoc(); if(doc) applyDocFmt(doc); if(typeof renderPageSettings==='function') renderPageSettings(); }
 function setDocFont(f){ const doc=getActiveDoc(); if(!doc) return; doc.fmt=doc.fmt||{}; doc.fmt.font=f; saveActiveDoc(doc); renderFmtBar(doc); }
 
 /* ── PAGE SETTINGS — the ribbon kebab + Home "Customize" open the unified
@@ -324,7 +333,7 @@ function renderPageSettings(){
   const fmt=doc.fmt||{}; const cfg=getCfg();
   const fk=normFontKey(fmt.font||cfg.font);
   const w=fmt.width||cfg.defWidth||'focused';
-  const s=fmt.size||cfg.defSize||'normal';
+  const s=getDevSize()||fmt.size||cfg.defSize||'normal';
   let fonts='',last=null;
   Object.keys(FONTS).forEach(k=>{ const f=FONTS[k]; if(f.grp!==last){ fonts+=`<div class="ps-fgrp">${f.grp}</div>`; last=f.grp; }
     fonts+=`<button class="ps-font${k===fk?' on':''}" onclick="setDocFont('${k}')" style="font-family:${f.stack}">${f.lbl}</button>`; });

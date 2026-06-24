@@ -198,7 +198,11 @@ function showSelToolbar(){
   if(!r.width&&!r.height){ tb.classList.remove('open'); return; }
   const z=parseFloat(document.documentElement.style.zoom||'1')||1;
   tb.classList.add('open');
-  let top=r.top/z-tb.offsetHeight-8; if(top<6) top=r.bottom/z+8;
+  // On mobile the OS copy/paste bubble sits ABOVE the selection, so put our toolbar
+  // BELOW it there; on desktop keep it above (falling back to below if no room).
+  let top;
+  if(window.innerWidth<=860){ top=r.bottom/z+14; }
+  else { top=r.top/z-tb.offsetHeight-8; if(top<6) top=r.bottom/z+8; }
   tb.style.top=top+'px';
   tb.style.left=Math.max(60,(r.left+r.width/2)/z)+'px';
   updateSelToolbarState();

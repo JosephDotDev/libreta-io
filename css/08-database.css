@@ -87,7 +87,7 @@
 .idb-tbl th:first-child,.idb-tbl td:first-child{padding-left:2px}
 .idb-tbl th:hover{color:var(--tx)}
 .idb-tbl th.idb-addcol{width:30px;text-align:center;color:var(--mu)}
-.idb-tbl td{padding:6px 10px;border-bottom:1px solid var(--bd);color:var(--tx);vertical-align:middle;min-width:60px}
+.idb-tbl td{padding:6px 10px;border-bottom:1px solid var(--bd);color:var(--tx);vertical-align:middle;min-width:60px;font-family:var(--fs)}
 .idb-tbl tbody tr:hover td{background:rgba(255,255,255,.014)}
 /* minimal group header: chevron + a pill for the value + count */
 .idb-grp td{background:none!important;padding:14px 6px 6px;border-bottom:none}
@@ -465,7 +465,7 @@ body.idb-cal-dragging-active .idb-cal-cell{cursor:copy}
 .idb-cev-cover{height:48px;overflow:hidden}
 .idb-cev-cover img{width:100%;height:100%;object-fit:cover;display:block}
 .idb-cev-row{display:flex;align-items:center;gap:4px;padding:5px 6px 2px}
-.idb-cev-t{display:flex;align-items:center;gap:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;font-size:12px;font-weight:600;color:var(--card-title)}
+.idb-cev-t{display:flex;align-items:center;gap:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;font-size:12px;font-weight:600;color:var(--card-title);font-family:var(--fs)}
 .idb-cev-chips{display:flex;flex-wrap:wrap;gap:4px;padding:1px 6px 6px}
 .idb-cev-chip{display:inline-flex;align-items:center;gap:4px;font-size:11px;border-radius:var(--r-lg);padding:2px 9px;cursor:pointer;line-height:1.4;background:var(--sur);color:var(--mu)}
 .idb-cev-chip:hover{filter:brightness(1.18)}

@@ -37,7 +37,10 @@ function idbOpenRow(blockId,rowId){
    editor by temporarily pointing the shared editor state at the peeked doc. */
 function openDocPeek(docId){
   const doc=DB.getDoc(docId); if(!doc) return;
-  const mode=getCfg().openMode||'peek';
+  let mode=getCfg().openMode||'peek';
+  // Side-peek is too cramped on a phone — open small screens as a full page instead
+  // (desktop keeps the user's chosen default).
+  if(window.innerWidth<=860 && mode==='peek') mode='full';
   if(mode==='full'){ clearTimeout(S.saveTimer); flushSave(); nav('editor',docId); return; }
   if(S.peekOpen) closeDocPeek(); // swap to the new doc
   clearTimeout(S.saveTimer); flushSave();

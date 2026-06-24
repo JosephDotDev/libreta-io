@@ -86,5 +86,7 @@ html{scrollbar-color:var(--bd2) transparent;scrollbar-width:thin}
     opacity:0;pointer-events:none;transition:opacity var(--t-slow) ease}
   body.sb-mobile-open .sb-backdrop{opacity:1;pointer-events:auto}
   .topbar{padding:0 14px}
+  /* The "Customize" page-settings button drops to just its gear on phones to save room. */
+  .tp-pgset .tp-pgset-lbl{display:none}
 }
 
