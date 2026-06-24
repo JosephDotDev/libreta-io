@@ -79,7 +79,7 @@ body.gf-mono{--fs:'DM Mono',monospace}
    header (icon + title) and the properties bar are inset by `edge + 56px` to line up
    with where the body TEXT begins, not the page edge. The page-background "card" layout
    has its own gutter system, so it's left untouched. */
-#view-editor.pw-full:not(.has-pagebg){--ed-edge:2%}
+#view-editor.pw-full:not(.has-pagebg){--ed-edge:1%}
 #view-editor.pw-full:not(.has-pagebg) .blocks-ct.w-full{padding:var(--ed-edge) var(--ed-edge) 8px}
 #view-editor.pw-full:not(.has-pagebg) .ed-title-row{padding-left:calc(var(--ed-edge) + 56px);padding-right:var(--ed-edge)}
 #view-editor.pw-full:not(.has-pagebg) .props-bar{padding-left:calc(var(--ed-edge) + 56px);padding-right:var(--ed-edge)}
