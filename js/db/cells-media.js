@@ -1,5 +1,6 @@
 async function onIdbImgChange(input){
   const file=input.files[0]; if(!file||!_idbImgTarget) return;
+  if(!withinUploadLimit(file,'Image')){ input.value=''; _idbImgTarget=null; return; }
   const t=_idbImgTarget; _idbImgTarget=null;
   const blob=await compressToBlob(file,1200,1200,0.82)||file;
   const id=await storeBlob(blob);

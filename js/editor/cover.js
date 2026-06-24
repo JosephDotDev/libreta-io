@@ -136,6 +136,7 @@ function removePageBg(){
 function triggerPageBgUpload(){ const i=document.getElementById('pagebg-file-input'); if(i){ i.value=''; i.click(); } }
 function onPageBgFileChange(input){
   const file=input.files[0]; if(!file) return;
+  if(!withinUploadLimit(file,'Image')){ input.value=''; return; }
   compressToBlob(file,2400,1600,0.86).then(async blob=>{
     if(!blob) return;
     const doc=getActiveDoc(); if(!doc) return;
@@ -195,6 +196,7 @@ function triggerCoverUpload(){
 }
 function onCoverFileChange(input){
   const file=input.files[0]; if(!file) return;
+  if(!withinUploadLimit(file,'Cover image')){ input.value=''; return; }
   // Higher res + quality than before so covers keep more of their original detail
   compressToBlob(file,2400,1100,0.90).then(async blob=>{
     if(!blob) return;

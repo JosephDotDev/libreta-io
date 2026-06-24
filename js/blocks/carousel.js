@@ -9,7 +9,7 @@ function mkCarouselHtml(blk){
     if(im.src){
       return `<div class="bk-car-item">
         <div class="bk-car-imgwrap">
-          <img class="bk-car-thumb" src="${srcFor(im.src)}" alt="">
+          <img class="bk-car-thumb" src="${srcFor(im.src)}" alt="" style="cursor:zoom-in" onclick="event.stopPropagation();openImgLightbox(this.src,{editable:false})">
           <div class="bk-car-ov">
             <button class="bk-car-btn" onclick="carUpload('${blk.id}',${i})">Replace</button>
             <button class="bk-car-btn" onclick="carRemove('${blk.id}',${i})">Remove</button>

@@ -43,6 +43,11 @@ function flushSave(){
 function autoGrowTitle(){ const el=document.getElementById('ed-title'); if(el&&el.tagName==='TEXTAREA'){ el.style.height='auto'; el.style.height=el.scrollHeight+'px'; } }
 function onTitleKey(e){ if(e.key==='Enter'){ e.preventDefault(); const first=document.querySelector('#blocks-ct .bk'); if(first){ first.focus(); if(typeof putCursorStart==='function') putCursorStart(first); } } }
 function onTitleInput(){
+  // The host editor's title field sits BEHIND an open side-peek and must never drive a
+  // save while the peek owns the shared editing state (S.docId points at the peeked
+  // item) — otherwise the host title could be written from, or onto, the wrong doc.
+  // The peek has its own handler (peekTitleInput).
+  if(S.peekOpen) return;
   autoGrowTitle();
   const val=document.getElementById('ed-title').value;
   document.getElementById('page-title').textContent=val||'Untitled';

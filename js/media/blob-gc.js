@@ -21,6 +21,8 @@ function collectRefs(){
   try{ const vs=(typeof _allVersions==='function')?_allVersions():{}; Object.values(vs).forEach(list=>(list||[]).forEach(scanDoc)); }catch(e){}
   // Pages sitting in Trash still own their media — keep their blobs until they're purged.
   try{ JSON.parse(localStorage.getItem('folio_trash')||'[]').forEach(scanDoc); }catch(e){}
+  // Uploaded custom fonts are stored as blobs too — keep them from being GC'd.
+  try{ (getCfg().customFonts||[]).forEach(cf=>add(cf&&cf.ref)); }catch(e){}
   return refs;
 }
 async function gcBlobs(){

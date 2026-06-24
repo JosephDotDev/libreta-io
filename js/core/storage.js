@@ -204,6 +204,22 @@ async function blobId(blob){
     return 'img_'+hex.slice(0,40);
   }catch(e){ return 'img_'+uuid(); }
 }
+/* ── Upload size cap ──────────────────────────────────────────────────────────
+   Hard ceiling on any single uploaded file (images, attachments, fonts, covers).
+   Images are still compressed afterward, but we reject oversized SOURCE files up
+   front so we never pull a huge file into a canvas / IndexedDB. */
+const MAX_UPLOAD_BYTES=25*1024*1024; // 25 MB
+function fmtBytes(n){ n=n||0; if(n>=1048576) return (n/1048576).toFixed(n>=10485760?0:1)+' MB'; if(n>=1024) return Math.round(n/1024)+' KB'; return n+' B'; }
+/* Returns true if the file is within the limit; otherwise toasts and returns false.
+   `label` lets callers say what was rejected (e.g. "Image", "Font"). */
+function withinUploadLimit(file,label){
+  if(!file) return false;
+  if(file.size>MAX_UPLOAD_BYTES){
+    if(typeof toast==='function') toast(`${label||'File'} is ${fmtBytes(file.size)} — the limit is 25 MB.`);
+    return false;
+  }
+  return true;
+}
 async function storeBlob(blob){
   ensurePersistence(); // first real media write is a good moment to ask the browser not to evict us
   const id=await blobId(blob);

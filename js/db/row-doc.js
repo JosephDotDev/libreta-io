@@ -98,8 +98,14 @@ function closeDocPeek(){
   }
   // Restore the host's own undo stack (the peek ran on an isolated one).
   if(S._peekHostHist){ S.hist=S._peekHostHist.hist; S.histRedo=S._peekHostHist.redo; S.histPresent=S._peekHostHist.present; S._peekHostHist=null; }
-  // Refresh whatever host surface is on screen.
-  if(host.view==='editor'&&hd){ renderBlocks('blocks-ct'); renderProps(); }
+  // Refresh whatever host surface is on screen. Re-seed the editor's title field from
+  // the HOST doc so the peeked item's title can never visually "stick" on the parent.
+  if(host.view==='editor'&&hd){
+    const t=document.getElementById('ed-title');
+    if(t){ t.value=hd.title||''; if(typeof autoGrowTitle==='function') autoGrowTitle(); }
+    const pt=document.getElementById('page-title'); if(pt) pt.textContent=hd.title||'Untitled';
+    renderBlocks('blocks-ct'); renderProps();
+  }
   else if(host.view==='tables'){ renderPageDb(); }
   else if(host.view==='overview'){ try{renderOverview();}catch(_){} }
   else if(tableId){ idbRerenderSiblings(tableId,null); }

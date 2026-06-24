@@ -10,6 +10,7 @@ function replaceBlkImg(id){ openBlkImgInput(id); }
 function toggleImgCaption(id){ const b=findBlock(id); if(!b)return; b.hideCaption=!b.hideCaption; reRenderBlock(id); sched(); }
 function onBlkImgChange(input){
   const file=input.files[0]; if(!file||!S.pendingBlkId) return;
+  if(!withinUploadLimit(file,'Image')){ input.value=''; S.pendingBlkId=null; S.pendingCarIdx=null; return; }
   const blkId=S.pendingBlkId, carIdx=S.pendingCarIdx;
   // Carousel thumbnails are compressed harder since several can share one document.
   const [mw,mh,q]=carIdx!=null?[1200,1200,0.78]:[1600,1200,0.85];
@@ -70,6 +71,7 @@ function imgResizeStart(e,blkId,dir){
    editor and the side-peek (everything routes through S.blocks / currentCtId()). */
 function setBlockImageFromFile(blkId,file){
   const blk=findBlock(blkId); if(!blk||!file||!file.type||!file.type.startsWith('image/')) return;
+  if(!withinUploadLimit(file,'Image')) return;
   const [mw,mh,q]=blk.type==='carousel'?[1200,1200,0.78]:[1600,1200,0.85];
   compressToBlob(file,mw,mh,q).then(async blob=>{
     if(!blob) return;
@@ -80,7 +82,9 @@ function setBlockImageFromFile(blkId,file){
   });
 }
 async function insertImageBlocksFromFiles(files,atRowId){
-  const imgs=[...files].filter(f=>f.type&&f.type.startsWith('image/')); if(!imgs.length) return;
+  let imgs=[...files].filter(f=>f.type&&f.type.startsWith('image/')); if(!imgs.length) return;
+  // Drop anything over the size cap (toasts once per oversized file).
+  const within=imgs.filter(f=>withinUploadLimit(f,'Image')); if(!within.length) return; imgs=within;
   const pt=imgs.length>1&&typeof progressToast==='function'?progressToast(`Adding ${imgs.length} images…`):null;
   const made=[];
   for(const file of imgs){

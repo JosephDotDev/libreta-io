@@ -8,6 +8,7 @@ function openBlkFileInput(id){
 }
 async function onBlkFileChange(input){
   const file=input.files[0]; if(!file||!S.pendingBlkId) return;
+  if(!withinUploadLimit(file,'File')){ input.value=''; return; }
   const blkId=S.pendingBlkId;
   const blk=findBlock(blkId); if(!blk){S.pendingBlkId=null;return}
   const prev=blk.fileId;
@@ -36,6 +37,7 @@ function triggerPropFileUpload(propId){
 }
 async function onPropFileChange(input){
   const file=input.files[0]; if(!file||!S.pendingPropId) return;
+  if(!withinUploadLimit(file,'File')){ input.value=''; return; }
   const propId=S.pendingPropId;
   const prop=S.props.find(p=>p.id===propId); if(!prop){S.pendingPropId=null;return}
   const prevId=prop.value&&prop.value.id;

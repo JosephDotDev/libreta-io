@@ -118,6 +118,7 @@ function triggerIconUpload(){
 }
 function onIconFileChange(input){
   const file=input.files[0]; if(!file) return;
+  if(!withinUploadLimit(file,'Icon')){ input.value=''; return; }
   compressToBlob(file,400,400,0.85).then(async blob=>{ if(blob){const id=await storeBlob(blob);applyIcon(id);} });
 }
 

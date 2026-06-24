@@ -74,9 +74,86 @@ function onBlockPaste(e,el){
   const trimmed=(text||'').trim();
   if(isUrl(trimmed) && !/\r?\n/.test(trimmed)){ e.preventDefault(); insertMention(el,trimmed); return; }
   e.preventDefault();
+  // Markdown-aware paste: text copied from Notion/GitHub/etc. arrives as Markdown in
+  // text/plain, so convert headings, lists, quotes, code, and inline bold/italic/links
+  // into the matching blocks + tags. Falls back to the plain line-per-block behaviour.
+  const md=parseMarkdownToBlocks(text);
+  if(md && md.length){ insertParsedBlocks(el,md); return; }
   const lines=(text||'').split(/\r?\n/).map(l=>l.replace(/\s+$/,'')).filter(l=>l.trim().length);
   if(lines.length>1){ pasteLinesAsBlocks(el,lines); return; }
   document.execCommand('insertText',false,text);
+}
+/* ── MARKDOWN → blocks ──────────────────────────────────────────────────────────
+   Conservative: only kicks in when the text actually carries a Markdown marker, so
+   plain prose is never mangled. Returns null when nothing markdown-ish is present. */
+function mdInline(s){
+  let h=String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  // [label](url) → safe link first, so its url isn't caught by * / _ emphasis rules.
+  h=h.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g,(m,t,u)=>{ const safe=(typeof safeUrl==='function')?safeUrl(u):u; return safe?`<a href="${safe.replace(/"/g,'&quot;')}">${t}</a>`:t; });
+  h=h.replace(/\*\*\*(.+?)\*\*\*/g,'<strong><em>$1</em></strong>')
+     .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+     .replace(/__(.+?)__/g,'<strong>$1</strong>')
+     .replace(/(?<![\*\w])\*([^*\n]+?)\*(?![\*\w])/g,'<em>$1</em>')
+     .replace(/(?<![_\w])_([^_\n]+?)_(?![_\w])/g,'<em>$1</em>')
+     .replace(/`([^`\n]+?)`/g,'<code>$1</code>')
+     .replace(/~~(.+?)~~/g,'<del>$1</del>');
+  return h;
+}
+const _MD_MARKER=/(^|\n)\s*(#{1,3}\s|>\s|[-*+]\s|\d+\.\s|```|---\s*$|\[[ xX]?\]\s)|\*\*|__|`[^`]+`|~~|\[[^\]]+\]\([^)]+\)/;
+function parseMarkdownToBlocks(text){
+  if(!text || !_MD_MARKER.test(text)) return null;
+  const raw=text.replace(/\r\n?/g,'\n').split('\n');
+  const blocks=[]; let i=0;
+  const escCode=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  while(i<raw.length){
+    const line=raw[i];
+    const fence=line.match(/^```(\w*)\s*$/);
+    if(fence){
+      const code=[]; i++;
+      while(i<raw.length && !/^```\s*$/.test(raw[i])){ code.push(raw[i]); i++; }
+      i++; // consume the closing fence
+      blocks.push({type:'code',content:escCode(code.join('\n'))});
+      continue;
+    }
+    if(!line.trim()){ i++; continue; } // blank line = block separator
+    let m;
+    if(m=line.match(/^(#{1,3})\s+(.*)$/))                blocks.push({type:'h'+m[1].length,content:mdInline(m[2])});
+    else if(m=line.match(/^>\s+(.*)$/))                  blocks.push({type:'quote',content:mdInline(m[1])});
+    else if(m=line.match(/^[-*+]\s+\[([ xX])\]\s+(.*)$/))blocks.push({type:'todo',content:mdInline(m[2]),checked:/[xX]/.test(m[1])});
+    else if(m=line.match(/^[-*+]\s+(.*)$/))              blocks.push({type:'bullet',content:mdInline(m[1])});
+    else if(m=line.match(/^\d+\.\s+(.*)$/))              blocks.push({type:'numbered',content:mdInline(m[1])});
+    else if(/^(---+|\*\*\*+|___+)\s*$/.test(line))       blocks.push({type:'divider',content:''});
+    else                                                blocks.push({type:'paragraph',content:mdInline(line)});
+    i++;
+  }
+  return blocks.length?blocks:null;
+}
+/* Place parsed blocks: a single inline-only paragraph is inserted at the caret (so
+   pasting "**bold**" mid-sentence just formats inline); anything structural becomes
+   real blocks — replacing the current block if it's empty, else inserted after it. */
+function insertParsedBlocks(el,parsed){
+  if(parsed.length===1 && parsed[0].type==='paragraph'){
+    document.execCommand('insertHTML',false,parsed[0].content);
+    saveBlk(el.dataset.id,el.innerHTML); return;
+  }
+  const id=el.dataset.id; const loc=locate(id);
+  if(!loc){ document.execCommand('insertText',false,parsed.map(b=>b.content.replace(/<[^>]+>/g,'')).join('\n')); return; }
+  const made=parsed.map(b=>{ const nb=mkBlock(b.type,b.content||''); if(b.checked)nb.checked=true; return nb; });
+  const cur=loc.arr[loc.idx];
+  const curEmpty=cur.type==='paragraph' && !(cur.content||'').replace(/<[^>]+>/g,'').trim();
+  let anchor=el.closest('.bk-row');
+  if(curEmpty){
+    loc.arr.splice(loc.idx,1,...made);
+    const frag=document.createDocumentFragment(); made.forEach(b=>frag.appendChild(mkBkEl(b)));
+    anchor.replaceWith(frag);
+  } else {
+    loc.arr.splice(loc.idx+1,0,...made);
+    let after=anchor; made.forEach(b=>{ const r=mkBkEl(b); after.after(r); after=r; });
+  }
+  if(typeof updNums==='function') updNums();
+  sched();
+  const last=made[made.length-1];
+  const lastEl=document.querySelector(`.bk[data-id="${last.id}"]`); if(lastEl){ lastEl.focus(); if(typeof putCursorEnd==='function') putCursorEnd(lastEl); }
 }
 /* First line goes into the current block at the caret; the rest become sibling
    paragraph blocks right after it. */

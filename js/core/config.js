@@ -71,6 +71,7 @@ function applyCfg(){
     const vf=c.filter||'none'; if(vf!=='none') document.body.classList.add('vf-'+vf);
   }
   applyNavVisibility();
+  if(typeof loadCustomFonts==='function') loadCustomFonts(); // register any user-uploaded fonts
   updCfgUI();
 }
 /* Which sidebar shortcuts (Home / Documents / Calendar) are visible. Hiding one
@@ -316,6 +317,65 @@ function setDocWidth(w){ const doc=getActiveDoc(); if(!doc) return; doc.fmt=doc.
 function setDocSize(s){ setDevSize(s); const doc=getActiveDoc(); if(doc) applyDocFmt(doc); if(typeof renderPageSettings==='function') renderPageSettings(); }
 function setDocFont(f){ const doc=getActiveDoc(); if(!doc) return; doc.fmt=doc.fmt||{}; doc.fmt.font=f; saveActiveDoc(doc); renderFmtBar(doc); }
 
+/* ═══════════════════════════════════════════════
+   CUSTOM FONT UPLOAD
+   A user-supplied font file is stored as an IndexedDB blob (kept alive by
+   collectRefs) and registered both as a FONTS picker entry and a live FontFace.
+   cfg.customFonts = [{ key, name, ref }]  (key doubles as the CSS family name).
+═══════════════════════════════════════════════ */
+const _customFontFaces=new Set(); // keys whose FontFace bytes are already loading/loaded
+/* Add the picker entry synchronously so it shows up immediately; loading the glyphs
+   is async (font swaps in when ready). */
+function registerCustomFont(cf){
+  if(!cf||!cf.key) return;
+  FONTS[cf.key]={lbl:cf.name||'Custom font',grp:'Custom',stack:`'${cf.key}',var(--fs-fallback,system-ui),sans-serif`,hw:[700,600,600],bw:400,dw:600,custom:true,ref:cf.ref};
+  loadCustomFontFace(cf.key,cf.ref);
+}
+function loadCustomFontFace(key,ref){
+  if(_customFontFaces.has(key)||!ref||typeof FontFace==='undefined'||!document.fonts) return;
+  _customFontFaces.add(key);
+  Promise.resolve(IDB.get(ref)).then(async blob=>{
+    if(!blob) return;
+    try{
+      const face=new FontFace(key, await blob.arrayBuffer());
+      await face.load(); document.fonts.add(face);
+      // Anything currently showing this face re-paints once it's ready.
+      if(typeof renderFmtBar==='function'){ const d=(typeof getActiveDoc==='function')&&getActiveDoc(); if(d) try{applyDocFmt(d);}catch(_){} }
+    }catch(e){ _customFontFaces.delete(key); console.warn('[font] failed to load',key,e); }
+  });
+}
+/* Register every saved custom font (called from applyCfg — idempotent). */
+function loadCustomFonts(){ (getCfg().customFonts||[]).forEach(cf=>{ if(cf&&cf.key&&!FONTS[cf.key]) registerCustomFont(cf); }); }
+function triggerCustomFontUpload(){ const inp=document.getElementById('custom-font-input'); if(inp){ inp.value=''; inp.click(); } }
+async function onCustomFontFile(input){
+  const file=input.files&&input.files[0]; input.value=''; if(!file) return;
+  if(typeof withinUploadLimit==='function' && !withinUploadLimit(file,'Font')) return;
+  if(!/\.(woff2?|ttf|otf)$/i.test(file.name||'')){ if(typeof toast==='function') toast('Please choose a .woff2, .woff, .ttf or .otf file.'); return; }
+  let ref; try{ ref=await storeBlob(file); }catch(e){ if(typeof toast==='function') toast('Couldn’t store that font.'); return; }
+  const name=(file.name||'Custom font').replace(/\.(woff2?|ttf|otf)$/i,'');
+  const cf={key:'cf_'+(typeof uuid==='function'?uuid():Date.now().toString(36)).replace(/[^a-z0-9]/gi,'').slice(0,12), name, ref};
+  const c=getCfg(); c.customFonts=c.customFonts||[]; c.customFonts.push(cf);
+  localStorage.setItem(CFG_KEY,JSON.stringify(c));
+  registerCustomFont(cf);
+  if(typeof renderPageSettings==='function') renderPageSettings();
+  if(typeof toast==='function') toast(`“${name}” added — pick it under Typeface.`);
+}
+function removeCustomFont(key){
+  const go=()=>{
+    const c=getCfg(); const list=c.customFonts||[]; const cf=list.find(x=>x.key===key); if(!cf) return;
+    c.customFonts=list.filter(x=>x.key!==key);
+    localStorage.setItem(CFG_KEY,JSON.stringify(c));
+    delete FONTS[key]; _customFontFaces.delete(key);
+    if(cf.ref && typeof freeBlob==='function') freeBlob(cf.ref);
+    // Drop the selection from any page that was using it so it falls back cleanly.
+    if(typeof getActiveDoc==='function'){ const d=getActiveDoc(); if(d&&d.fmt&&d.fmt.font===key){ d.fmt.font='cormorant'; if(typeof saveActiveDoc==='function') saveActiveDoc(d); } }
+    if(c.font===key){ c.font='cormorant'; localStorage.setItem(CFG_KEY,JSON.stringify(c)); }
+    applyCfg();
+    if(typeof renderPageSettings==='function') renderPageSettings();
+  };
+  if(typeof showConfirm==='function') showConfirm('Remove this custom font?',go,'Remove','Remove font'); else go();
+}
+
 /* ── PAGE SETTINGS — the ribbon kebab + Home "Customize" open the unified
    Settings panel on its "This page" tab. ── */
 function togglePageSettings(e){
@@ -336,7 +396,13 @@ function renderPageSettings(){
   const s=getDevSize()||fmt.size||cfg.defSize||'normal';
   let fonts='',last=null;
   Object.keys(FONTS).forEach(k=>{ const f=FONTS[k]; if(f.grp!==last){ fonts+=`<div class="ps-fgrp">${f.grp}</div>`; last=f.grp; }
-    fonts+=`<button class="ps-font${k===fk?' on':''}" onclick="setDocFont('${k}')" style="font-family:${f.stack}">${f.lbl}</button>`; });
+    if(f.custom){
+      fonts+=`<span class="ps-font-wrap"><button class="ps-font${k===fk?' on':''}" onclick="setDocFont('${k}')" style="font-family:${f.stack}">${escHtml(f.lbl)}</button><button class="ps-font-rm" title="Remove font" onclick="removeCustomFont('${k}')">&times;</button></span>`;
+    } else {
+      fonts+=`<button class="ps-font${k===fk?' on':''}" onclick="setDocFont('${k}')" style="font-family:${f.stack}">${f.lbl}</button>`;
+    }
+  });
+  fonts+=`<button class="ps-font ps-font-up" onclick="triggerCustomFontUpload()" title="Upload a font file (.woff2, .woff, .ttf, .otf — max 25 MB)">&#8593; Upload font</button>`;
   const wb=(v,l)=>`<button class="ps-seg${w===v?' on':''}" onclick="setDocWidth('${v}')">${l}</button>`;
   const sb=(v,l)=>`<button class="ps-seg${s===v?' on':''}" onclick="setDocSize('${v}')">${l}</button>`;
   // Home: page setup (cover / icon / title) + width + typeface. The buttons keep

@@ -38,6 +38,15 @@ body[data-view="editor"] .tp-fav{display:inline-flex}
 .ps-font{padding:7px 9px;border:1px solid var(--bd);border-radius:var(--r-md);background:none;color:var(--tx);cursor:pointer;font-size:14px;text-align:left;transition:border-color var(--t-fast),background var(--t-fast)}
 .ps-font:hover{border-color:var(--mu)}
 .ps-font.on{border-color:var(--ac);background:var(--acs)}
+/* Uploaded custom fonts: the chip carries a small remove (×) in its corner. */
+.ps-font-wrap{position:relative;display:block}
+.ps-font-wrap .ps-font{width:100%;padding-right:22px}
+.ps-font-rm{position:absolute;top:50%;right:5px;transform:translateY(-50%);width:16px;height:16px;display:flex;align-items:center;justify-content:center;border:none;border-radius:var(--r-xs);background:none;color:var(--mu);cursor:pointer;font-size:13px;line-height:1;opacity:0;transition:opacity var(--t-fast),color var(--t-fast),background var(--t-fast)}
+.ps-font-wrap:hover .ps-font-rm{opacity:1}
+.ps-font-rm:hover{color:var(--re);background:var(--bd)}
+/* Upload-font affordance reads as an action, not a typeface choice. */
+.ps-font-up{grid-column:1/-1;text-align:center;color:var(--mu);border-style:dashed;font-size:12px;font-family:var(--fm)}
+.ps-font-up:hover{color:var(--tx);border-color:var(--mu)}
 .ps-segrow{display:flex;gap:5px}
 .ps-seg{flex:1;padding:6px 4px;border:1px solid var(--bd);border-radius:var(--r-md);background:none;color:var(--mu);cursor:pointer;font-size:11px;font-family:var(--fm);transition:border-color var(--t-fast),color var(--t-fast),background var(--t-fast)}
 .ps-seg:hover{border-color:var(--mu);color:var(--tx)}
