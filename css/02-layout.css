@@ -1,7 +1,7 @@
 /* ── SIDEBAR ─────────────────────────────────── */
-.sb{width:220px;height:100%;flex-shrink:0;background:var(--sur);border-right:1px solid var(--bd);display:flex;flex-direction:column;padding:20px 0}
+.sb{width:220px;height:100%;flex-shrink:0;background:var(--sur);border-right:1px solid var(--bd);display:flex;flex-direction:column;padding:10px 0}
 .sb-brand{padding:0 18px 11px;border-bottom:1px solid var(--bd);margin-bottom:12px}
-.sb-logo{font-family:var(--fs);font-size:18px;font-weight:var(--dw);letter-spacing:.03em}
+.sb-logo{font-family:var(--fs);font-size:22px;font-weight:var(--dw);letter-spacing:.03em}
 .sb-logo .dot{color:var(--ac)}
 .sb-sub{font-size:10px;letter-spacing:var(--ls-label);text-transform:uppercase;color:var(--mu);margin-top:3px}
 .nav-g{padding:0 10px}
