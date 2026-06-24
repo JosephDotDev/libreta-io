@@ -783,7 +783,14 @@ const Cloud = (()=>{
      <key> ∈ { "doc:<id>", "tbl:<id>", "kv" }. The small content singletons (cfg,
      trash, versions, …) ride together in the kv record; docs+tables are per-record.
   ═══════════════════════════════════════════════════════════════════════ */
-  function _syncMode(){ try{ return localStorage.getItem('libreta_sync_mode')||'mono'; }catch(e){ return 'mono'; } }
+  // DEFAULT is now 'records' (per-record two-way sync) — verified across devices + the
+  // planReconcile truth-table suite (tests/reconcile.html). 'mono' (whole-snapshot) and
+  // 'dual' remain available as explicit per-device overrides.
+  // ROLLBACK PATH: in 'records', state.json goes stale (it isn't written), so reverting
+  // is mono ← dual ← records: drop to 'dual' and make one edit on your most-current device
+  // FIRST (that rebuilds a fresh state.json) before any device reloads on 'mono'.
+  const DEFAULT_SYNC_MODE = 'records';
+  function _syncMode(){ try{ return localStorage.getItem('libreta_sync_mode')||DEFAULT_SYNC_MODE; }catch(e){ return DEFAULT_SYNC_MODE; } }
   function setSyncMode(m){ try{ localStorage.setItem('libreta_sync_mode', m); }catch(e){} return _syncMode(); }
   const RECMAN = ()=> `${user.id}/rec/manifest.json`;
   const RECKV  = ()=> `${user.id}/rec/kv.json`;
