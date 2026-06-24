@@ -73,6 +73,46 @@ body.vf-frost{
 body.vf-frost .sb,
 body.vf-frost .main{ filter:brightness(1.03) saturate(.97); }
 
+/* ── Frosted glass + ────────────────────────────
+   Same background sheen, but the glass now extends to the cards, card blocks, and
+   cover/header imagery: surfaces get a translucent white film + backdrop blur +
+   a top sheen, and covers are softly blurred like real frosted panels. */
+body.vf-frostfull{
+  background-color:var(--bg);
+  background-image:
+    linear-gradient(135deg, rgba(255,255,255,.06), rgba(255,255,255,0) 44%),
+    radial-gradient(120% 85% at 12% -5%, rgba(190,215,255,.07), transparent 55%),
+    radial-gradient(110% 80% at 92% 105%, rgba(255,255,255,.06), transparent 55%);
+}
+body.vf-frostfull .sb,
+body.vf-frostfull .main{ filter:brightness(1.02) saturate(.97); }
+body.vf-frostfull .home-card,
+body.vf-frostfull .rec-card,
+body.vf-frostfull .dc,
+body.vf-frostfull .home-empty-cta,
+body.vf-frostfull .idb-card,
+body.vf-frostfull .tk-card,
+body.vf-frostfull .idb-bcol,
+body.vf-frostfull .bk-callout,
+body.vf-frostfull .bk-page-card,
+body.vf-frostfull .bk-grid-wrap,
+body.vf-frostfull .bk-yt-card,
+body.vf-frostfull .cfg-panel{
+  background-image:linear-gradient(rgba(255,255,255,.085), rgba(255,255,255,.03)) !important;
+  -webkit-backdrop-filter:blur(7px) saturate(1.15); backdrop-filter:blur(7px) saturate(1.15);
+  border-color:rgba(255,255,255,.16) !important;
+  box-shadow:0 1px 0 rgba(255,255,255,.10) inset, 0 10px 30px -16px rgba(0,0,0,.55) !important;
+}
+/* frost the cover / header imagery */
+body.vf-frostfull .cover-img-el,
+body.vf-frostfull .home-card-cover,
+body.vf-frostfull .dc-cover-thumb,
+body.vf-frostfull .bk-page-card-cover,
+body.vf-frostfull .bk-yt-thumb img,
+body.vf-frostfull .idb-card-cover img{
+  filter:blur(1.6px) brightness(1.06) saturate(.9);
+}
+
 /* ── Hologram (Stark HUD) ───────────────────────
    Cyan/blue tint + phosphor glow, fine scanlines and a slow interference sweep. */
 body.vf-holo .sb,
@@ -123,30 +163,29 @@ body.vf-grid{
   background-size:120px 120px, 120px 120px, 24px 24px, 24px 24px;
 }
 
-/* ── Retro (creamy beige plastic) ───────────────
-   Vintage Macintosh: a warm beige-cream "plastic" cast with the UI's own section
-   colours boosted to bold accents, plus a faint glossy top sheen. No rainbow. */
+/* ── Synthwave (vf-retro) ────────────────────────
+   80s neon: a magenta/violet tint with a dusk-sunset wash (indigo → hot pink →
+   sunset orange), faint scanlines and a hot-pink glow on text. */
 body.vf-retro .sb,
-body.vf-retro .main{ filter:sepia(.5) saturate(1.5) brightness(1.18) contrast(.9) hue-rotate(-6deg); }
+body.vf-retro .main{ filter:saturate(1.6) brightness(1.04) contrast(1.06) hue-rotate(-16deg);
+  text-shadow:0 0 7px rgba(255,70,190,.4); }
 body.vf-retro #vf-overlay{
-  display:block; mix-blend-mode:soft-light; opacity:.6;
+  display:block; mix-blend-mode:soft-light; opacity:.55;
   background:
-    linear-gradient(180deg, rgba(255,248,232,.5), rgba(0,0,0,0) 22%),         /* glossy top sheen */
-    linear-gradient(165deg, rgba(238,224,190,1), rgba(224,204,166,1) 70%, rgba(206,184,150,1)); /* beige plastic */
+    repeating-linear-gradient(to bottom, rgba(0,0,0,.07) 0 1px, transparent 1px 3px),
+    linear-gradient(180deg, rgba(48,16,86,.7) 0%, rgba(196,40,150,.5) 52%, rgba(255,140,60,.5) 100%);
 }
 
 /* ── Paper (grain / pulp) ───────────────────────
-   Warm paper tone under a COARSE, clearly-visible fractal grain. A screen-blended
-   light fleck (reads on dark) over a softer mottle, both scaled up for bigger
-   pulp. */
+   Warm paper tone under a FINE, subtle fractal grain — visible but soft, not
+   blocky. One fine soft-light layer at low opacity. */
 body.vf-paper .sb,
-body.vf-paper .main{ filter:sepia(.34) brightness(1.05) contrast(.95) saturate(.9); }
+body.vf-paper .main{ filter:sepia(.32) brightness(1.04) contrast(.97) saturate(.92); }
 body.vf-paper #vf-overlay{
-  display:block; opacity:.38; mix-blend-mode:screen;
+  display:block; opacity:.28; mix-blend-mode:soft-light;
   background-image:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.45' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.16' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E");
-  background-size:360px 360px, 620px 620px;
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size:150px 150px;
 }
 
 @media (prefers-reduced-motion: reduce){
