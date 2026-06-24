@@ -73,15 +73,15 @@ body.gf-mono{--fs:'DM Mono',monospace}
 .blocks-ct.w-wide{max-width:960px}
 .blocks-ct.w-full{max-width:none;padding:0 5%}   /* full width keeps a ~5% gutter, not edge-to-edge */
 /* ── DOC FONT SIZES ── */
-/* Per-page font sizes. Normal is 20px (set in 10-scale.css); these are tuned so the
-   S→M→L→XL steps feel even (≈ +3 / +4 / +5) instead of S→M jumping +5 while M→L was +2. */
-.blocks-ct.fs-sm .bk{font-size:17px!important}
-.blocks-ct.fs-lg .bk{font-size:24px!important}
-.blocks-ct.fs-xl .bk{font-size:29px!important}
+/* Per-page font sizes. Normal is 18px (set in 10-scale.css); these are tuned so the
+   S→M→L→XL steps feel even (≈ +4 / +4 / +6) instead of S→M jumping +5 while M→L was +2. */
+.blocks-ct.fs-sm .bk{font-size:14px!important}
+.blocks-ct.fs-lg .bk{font-size:22px!important}
+.blocks-ct.fs-xl .bk{font-size:28px!important}
 /* Inline-database item text scales with the page font size (chrome — toolbars,
    menus, column headers — stays fixed). Driven through --idb-scale so the same
    db rules elsewhere (full-page tables, peek) fall back to 1× untouched. */
 .blocks-ct{--idb-scale:1}
-.blocks-ct.fs-sm{--idb-scale:.85}
+.blocks-ct.fs-sm{--idb-scale:.9}
 .blocks-ct.fs-lg{--idb-scale:1.2}
 .blocks-ct.fs-xl{--idb-scale:1.45}
