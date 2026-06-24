@@ -67,7 +67,7 @@ function applyCfg(){
   document.documentElement.style.setProperty('--zoom', _zoom);
   // Visual filter (fun whole-app display effect)
   if(document.body){
-    document.body.classList.remove('vf-pixel','vf-crt','vf-bw');
+    [...document.body.classList].forEach(cl=>{ if(cl.indexOf('vf-')===0) document.body.classList.remove(cl); });
     const vf=c.filter||'none'; if(vf!=='none') document.body.classList.add('vf-'+vf);
   }
   applyNavVisibility();

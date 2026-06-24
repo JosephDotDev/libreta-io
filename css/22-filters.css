@@ -55,6 +55,102 @@ body.vf-crt #crt-overlay::after{    /* faint rolling glow + flicker */
 body.vf-crt .sb,
 body.vf-crt .main{ filter:saturate(1.3) contrast(1.06) brightness(1.03); text-shadow:0 0 1px rgba(255,255,255,.22); }
 
+/* ═══ Shared full-screen overlay for the filters below ═══
+   One fixed, click-through layer that each filter paints its texture onto. */
+#vf-overlay{ display:none; position:fixed; inset:0; z-index:9500; pointer-events:none; overflow:hidden; }
+
+/* ── Frosted glass ──────────────────────────────
+   A gently blurred, brightened UI under a glassy white veil + diagonal sheen. */
+body.vf-frost .sb,
+body.vf-frost .main{ filter:saturate(.92) brightness(1.06) contrast(.97); }
+body.vf-frost #vf-overlay{
+  display:block;
+  -webkit-backdrop-filter:blur(1.3px) saturate(1.15); backdrop-filter:blur(1.3px) saturate(1.15);
+  background:
+    linear-gradient(135deg, rgba(255,255,255,.12), rgba(255,255,255,.02) 36%, rgba(255,255,255,0) 60%),
+    radial-gradient(130% 80% at 50% -25%, rgba(255,255,255,.10), transparent 55%);
+}
+
+/* ── Hologram (Stark HUD) ───────────────────────
+   Cyan/blue tint + phosphor glow, fine scanlines and a slow interference sweep. */
+body.vf-holo .sb,
+body.vf-holo .main{ filter:brightness(1.12) sepia(.55) hue-rotate(160deg) saturate(2.3) contrast(1.03);
+  text-shadow:0 0 6px rgba(90,200,255,.45); }
+body.vf-holo #vf-overlay{
+  display:block; mix-blend-mode:screen;
+  background:
+    repeating-linear-gradient(to bottom, rgba(120,220,255,.05) 0 1px, transparent 1px 3px),
+    radial-gradient(ellipse at center, transparent 60%, rgba(0,28,56,.42) 100%);
+}
+body.vf-holo #vf-overlay::after{
+  content:''; position:absolute; left:0; right:0; top:-30%; height:30%;
+  background:linear-gradient(rgba(120,220,255,.10), transparent);
+  animation:vf-sweep 5s linear infinite;
+}
+@keyframes vf-sweep{ 0%{top:-30%} 100%{top:100%} }
+
+/* ── Fallout / Matrix terminal ──────────────────
+   Phosphor-green monochrome on black, mono type, scanlines + a fast flicker. */
+body.vf-matrix .sb,
+body.vf-matrix .main{ filter:grayscale(1) sepia(1) hue-rotate(62deg) saturate(6) brightness(.94) contrast(1.18);
+  text-shadow:0 0 5px rgba(0,255,120,.45); }
+body.vf-matrix .sb *,
+body.vf-matrix .main *{ font-family:'DM Mono',ui-monospace,monospace !important; }
+body.vf-matrix #vf-overlay{
+  display:block; mix-blend-mode:multiply;
+  background:repeating-linear-gradient(to bottom, rgba(0,0,0,.22) 0 1px, transparent 1px 3px);
+}
+body.vf-matrix #vf-overlay::after{
+  content:''; position:absolute; inset:0;
+  background:linear-gradient(rgba(0,255,120,.05), rgba(0,0,0,0));
+  animation:vf-flicker .11s steps(2) infinite;
+}
+@keyframes vf-flicker{ 0%{opacity:.72} 100%{opacity:1} }
+
+/* ── Grid (graph paper) ─────────────────────────
+   Fine engineering-paper grid with bolder major lines every 5 cells. */
+body.vf-grid #vf-overlay{
+  display:block; opacity:.5;
+  background-image:
+    linear-gradient(rgba(120,200,180,.34) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(120,200,180,.34) 1px, transparent 1px),
+    linear-gradient(rgba(120,200,180,.15) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(120,200,180,.15) 1px, transparent 1px);
+  background-size:110px 110px, 110px 110px, 22px 22px, 22px 22px;
+}
+
+/* ── Retro (Apple rainbow / cream) ──────────────
+   Warm beige-cream cast + a visible six-stripe rainbow wash, à la the old Apple
+   logo. A cream veil lifts the dark UI toward vintage paper; the rainbow rides on
+   soft-light so it tints hues without crushing legibility. */
+body.vf-retro .sb,
+body.vf-retro .main{ filter:sepia(.45) saturate(1.25) brightness(1.12) contrast(.95); }
+body.vf-retro #vf-overlay{
+  display:block; mix-blend-mode:soft-light; opacity:.55;
+  background:
+    linear-gradient(rgba(232,216,178,.5), rgba(232,216,178,.5)),
+    linear-gradient(180deg,
+      #61bb46 0 16.6%, #fdb827 16.6% 33.3%, #f5821f 33.3% 50%,
+      #e03a3e 50% 66.6%, #963d97 66.6% 83.3%, #009ddc 83.3% 100%);
+  background-blend-mode:overlay;
+}
+
+/* ── Paper (grain / pulp) ───────────────────────
+   Warm paper tone under a fine fractal-noise grain. Two grain layers on
+   soft-light so the speckle reads on dark surfaces without washing text:
+   a fine pulp + a coarser fleck. */
+body.vf-paper .sb,
+body.vf-paper .main{ filter:sepia(.3) brightness(1.05) contrast(.96) saturate(.92); }
+body.vf-paper #vf-overlay{
+  display:block; opacity:.85; mix-blend-mode:soft-light;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.35' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+  background-size:160px 160px, 240px 240px;
+}
+
 @media (prefers-reduced-motion: reduce){
   body.vf-crt #crt-overlay::after{ animation:none; opacity:.6; }
+  body.vf-holo #vf-overlay::after,
+  body.vf-matrix #vf-overlay::after{ animation:none; }
 }
