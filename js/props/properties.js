@@ -129,7 +129,7 @@ function propNameMenu(e,pid){
     <div class="sb-menu-it" onclick="closeSbMenu();propEditValueById('${pid}')"><span class="sb-menu-i">&#9998;</span> Edit value</div>
     <div class="sb-menu-it" onclick="closeSbMenu();renamePropById('${pid}')"><span class="sb-menu-i">&#8801;</span> Rename</div>
     <div class="sb-menu-sep"></div>
-    <div class="sb-menu-it danger" onclick="closeSbMenu();removeProp('${pid}')"><span class="sb-menu-i">&#128465;</span> Delete</div>`);
+    <div class="sb-menu-it danger" onclick="closeSbMenu();removeProp('${pid}')"><span class="sb-menu-i"><svg class="lic" viewBox="0 0 24 24" width="13" height="13"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13"/></svg></span> Delete</div>`);
 }
 /* Direct value edit: inline field for text/number/url, toggle for checkbox,
    the in-place picker for select/multiselect/date/file. */

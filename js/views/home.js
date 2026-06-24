@@ -195,7 +195,7 @@ function renderHome(){
   const titleToggle=document.getElementById('home-title-toggle');
   if(ti){
     if(hd.titleHidden){ ti.style.display='none'; document.getElementById('greeting').style.display='none'; if(titleToggle)titleToggle.innerHTML='&#43; Add title'; }
-    else { ti.style.display=''; document.getElementById('greeting').style.display=''; ti.value=hd.title||''; if(titleToggle)titleToggle.innerHTML='&#128465; Remove title'; }
+    else { ti.style.display=''; document.getElementById('greeting').style.display=''; ti.value=hd.title||''; if(titleToggle)titleToggle.innerHTML='<svg class="lic" viewBox="0 0 24 24" width="13" height="13" style="vertical-align:-2px;margin-right:5px"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13"/></svg>Remove title'; }
   }
   const w=hd.fmt?.width||'focused'; applyHomeWidth(w); syncHomeWidthBtns(w);
   if(typeof applyDocFmt==='function') applyDocFmt(hd);   // apply the home's per-page typeface

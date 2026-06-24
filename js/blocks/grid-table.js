@@ -53,7 +53,7 @@ function gridHandleMenu(e,id,kind,idx){
   m.innerHTML=`
     <div class="ghm-it" onclick="grid${col?'InsColAt':'InsRowAt'}('${id}',${idx},'before');gridCloseMenu()">↤ Insert ${col?'left':'above'}</div>
     <div class="ghm-it" onclick="grid${col?'InsColAt':'InsRowAt'}('${id}',${idx},'after');gridCloseMenu()">↦ Insert ${col?'right':'below'}</div>
-    <div class="ghm-it ghm-danger" onclick="grid${col?'DelColAt':'DelRowAt'}('${id}',${idx});gridCloseMenu()">🗑 Delete ${col?'column':'row'}</div>`;
+    <div class="ghm-it ghm-danger" onclick="grid${col?'DelColAt':'DelRowAt'}('${id}',${idx});gridCloseMenu()"><svg class="lic" viewBox="0 0 24 24" width="13" height="13" style="vertical-align:-2px;margin-right:5px"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13"/></svg>Delete ${col?'column':'row'}</div>`;
   const r=e.currentTarget.getBoundingClientRect();
   m.style.display='block';
   m.style.left=Math.min(r.left,window.innerWidth-160)+'px';

@@ -335,7 +335,7 @@ function renderPageSettings(){
   // them while the panel is open.
   if(home){
     const hd=doc, hw=hd.fmt?.width||'focused';
-    const titleLbl=hd.titleHidden?'&#43; Add title':'&#128465; Remove title';
+    const titleLbl=hd.titleHidden?'&#43; Add title':'<svg class="lic" viewBox="0 0 24 24" width="13" height="13" style="vertical-align:-2px;margin-right:5px"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13"/></svg>Remove title';
     pop.innerHTML=`
       <div class="ps-sec"><div class="ps-lbl">Page</div>
         <div class="ps-setup">
@@ -384,7 +384,7 @@ function renderPageSettings(){
     ${propsSec}
     <div class="ps-sec">
       <button class="ps-actbtn" onclick="closePageSettings();openVersionPanel()">&#128336; Version history</button>
-      <button class="ps-actbtn ps-danger" onclick="closePageSettings();deleteSbDoc(event,S.docId)" style="margin-top:6px">&#128465; Delete page</button>
+      <button class="ps-actbtn ps-danger" onclick="closePageSettings();deleteSbDoc(event,S.docId)" style="margin-top:6px"><svg class="lic" viewBox="0 0 24 24" width="13" height="13" style="vertical-align:-2px;margin-right:5px"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13"/></svg>Delete page</button>
     </div>`;
 }
 

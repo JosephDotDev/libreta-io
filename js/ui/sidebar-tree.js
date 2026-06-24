@@ -121,7 +121,7 @@ function openTreeMenu(e,id){
     <div class="sb-menu-it" onclick="openMovePicker(event,'${id}')"><span class="sb-menu-i">&#8594;</span> Move to&hellip;</div>
     <div class="sb-menu-it" onclick="hideDoc(event,'${id}')"><span class="sb-menu-i">&#128065;</span> Hide from sidebar</div>
     <div class="sb-menu-sep"></div>
-    <div class="sb-menu-it danger" onclick="deleteSbDoc(event,'${id}')"><span class="sb-menu-i">&#128465;</span> Delete</div>`;
+    <div class="sb-menu-it danger" onclick="deleteSbDoc(event,'${id}')"><span class="sb-menu-i"><svg class="lic" viewBox="0 0 24 24" width="13" height="13"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13"/></svg></span> Delete</div>`;
   openSbPopover(e.currentTarget.getBoundingClientRect(),html);
 }
 function openMovePicker(e,id){

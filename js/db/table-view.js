@@ -172,7 +172,7 @@ function idbRowMenu(e,blockId,rowId){
       `<div class="idb-dd-it" onclick="idbCloseRowMenu();idbRowMoveTo('${blockId}','${rowId}','${t.id}')"><span class="idb-mi">⊞</span> ${escHtml(t.name||'Untitled')}</div>`).join(''):'';
   const pop=document.getElementById('idb-rowmenu');
   pop.innerHTML=`<div class="idb-dd-it" onclick="idbCloseRowMenu();idbOpenRow('${blockId}','${rowId}')"><span class="idb-mi">⤢</span> Open as page</div>
-    <div class="idb-dd-it idb-rm-del" onclick="idbRowMenuDelete('${blockId}','${rowId}')"><span class="idb-mi">🗑</span> Delete entry</div>${moveSection}`;
+    <div class="idb-dd-it idb-rm-del" onclick="idbRowMenuDelete('${blockId}','${rowId}')"><span class="idb-mi"><svg class="lic" viewBox="0 0 24 24" width="13" height="13"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13"/></svg></span> Delete entry</div>${moveSection}`;
   idbDdPos(pop,e.currentTarget.getBoundingClientRect()); pop.classList.add('open'); openOvl();
 }
 function idbRowMoveTo(blockId,rowId,destTblId){

@@ -125,7 +125,7 @@ function updateTrashBadge(){
   const c=trashCount();
   const el=document.getElementById('sb-trash-count'); if(el) el.textContent=c?` (${c})`:'';
   const btn=document.getElementById('cfg-empty-trash');
-  if(btn){ btn.textContent=c?`🗑 Empty Trash now (${c})`:'🗑 Empty Trash now'; btn.disabled=!c; btn.style.opacity=c?'':'.5'; }
+  if(btn){ const ico='<svg class="lic" viewBox="0 0 24 24" width="14" height="14" style="vertical-align:-2px;margin-right:6px"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13"/></svg>'; btn.innerHTML=ico+(c?`Empty Trash now (${c})`:'Empty Trash now'); btn.disabled=!c; btn.style.opacity=c?'':'.5'; }
 }
 function openTrashPanel(){ renderTrashPanel();
   document.getElementById('trash-panel').classList.add('open');
