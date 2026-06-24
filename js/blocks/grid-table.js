@@ -6,7 +6,7 @@ function mkGridHtml(blk){
   const g=blk.grid||defaultGrid();
   const ncol=g.rows[0]?g.rows[0].length:0;
   const colRow=`<tr class="bk-grid-chrow"><td class="bk-grid-corner"></td>${Array.from({length:ncol},(_,ci)=>`<td class="bk-grid-chandle" draggable="true" onclick="gridHandleMenu(event,'${blk.id}','col',${ci})" ondragstart="gridColDragStart(event,'${blk.id}',${ci})" ondragover="gridColDragOver(event)" ondragleave="gridColDragLeave(event)" ondrop="gridColDrop(event,'${blk.id}',${ci})" ondragend="gridDragEnd()" title="Click for options · drag to move">⠿</td>`).join('')}</tr>`;
-  const rowsH=g.rows.map((r,ri)=>`<tr class="${g.header&&ri===0?'bk-grid-hdr':''}" ondragover="gridRowDragOver(event)" ondragleave="gridRowDragLeave(event)" ondrop="gridRowDrop(event,'${blk.id}',${ri})"><td class="bk-grid-rhandle" draggable="true" onclick="gridHandleMenu(event,'${blk.id}','row',${ri})" ondragstart="gridRowDragStart(event,'${blk.id}',${ri})" ondragend="gridDragEnd()" title="Click for options · drag to move">⠿</td>`+r.map((c,ci)=>`<td contenteditable="true" onpaste="onGridPaste(event,this)" oninput="gridSet('${blk.id}',${ri},${ci},this.innerHTML)">${gridCellHtml(c)}</td>`).join('')+'</tr>').join('');
+  const rowsH=g.rows.map((r,ri)=>`<tr class="${g.header&&ri===0?'bk-grid-hdr':''}" ondragover="gridRowDragOver(event)" ondragleave="gridRowDragLeave(event)" ondrop="gridRowDrop(event,'${blk.id}',${ri})"><td class="bk-grid-rhandle" draggable="true" onclick="gridHandleMenu(event,'${blk.id}','row',${ri})" ondragstart="gridRowDragStart(event,'${blk.id}',${ri})" ondragend="gridDragEnd()" title="Click for options · drag to move">⠿</td>`+r.map((c,ci)=>`<td contenteditable="true" onkeydown="gridCellKey(event,this)" onpaste="onGridPaste(event,this)" oninput="gridSet('${blk.id}',${ri},${ci},this.innerHTML)">${gridCellHtml(c)}</td>`).join('')+'</tr>').join('');
   return `<div class="bk-grid-wrap"><table class="bk-grid${g.header?' has-header':''}">${colRow}${rowsH}</table></div>`;
 }
 let _gridColDrag=null,_gridRowDrag=null;
@@ -22,6 +22,19 @@ function gridDragEnd(){_gridColDrag=null;_gridRowDrag=null;document.querySelecto
 /* Older grid cells were stored as plain text; new ones store HTML (so mentions persist) */
 function gridCellHtml(c){ c=c||''; return /<(a|img|span)\b/.test(c)?c:escHtml(c); }
 function gridSet(id,r,c,val){const b=findBlock(id);if(!b||!b.grid||!b.grid.rows[r])return;b.grid.rows[r][c]=val;sched()}
+/* Enter → drop to the cell below in the same column (like a spreadsheet) instead of
+   inserting a newline. Shift+Enter still adds a line break within the cell. Tab keeps
+   its native behaviour (moves to the next cell). */
+function gridCellKey(e,td){
+  if(e.key!=='Enter'||e.shiftKey) return;
+  e.preventDefault();
+  const tr=td.parentElement; const idx=[...tr.children].indexOf(td);
+  let row=tr;
+  while(row=row.nextElementSibling){
+    const next=row.children[idx];
+    if(next&&next.isContentEditable){ next.focus(); if(typeof putCursorEnd==='function') putCursorEnd(next); return; }
+  }
+}
 /* Paste a URL into a grid cell → formatted mention */
 function onGridPaste(e,td){
   const text=e.clipboardData.getData('text/plain');

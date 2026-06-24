@@ -80,7 +80,10 @@ function onBkKey(e,el){
    INPUT HANDLER — markdown triggers
 ═══════════════════════════════════════════════ */
 function onBkInput(e,el){
-  const id=el.dataset.id; const txt=el.innerText;
+  // textContent (not innerText) on the hot path: innerText forces a synchronous reflow
+  // on every keystroke, which is the main source of typing lag as a page grows. The
+  // markdown/slash checks below only need the raw text, so textContent is equivalent.
+  const id=el.dataset.id; const txt=el.textContent;
 
   /* Block-level markdown auto-conversion */
   if(checkBkMd(el,id)) return;
@@ -101,7 +104,7 @@ function onBkInput(e,el){
 
 /* Block-level markdown: # → h1, > → quote, - → bullet etc. */
 function checkBkMd(el,id){
-  const txt=el.innerText;
+  const txt=el.textContent;  // textContent avoids the per-keystroke reflow innerText triggers
   /* Inside a toggle header, #/##/### sets the header size instead of converting the block */
   if(el.getAttribute('data-t')==='toggle'){
     const hm=[{re:/^# $/,s:'h1'},{re:/^## $/,s:'h2'},{re:/^### $/,s:'h3'}].find(m=>m.re.test(txt));

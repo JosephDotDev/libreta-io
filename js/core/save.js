@@ -19,9 +19,12 @@ function flushSave(){
   doc.title=titleEl?.value??doc.title??'';
   doc.blocks=S.blocks; doc.props=S.props; doc.fmt=doc.fmt||{};
   const leaves=flattenBlocks(S.blocks);
-  const txt=leaves.filter(b=>!['divider','database','image','file','carousel','youtube','grid','math'].includes(b.type))
-    .map(b=>{const d=document.createElement('div');d.innerHTML=b.content||'';return d.innerText}).join(' ');
-  const wc=txt.trim().split(/\s+/).filter(w=>w.length>0).length;
+  // Word count: strip tags with a regex and decode entities in ONE pass, rather than
+  // building a <div> per block and reading innerText (which forced a layout per block).
+  const raw=leaves.filter(b=>!['divider','database','image','file','carousel','youtube','grid','math'].includes(b.type))
+    .map(b=>(b.content||'').replace(/<[^>]+>/g,' ')).join(' ');
+  const dec=document.createElement('textarea'); dec.innerHTML=raw;
+  const wc=dec.value.trim().split(/\s+/).filter(Boolean).length;
   doc.meta=Object.assign({version:1,pinned:false,icon:'',tags:[]},doc.meta||{},{
     wordCount:wc,blockCount:leaves.length,readingTime:Math.max(1,Math.round(wc/200)),
     lastSaved:new Date().toISOString(),
@@ -31,7 +34,10 @@ function flushSave(){
   document.getElementById('page-title').textContent=doc.title||'Untitled';
   // Refresh overview table title live
   if(S.view==='overview') renderOvRows();
-  renderSidebarLists();
+  // Sidebar (favorites/recents/tree) only reflects titles + ordering, never the body
+  // text being typed — rebuild it on a lazy debounce so it doesn't rebuild the tree DOM
+  // on every typing pause and compete with the next keystroke.
+  renderSidebarListsSoon();
   return ok;
 }
 function autoGrowTitle(){ const el=document.getElementById('ed-title'); if(el&&el.tagName==='TEXTAREA'){ el.style.height='auto'; el.style.height=el.scrollHeight+'px'; } }

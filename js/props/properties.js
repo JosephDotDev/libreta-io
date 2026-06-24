@@ -203,8 +203,10 @@ function pickDate(ds){
     setTblCell(S.dpTarget.tblId,S.dpTarget.rowId,S.dpTarget.colId,ds||'');
     renderTbl(DB.getTbl(S.dpTarget.tblId));
   }else if(S.dpTarget?.type==='idb'){
+    const adv=S.dpTarget._advance;
     idbSetCell(S.dpTarget.blockId,S.dpTarget.rowId,S.dpTarget.colId,ds||'');
     reRenderBlock(S.dpTarget.blockId);
+    if(adv&&typeof idbRefocusBelow==='function') idbRefocusBelow(adv.rowId,adv.cid);
   }else if(S.dpTarget?.type==='idbdoc'){
     const tbl=DB.getTbl(S.dbRow?.tableId), row=tbl&&tbl.rows.find(r=>r.id===S.dbRow.rowId);
     if(row){row.cells[S.dpTarget.colId]=ds||'';DB.saveTbl(tbl);}

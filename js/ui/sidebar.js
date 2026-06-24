@@ -57,4 +57,9 @@ function renderSidebarLists(){
   if(typeof renderHiddenList==='function') renderHiddenList();
   if(typeof updateTrashBadge==='function') updateTrashBadge();
 }
+/* Lazy, coalesced sidebar refresh for the autosave path — keeps tree rebuilds off the
+   typing hot path. Direct structural changes (create/delete/rename) still call
+   renderSidebarLists() for an immediate update. */
+let _sbListsT=null;
+function renderSidebarListsSoon(){ clearTimeout(_sbListsT); _sbListsT=setTimeout(renderSidebarLists,1200); }
 

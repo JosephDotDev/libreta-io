@@ -151,6 +151,10 @@ body.idb-col-resizing{cursor:col-resize;user-select:none}
 /* Editing a cell shows a faint fill, not a border — the old inset ring felt like it
    constricted the cell. */
 .idb-ed:focus{background:rgba(255,255,255,.05);border-radius:var(--r-xs)}
+/* Keyboard focus on a non-text cell (Tab/arrow navigation) — a clear ring so you can
+   see which cell will take a Space/Enter action. Mouse focus still shows the same. */
+.idb-tbl td[tabindex]:focus,.idb-tbl td[tabindex]:focus-visible{outline:2px solid var(--ac);outline-offset:-2px;border-radius:var(--r-xs)}
+.idb-tbl td[tabindex]:focus{background:rgba(255,255,255,.05)}
 /* Inline-editable titles on board cards / calendar events. inline-block + min-width
    gives an empty contenteditable a line box so the caret actually renders (an empty
    inline span has no box to draw the cursor in). */

@@ -71,7 +71,12 @@ body.gf-sans{--fs:'DM Sans',system-ui,sans-serif}
 body.gf-mono{--fs:'DM Mono',monospace}
 /* ── DOC WIDTHS ── */
 .blocks-ct.w-wide{max-width:960px}
-.blocks-ct.w-full{max-width:none;padding:0 5%}   /* full width keeps a ~5% gutter, not edge-to-edge */
+.blocks-ct.w-full{max-width:none;padding:0 20px}   /* full width: a slim 20px gutter, not a wide % margin */
+/* Full width: pull the title + properties bar in to the same 20px gutter as the body
+   (they normally sit at 60px) so text uses the screen edge-to-edge. The page-background
+   "card" layout has its own gutter system, so leave it alone. */
+#view-editor.pw-full:not(.has-pagebg) .ed-title-row{padding-left:20px;padding-right:20px}
+#view-editor.pw-full:not(.has-pagebg) .props-bar{padding-left:20px;padding-right:20px}
 /* ── DOC FONT SIZES ── */
 /* Per-page font sizes. Normal is 18px (set in 10-scale.css); these are tuned so the
    S→M→L→XL steps feel even (≈ +4 / +4 / +6) instead of S→M jumping +5 while M→L was +2. */

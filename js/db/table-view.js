@@ -23,7 +23,16 @@ function idbTableView(blk,tbl){
     // 12%-alpha tint alone read as "nothing happened").
     const rowStyle=colorRule?` style="background:${colorRule.color}30;box-shadow:inset 4px 0 0 ${colorRule.color}"`:''
     const handle=`<td class="idb-rowhandle" draggable="true" ondragstart="idbRowDragStart(event,'${blk.id}','${row.id}')" ondragend="idbRowDragEnd()"><button class="idb-rowmenu-btn" onclick="idbRowMenu(event,'${blk.id}','${row.id}')" title="Drag to reorder \u00b7 click for menu">\u22ee</button></td>`;
-    const tds=cols.map(col=>idbCell(blk,tbl,row,col,col.id===titleId)).join('');
+    const tds=cols.map(col=>{
+      let cell=idbCell(blk,tbl,row,col,col.id===titleId);
+      // Tag every data cell with its column id so keyboard nav can move within a column.
+      cell=cell.replace(/^<td/,`<td data-cid="${col.id}"`);
+      // Make non-text, interactive cells keyboard-focusable (text/title cells focus via
+      // their own contenteditable). Only cells that have an action (onclick) become tab stops.
+      const interactive=col.id!==titleId&&['select','status','multiselect','image','cover','date','checkbox','link'].includes(col.type);
+      if(interactive&&/ onclick=/.test(cell)) cell=cell.replace(/^<td([^>]*)>/,`<td$1 tabindex="0" onkeydown="idbCellNav(event,this)">`);
+      return cell;
+    }).join('');
     return `<tr ondragover="idbRowDragOver(event)" ondrop="idbRowDrop(event,'${blk.id}','${row.id}')" ondragleave="idbRowDragLeave(event)" data-rid="${row.id}"${rowStyle}>${handle}${tds}<td class="idb-rowend"></td></tr>`;
   };
   const groupAddRow=(gcol,g)=>`<tr class="idb-grp-newrow"><td class="idb-rowhandle"></td><td colspan="${cols.length+1}"><button class="idb-grp-add" onclick="idbAddRowTo('${blk.id}','${gcol.id}','${escAttr(g.key)}')"><span class="np-pill">+ New Page</span></button></td></tr>`;
@@ -113,7 +122,7 @@ function idbCell(blk,tbl,row,col,isTitle){
     return `<td class="idb-click idb-cbcell" onclick="idbToggleCheck('${bid}','${row.id}','${col.id}')"><span class="idb-cb${v?' on':''}">${v?'\u2713':''}</span></td>`;
   if(col.type==='document'){
     const d=v?DB.getDoc(v):null;
-    return `<td><button class="doc-link${d?' has-doc':''}" onclick="openLinkedDoc('${tbl.id}','${row.id}','${col.id}')">${d?'\u2197 '+escHtml(d.title||'Untitled'):'+ Doc'}</button></td>`;
+    return `<td><button class="doc-link${d?' has-doc':''}" onkeydown="idbCellNav(event,this)" onclick="openLinkedDoc('${tbl.id}','${row.id}','${col.id}')">${d?'\u2197 '+escHtml(d.title||'Untitled'):'+ Doc'}</button></td>`;
   }
   if(col.type==='link')
     return v?`<td class="idb-click" onclick="idbEditLink(event,'${bid}','${row.id}','${col.id}')">${tblMentionHtml(v)}</td>`
@@ -122,38 +131,105 @@ function idbCell(blk,tbl,row,col,isTitle){
     return `<td class="idb-title-cell"><div class="idb-title-inner">${idbRowIcon(row)}<span class="idb-ed idb-title-ed" contenteditable="true" onkeydown="idbCellKey(event,this)" onblur="idbSetCell('${bid}','${row.id}','${col.id}',this.innerText)">${escHtml(v)}</span><button class="idb-open-row" onclick="event.stopPropagation();idbOpenRow('${bid}','${row.id}')" data-tip="Open as page"><span class="idb-mi">⤢</span> Open</button></div></td>`;
   return `<td class="idb-ed" contenteditable="true" onkeydown="idbCellKey(event,this)" onblur="idbSetCell('${bid}','${row.id}','${col.id}',this.innerText)">${escHtml(v)}</td>`;
 }
-/* Spreadsheet-style keyboard nav for editable table cells:
-   Tab → next editable cell, Shift+Tab → previous, Enter → commit + drop to the cell
-   below (same visual column), wrapping across rows. Non-text columns (select/date/
-   checkbox) open on click, so Tab simply skips over them to the next text cell. */
+/* ── Spreadsheet-style keyboard navigation ──────────────────────────────────
+   Every data cell is a tab stop — text/title cells via their contenteditable,
+   everything else (select, date, checkbox, link, image, document) via tabindex.
+     Tab / Shift+Tab → next / previous cell (any type)
+     Enter           → commit a text cell + drop to the cell below; on a non-text
+                       cell, assign a value (toggle / open editor) then move down
+     Space           → assign a value on a non-text cell (stay put)
+     Arrows          → move between non-text cells (up/down keep the column)
+   Non-text cells re-render their block when a value lands, so move-down is wired
+   through the editors that apply asynchronously (idbSelPick / pickDate). */
+
+/* All focusable cell targets in a table, in document order. */
+function idbNavTargets(scope){ return [...scope.querySelectorAll('.idb-ed, td[tabindex], .doc-link')]; }
+/* The focusable element inside (or being) a cell, or null for read-only cells. */
+function idbTargetIn(td){
+  if(!td) return null;
+  if(td.classList.contains('idb-ed')) return td;          // plain text cell (td is editable)
+  const ed=td.querySelector('.idb-ed'); if(ed) return ed;  // title cell (inner span)
+  const dl=td.querySelector('.doc-link'); if(dl) return dl; // document cell (inner button)
+  if(td.hasAttribute('tabindex')) return td;               // interactive click cell
+  return null;                                             // read-only (e.g. "No cover")
+}
+function idbFocusTarget(t){
+  if(!t) return;
+  t.focus();
+  if(t.classList&&t.classList.contains('idb-ed')){ const r=document.createRange(); r.selectNodeContents(t); const s=getSelection(); s.removeAllRanges(); s.addRange(r); }
+}
+function _idbFocusCell(el){ idbFocusTarget(el); } // back-compat alias
+/* Move horizontally across the full cell list. */
+function idbCellHop(el,dir){
+  const table=el.closest('.idb-tbl'); if(!table) return;
+  const list=idbNavTargets(table); const i=list.indexOf(el);
+  if(i<0) return; const t=list[i+dir]; if(t) idbFocusTarget(t);
+}
+/* Move vertically within the same column (skips group headers / footers). */
+function idbCellVert(el,dir){
+  const td=el.closest('td'); const cid=td&&td.getAttribute('data-cid'); const tr=el.closest('tr');
+  if(!cid||!tr) return false;
+  const step=dir>0?'nextElementSibling':'previousElementSibling';
+  let row=tr;
+  while(row=row[step]){
+    if(!row.hasAttribute('data-rid')) continue;
+    const t=idbTargetIn(row.querySelector(`td[data-cid="${cid}"]`));
+    if(t){ idbFocusTarget(t); return true; }
+  }
+  return false;
+}
+/* Re-find a row by id (the block may have re-rendered) and focus the cell below it
+   in the given column; falls back to the same cell on the last row. */
+function idbRefocusBelow(rowId,cid){
+  const tr=document.querySelector(`tr[data-rid="${rowId}"]`); if(!tr) return;
+  let row=tr;
+  while(row=row.nextElementSibling){
+    if(!row.hasAttribute('data-rid')) continue;
+    const t=idbTargetIn(row.querySelector(`td[data-cid="${cid}"]`));
+    if(t){ idbFocusTarget(t); return; }
+  }
+  const t=idbTargetIn(tr.querySelector(`td[data-cid="${cid}"]`)); if(t) idbFocusTarget(t);
+}
+/* Re-find a row by id and re-focus the SAME column's cell (used after a synchronous
+   re-render so keyboard focus isn't dropped). */
+function idbRefocusSame(rowId,cid){
+  const tr=document.querySelector(`tr[data-rid="${rowId}"]`); if(!tr) return;
+  const t=idbTargetIn(tr.querySelector(`td[data-cid="${cid}"]`)); if(t) idbFocusTarget(t);
+}
+
+/* Text / title cells (contenteditable). */
 function idbCellKey(e,el){
-  if(e.key==='Enter'){
-    e.preventDefault();
-    const cell=el.closest('td'), tr=el.closest('tr');
-    const idx=cell?[...tr.children].indexOf(cell):-1;
-    // look for an editable cell in the same column on following rows
-    let row=tr, target=null;
-    while(row=row.nextElementSibling){
-      const td=row.children[idx]; const ed=td&&td.querySelector&&td.querySelector('.idb-ed');
-      if(ed){ target=ed; break; }
-    }
-    el.blur();
-    if(target) _idbFocusCell(target);
+  if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); el.blur(); idbCellVert(el,1); return; }
+  if(e.key==='Tab'){ e.preventDefault(); el.blur(); idbCellHop(el,e.shiftKey?-1:1); return; }
+}
+/* Non-text cells (select, date, checkbox, link, image, document). */
+function idbCellNav(e,el){
+  switch(e.key){
+    case 'Tab':        e.preventDefault(); idbCellHop(el,e.shiftKey?-1:1); return;
+    case 'ArrowDown':  e.preventDefault(); idbCellVert(el,1); return;
+    case 'ArrowUp':    e.preventDefault(); idbCellVert(el,-1); return;
+    case 'ArrowRight': e.preventDefault(); idbCellHop(el,1); return;
+    case 'ArrowLeft':  e.preventDefault(); idbCellHop(el,-1); return;
+    case 'Enter':      e.preventDefault(); idbActivateCell(el,true); return;
+    case ' ':          e.preventDefault(); idbActivateCell(el,false); return;
+  }
+}
+/* Fire a non-text cell's own action (toggle / open editor / navigate). When `advance`
+   is set, move to the cell below once the value is committed. */
+function idbActivateCell(el,advance){
+  const td=el.closest('td'); if(!td) return;
+  const cid=td.getAttribute('data-cid'); const tr=td.closest('tr'); const rowId=tr&&tr.getAttribute('data-rid');
+  const isCheckbox=td.classList.contains('idb-cbcell');
+  const btn=td.querySelector('button');
+  if(btn) btn.click(); else td.click();
+  if(isCheckbox){ // toggle re-renders synchronously — restore focus (move down on Enter, stay on Space)
+    if(rowId&&cid){ if(advance) idbRefocusBelow(rowId,cid); else idbRefocusSame(rowId,cid); }
     return;
   }
-  if(e.key!=='Tab') return;
-  e.preventDefault();
-  const table=el.closest('.idb-tbl'); if(!table) return;
-  const cells=[...table.querySelectorAll('.idb-ed')];
-  const i=cells.indexOf(el);
-  const ni=e.shiftKey?i-1:i+1;
-  el.blur();
-  if(ni>=0&&ni<cells.length) _idbFocusCell(cells[ni]);
-}
-function _idbFocusCell(el){
-  el.focus();
-  const r=document.createRange(); r.selectNodeContents(el);
-  const s=getSelection(); s.removeAllRanges(); s.addRange(r);
+  if(!advance) return;
+  // Select/date editors apply later — stash the move-down target on their context.
+  if(typeof _selCtx!=='undefined'&&_selCtx) _selCtx._advance={rowId,cid};
+  else if(S.dpTarget) S.dpTarget._advance={rowId,cid};
 }
 /* A row's linked-doc icon, shown in the title cell / cards / calendar. */
 function idbRowIcon(row){
@@ -294,7 +370,7 @@ function idbSelCreatePick(){
   idbSelChoose(name);
 }
 function idbSelLive(){ if(_selCtx&&_selCtx.rerender)_selCtx.rerender(); } // live-update the underlying view without closing
-function idbSelPick(val){ if(_selCtx&&_selCtx.onPick)_selCtx.onPick(val); closeSelDD(); }
+function idbSelPick(val){ const adv=_selCtx&&_selCtx._advance; if(_selCtx&&_selCtx.onPick)_selCtx.onPick(val); closeSelDD(); if(adv) idbRefocusBelow(adv.rowId,adv.cid); }
 /* Multi-select: toggle membership and keep the dropdown open so you can pick several. */
 function idbSelToggle(val){
   if(!_selCtx)return;
