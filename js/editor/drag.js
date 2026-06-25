@@ -6,6 +6,27 @@
    Reuses dropZone() for the left/right/top/bottom indicator and onDrop() for the actual move
    (so list renumbering, column-creation, nesting rules etc. all stay consistent). */
 let _bkJustDragged=false;
+/* A floating, tilted preview of the block you're carrying. It's purely visual
+   (pointer-events:none, so elementFromPoint still hits the real rows underneath). */
+let _dragGhost=null;
+function _mkDragGhost(srcRow,count){
+  _rmDragGhost();
+  try{
+    const g=document.createElement('div'); g.className='bk-drag-ghost';
+    const bk=srcRow&&srcRow.querySelector('.bk');
+    let txt=(bk?bk.textContent:'').trim();
+    if(!txt){ const ty=srcRow&&srcRow.dataset.type; const bt=(typeof BT!=='undefined')&&BT.find(b=>b.t===ty); txt=(bt&&bt.lbl)||'Empty block'; }
+    g.textContent=count>1?`${count} blocks`:txt.slice(0,90);
+    document.body.appendChild(g); _dragGhost=g;
+  }catch(_){}
+}
+function _moveDragGhost(x,y){
+  if(!_dragGhost) return;
+  const z=parseFloat(document.documentElement.style.zoom||'1')||1;
+  _dragGhost.style.left=(x/z+14)+'px';
+  _dragGhost.style.top=(y/z+12)+'px';
+}
+function _rmDragGhost(){ if(_dragGhost){ _dragGhost.remove(); _dragGhost=null; } }
 function bkGripDown(e,id){
   if(e.button!==0) return;
   e.preventDefault(); e.stopPropagation();
@@ -23,7 +44,9 @@ function bkGripDown(e,id){
       started=true; S.dragId=id;
       dragIds.forEach(d=>document.querySelector(`.bk-row[data-id="${d}"]`)?.classList.add('dragging'));
       document.body.classList.add('bk-ptr-dragging');
+      _mkDragGhost(srcRow,dragIds.length);
     }
+    _moveDragGhost(ev.clientX,ev.clientY);
     clearDropZones();
     const under=document.elementFromPoint(ev.clientX,ev.clientY);
     const row=under&&under.closest('.bk-row');
@@ -59,6 +82,7 @@ function bkGripDown(e,id){
     document.removeEventListener('mousemove',mm);
     document.removeEventListener('mouseup',mu);
     _asStop();
+    _rmDragGhost();
     document.body.classList.remove('bk-ptr-dragging');
     dragIds.forEach(d=>document.querySelector(`.bk-row[data-id="${d}"]`)?.classList.remove('dragging'));
     if(!started){ S.dragId=null; return; } // no movement → treat as a click (opens block menu)
@@ -80,6 +104,7 @@ function onDragStart(e,id){e.stopPropagation();S.dragId=id;e.dataTransfer.effect
 /* Global safety net: if a drag ends without a successful drop, clear any leftover
    "dragging"/drop-zone styling and reset drag state so nothing stays greyed out. */
 document.addEventListener('dragend',function(){
+  _rmDragGhost();
   const cls=['dragging','idb-cal-dragging','home-drop','idb-col-drop','idb-row-drop','idb-cal-drop','bk-grid-col-drop','bk-grid-row-drop','col-drag-over','opt-dov','drag-over','dz-left','dz-right','dz-top','dz-bottom'];
   document.querySelectorAll('.'+cls.join(',.')).forEach(el=>el.classList.remove(...cls));
   document.body.classList.remove('home-dragging','idb-cal-dragging-active','idb-col-resizing');

@@ -33,11 +33,14 @@ function renderSlashItems(){
     m.innerHTML='<div class="sm-hdr">Block type — type to filter</div><div id="sm-its" class="sm-its"></div>';
     cont=document.getElementById('sm-its');
   }
-  cont.innerHTML=items.map((t,i)=>`
+  cont.innerHTML=items.map((t,i)=>{
+    const c=btCol(t.t);
+    const sty=`color:${c};background:color-mix(in srgb,${c} 13%,var(--bg));border-color:color-mix(in srgb,${c} 32%,var(--bd))`;
+    return `
     <div class="sm-it${i===S.slashFoc?' foc':''}" onclick="pickSlash('${t.t}')">
-      <div class="sm-ico">${t.ico}</div>
+      <div class="sm-ico" style="${sty}">${t.ico}</div>
       <div><div class="sm-nm">${t.lbl}</div><div class="sm-ds">${t.ds}</div></div>
-    </div>`).join('')||`<div style="padding:12px;color:var(--mu);font-size:11px">No matches</div>`;
+    </div>`;}).join('')||`<div style="padding:12px;color:var(--mu);font-size:11px">No matches</div>`;
   // Keep the highlighted item in view when navigating past the scroll edge.
   const foc=cont.querySelector('.sm-it.foc');
   if(foc) foc.scrollIntoView({block:'nearest'});

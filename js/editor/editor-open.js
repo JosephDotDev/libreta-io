@@ -79,6 +79,7 @@ function openEditor(id,opts){
   renderEditorIcon(doc);
   renderFavBtn(doc);
   renderBlocks(); renderProps();
+  maybeShowInvite(doc);
   const _d=DB.getDoc(id);if(_d)renderFmtBar(_d);
   if(typeof renderOutline==='function') renderOutline();   // rebuild the sections rail for this page
   if(typeof renderBacklinks==='function') renderBacklinks(id);   // pages that link here
@@ -98,5 +99,31 @@ function openEditor(id,opts){
     }
     const el=document.querySelector('.bk');if(el){el.focus({preventScroll:true});putCursorEnd(el);if(sc)sc.scrollTop=0;onEditorScroll({currentTarget:sc})}
   },50);
+}
+
+/* ── Blank-page invitation ──
+   A brand-new, untitled, empty page shows a warm prompt with quick-start chips
+   instead of a bare cursor. It dismisses the moment the user types or picks one. */
+function maybeShowInvite(doc){
+  const inv=document.getElementById('ed-invite'); if(!inv) return;
+  const b0=S.blocks[0];
+  const empty=S.blocks.length<=1 && (!b0 || (b0.type==='paragraph' && !((b0.content||'').replace(/<[^>]+>/g,'').trim())));
+  const show=empty && !((doc.title||'').trim());
+  inv.style.display=show?'':'none';
+  if(show){
+    const sc=document.getElementById('blocks-sc');
+    if(sc) sc.addEventListener('keydown',dismissInvite,{once:true,capture:true});
+  }
+}
+function dismissInvite(){ const inv=document.getElementById('ed-invite'); if(inv) inv.style.display='none'; }
+function inviteDo(kind){
+  dismissInvite();
+  if(kind==='write'){ const el=document.querySelector('#blocks-ct .bk'); if(el){el.focus();putCursorEnd(el);} return; }
+  if(kind==='template'){ if(typeof openTemplateGallery==='function') openTemplateGallery(); return; }
+  const id=S.blocks[0]&&S.blocks[0].id;
+  if(id && typeof xformBlk==='function'){
+    xformBlk(id,kind);
+    setTimeout(()=>{ const el=document.querySelector(`#blocks-ct .bk-row[data-id="${id}"] .bk`); if(el){el.focus();putCursorEnd(el);} },0);
+  }
 }
 

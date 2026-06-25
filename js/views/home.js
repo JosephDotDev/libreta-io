@@ -86,6 +86,10 @@ function homeMoveTo(src,target,zone){
 }
 
 /* ── home content builders ── */
+/* A stable section-hue per page (pages have no intrinsic section, so derive a
+   consistent colour from the id) — gives each card a bit of identity up top. */
+const HOME_CARD_HUES=['var(--ac)','var(--c-docs)','var(--gr)','var(--go)','var(--pu)'];
+function cardHue(id){ let h=0; const s=String(id||''); for(let i=0;i<s.length;i++) h=(h*31+s.charCodeAt(i))>>>0; return HOME_CARD_HUES[h%HOME_CARD_HUES.length]; }
 function homeCardHtml(d){
   const pos=d.meta?.coverPos!=null?d.meta.coverPos:50;
   const cover=d.meta?.cover
@@ -94,6 +98,7 @@ function homeCardHtml(d){
   const icoInline=(d.meta?.icon&&d.meta?.cover)?`<span class="card-ico">${iconHtml(d.meta.icon,'1.1em')}</span>`:'';
   const chips=listTagsOn()?quickChips(d,false):'';
   return `<div class="home-card" onclick="nav('editor','${d.id}')">
+    <div class="home-card-strip" style="background:${cardHue(d.id)}"></div>
     ${cover}
     <button class="home-card-star${isFav(d)?' on':''}" onclick="event.stopPropagation();toggleFavorite('${d.id}')" title="${isFav(d)?'Remove favorite':'Add favorite'}">${isFav(d)?'★':'☆'}</button>
     <div class="home-card-body">
@@ -189,6 +194,19 @@ function renderHome(){
   const cfg=getHomeCfg();
   // load home doc into the editing context (block engine + cover/icon/flushSave target it)
   const hd=getHomeDoc(); S.docId=HOME_ID; S.blocks=hd.blocks&&hd.blocks.length?hd.blocks:[mkBlock('paragraph')]; S.props=[];
+  // Phase 1 — date reminder line under the greeting + ambient time-of-day backdrop.
+  const _dateEl=document.getElementById('home-date');
+  if(_dateEl){
+    const _ds=new Date().toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});
+    let _n=0; try{ _n=DB.getDocs().filter(d=>d.id!==HOME_ID && (typeof sbIsForeignDbEntry!=='function'||!sbIsForeignDbEntry(d))).length; }catch(_){}
+    _dateEl.innerHTML=_n>0 ? `${_ds} · <span class="hd-count">${_n} page${_n!==1?'s':''}</span> in your workspace` : _ds;
+    _dateEl.style.display=hd.titleHidden?'none':'';
+  }
+  const _homeC=document.getElementById('home-c');
+  if(_homeC){
+    _homeC.dataset.tod = h<6?'night':h<12?'morning':h<17?'afternoon':h<21?'evening':'night';
+    _homeC.classList.toggle('home-ambient', !(hd.meta&&hd.meta.cover) && !hd.titleHidden);
+  }
   // header: cover, icon, title, width
   renderCover(hd); renderEditorIcon(hd);
   const ti=document.getElementById('home-title-input');

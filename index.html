@@ -42,28 +42,29 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&family=Newsreader:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&family=Inter:wght@300;400;500;600;700&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap" rel="stylesheet">
 <!-- Pixel/terminal fonts for the Pixel-art & CRT visual filters (loaded lazily-ish; only used when those filters are on) -->
 <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&family=VT323&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/01-tokens.css?v=43">
-<link rel="stylesheet" href="css/02-layout.css?v=43">
-<link rel="stylesheet" href="css/03-home-docs.css?v=43">
-<link rel="stylesheet" href="css/04-editor.css?v=43">
-<link rel="stylesheet" href="css/05-menus.css?v=43">
-<link rel="stylesheet" href="css/06-calendar-tables.css?v=43">
-<link rel="stylesheet" href="css/07-chrome.css?v=43">
-<link rel="stylesheet" href="css/08-database.css?v=43">
-<link rel="stylesheet" href="css/09-prop-editor.css?v=43">
-<link rel="stylesheet" href="css/10-scale.css?v=43">
-<link rel="stylesheet" href="css/11-overview.css?v=43">
-<link rel="stylesheet" href="css/12-editor-extras.css?v=43">
-<link rel="stylesheet" href="css/13-home-redesign.css?v=43">
-<link rel="stylesheet" href="css/14-sidebar-misc.css?v=43">
-<link rel="stylesheet" href="css/15-rich-blocks.css?v=43">
-<link rel="stylesheet" href="css/16-components.css?v=43">
-<link rel="stylesheet" href="css/17-versions.css?v=43">
-<link rel="stylesheet" href="css/18-sidebar-tree.css?v=43">
-<link rel="stylesheet" href="css/19-page-settings.css?v=43">
-<link rel="stylesheet" href="css/20-cloud.css?v=43">
-<link rel="stylesheet" href="css/21-trash.css?v=43">
-<link rel="stylesheet" href="css/22-filters.css?v=43">
+<link rel="stylesheet" href="css/01-tokens.css?v=44">
+<link rel="stylesheet" href="css/02-layout.css?v=44">
+<link rel="stylesheet" href="css/03-home-docs.css?v=44">
+<link rel="stylesheet" href="css/04-editor.css?v=44">
+<link rel="stylesheet" href="css/05-menus.css?v=44">
+<link rel="stylesheet" href="css/06-calendar-tables.css?v=44">
+<link rel="stylesheet" href="css/07-chrome.css?v=44">
+<link rel="stylesheet" href="css/08-database.css?v=44">
+<link rel="stylesheet" href="css/09-prop-editor.css?v=44">
+<link rel="stylesheet" href="css/10-scale.css?v=44">
+<link rel="stylesheet" href="css/11-overview.css?v=44">
+<link rel="stylesheet" href="css/12-editor-extras.css?v=44">
+<link rel="stylesheet" href="css/13-home-redesign.css?v=44">
+<link rel="stylesheet" href="css/14-sidebar-misc.css?v=44">
+<link rel="stylesheet" href="css/15-rich-blocks.css?v=44">
+<link rel="stylesheet" href="css/16-components.css?v=44">
+<link rel="stylesheet" href="css/17-versions.css?v=44">
+<link rel="stylesheet" href="css/18-sidebar-tree.css?v=44">
+<link rel="stylesheet" href="css/19-page-settings.css?v=44">
+<link rel="stylesheet" href="css/20-cloud.css?v=44">
+<link rel="stylesheet" href="css/21-trash.css?v=44">
+<link rel="stylesheet" href="css/22-filters.css?v=44">
+<link rel="stylesheet" href="css/23-phase1.css?v=44">
 </head>
 <body>
 
@@ -150,6 +151,7 @@
         </div>
         <div id="home-icon-area"></div>
         <div class="hero-ey" id="greeting" style="margin-bottom:6px"></div>
+        <div class="home-date-line" id="home-date"></div>
         <input id="home-title-input" class="home-title-input" placeholder="Untitled" oninput="onHomeTitleInput()">
       </div>
       <div id="home-sections"></div>
@@ -205,6 +207,16 @@
         <!-- Properties: stays pinned (thin row) as the rest of the header scrolls away -->
         <div class="props-bar"><div class="props-row" id="props-row"></div></div>
         <div class="blocks-ct" id="blocks-ct"></div>
+        <div class="ed-invite" id="ed-invite" style="display:none">
+          <div class="ed-invite-lead">A blank page. Infinite directions.</div>
+          <div class="ed-invite-sub">Type <code>/</code> to summon any block — or start with one of these:</div>
+          <div class="ed-invite-chips">
+            <div class="inv-chip" onclick="inviteDo('write')"><span class="ic" style="color:var(--c-docs);background:color-mix(in srgb,var(--c-docs) 14%,transparent)">&#9998;</span><span class="tx"><b>Just write</b><span>Plain prose</span></span></div>
+            <div class="inv-chip" onclick="inviteDo('h1')"><span class="ic" style="color:var(--pu);background:color-mix(in srgb,var(--pu) 14%,transparent)">H</span><span class="tx"><b>Heading</b><span>Section title</span></span></div>
+            <div class="inv-chip" onclick="inviteDo('todo')"><span class="ic" style="color:var(--gr);background:color-mix(in srgb,var(--gr) 14%,transparent)">&#9745;</span><span class="tx"><b>To-do list</b><span>Track a task</span></span></div>
+            <div class="inv-chip" onclick="inviteDo('template')"><span class="ic" style="color:var(--ac);background:color-mix(in srgb,var(--ac) 14%,transparent)">&#10022;</span><span class="tx"><b>Template</b><span>Start from a shape</span></span></div>
+          </div>
+        </div>
         <!-- Backlinks: pages that reference this one (populated by renderBacklinks) -->
         <div class="blocks-ct" id="backlinks-sec"></div>
       </div>
@@ -328,77 +340,77 @@
 <input type="file" id="custom-font-input" accept=".woff2,.woff,.ttf,.otf" style="display:none" onchange="onCustomFontFile(this)">
 
 
-<script src="js/core/state.js?v=43"></script>
-<script src="js/core/security.js?v=43"></script>
-<script src="js/core/storage.js?v=43"></script>
-<script src="js/core/router.js?v=43"></script>
-<script src="js/ui/feedback.js?v=43"></script>
-<script src="js/core/history.js?v=43"></script>
-<script src="js/editor/editor-open.js?v=43"></script>
-<script src="js/editor/blocks-render.js?v=43"></script>
-<script src="js/editor/block-model.js?v=43"></script>
-<script src="js/editor/keyboard.js?v=43"></script>
-<script src="js/editor/block-ops.js?v=43"></script>
-<script src="js/editor/drag.js?v=43"></script>
-<script src="js/editor/slash-menu.js?v=43"></script>
-<script src="js/editor/block-menu.js?v=43"></script>
-<script src="js/editor/multiselect.js?v=43"></script>
-<script src="js/blocks/carousel.js?v=43"></script>
-<script src="js/blocks/grid-table.js?v=43"></script>
-<script src="js/blocks/youtube.js?v=43"></script>
-<script src="js/blocks/callout-page-mention.js?v=43"></script>
-<script src="js/props/properties.js?v=43"></script>
-<script src="js/core/save.js?v=43"></script>
-<script src="js/editor/undo.js?v=43"></script>
-<script src="js/ui/overlay.js?v=43"></script>
-<script src="js/media/compress.js?v=43"></script>
-<script src="js/editor/cover.js?v=43"></script>
-<script src="js/editor/templates.js?v=43"></script>
-<script src="js/editor/page-icon.js?v=43"></script>
-<script src="js/blocks/image-block.js?v=43"></script>
-<script src="js/blocks/file-block.js?v=43"></script>
-<script src="js/blocks/math.js?v=43"></script>
-<script src="js/props/quick-edit.js?v=43"></script>
-<script src="js/props/filtering.js?v=43"></script>
-<script src="js/views/home.js?v=43"></script>
-<script src="js/views/calendar.js?v=43"></script>
-<script src="js/views/tasks.js?v=43"></script>
-<script src="js/views/databases-page.js?v=43"></script>
-<script src="js/core/utils.js?v=43"></script>
-<script src="js/core/config.js?v=43"></script>
-<script src="js/db/core.js?v=43"></script>
-<script src="js/db/toolbar.js?v=43"></script>
-<script src="js/db/block.js?v=43"></script>
-<script src="js/db/table-view.js?v=43"></script>
-<script src="js/ui/lightbox.js?v=43"></script>
-<script src="js/db/cells-media.js?v=43"></script>
-<script src="js/db/row-doc.js?v=43"></script>
-<script src="js/db/board-view.js?v=43"></script>
-<script src="js/db/calendar-view.js?v=43"></script>
-<script src="js/db/timeline-view.js?v=43"></script>
-<script src="js/db/filters.js?v=43"></script>
-<script src="js/db/page-db.js?v=43"></script>
-<script src="js/db/doc-props.js?v=43"></script>
-<script src="js/props/prop-editor.js?v=43"></script>
-<script src="js/props/options.js?v=43"></script>
-<script src="js/ui/confirm.js?v=43"></script>
-<script src="js/views/all-docs.js?v=43"></script>
-<script src="js/views/overview.js?v=43"></script>
-<script src="js/ui/tilt.js?v=43"></script>
-<script src="js/ui/sidebar.js?v=43"></script>
-<script src="js/ui/sidebar-tree.js?v=43"></script>
-<script src="js/ui/search.js?v=43"></script>
-<script src="js/ui/outline.js?v=43"></script>
-<script src="js/ui/link-hover.js?v=43"></script>
-<script src="js/ui/backlinks.js?v=43"></script>
-<script src="js/core/versions.js?v=43"></script>
-<script src="js/media/blob-gc.js?v=43"></script>
-<script src="js/core/trash.js?v=43"></script>
+<script src="js/core/state.js?v=44"></script>
+<script src="js/core/security.js?v=44"></script>
+<script src="js/core/storage.js?v=44"></script>
+<script src="js/core/router.js?v=44"></script>
+<script src="js/ui/feedback.js?v=44"></script>
+<script src="js/core/history.js?v=44"></script>
+<script src="js/editor/editor-open.js?v=44"></script>
+<script src="js/editor/blocks-render.js?v=44"></script>
+<script src="js/editor/block-model.js?v=44"></script>
+<script src="js/editor/keyboard.js?v=44"></script>
+<script src="js/editor/block-ops.js?v=44"></script>
+<script src="js/editor/drag.js?v=44"></script>
+<script src="js/editor/slash-menu.js?v=44"></script>
+<script src="js/editor/block-menu.js?v=44"></script>
+<script src="js/editor/multiselect.js?v=44"></script>
+<script src="js/blocks/carousel.js?v=44"></script>
+<script src="js/blocks/grid-table.js?v=44"></script>
+<script src="js/blocks/youtube.js?v=44"></script>
+<script src="js/blocks/callout-page-mention.js?v=44"></script>
+<script src="js/props/properties.js?v=44"></script>
+<script src="js/core/save.js?v=44"></script>
+<script src="js/editor/undo.js?v=44"></script>
+<script src="js/ui/overlay.js?v=44"></script>
+<script src="js/media/compress.js?v=44"></script>
+<script src="js/editor/cover.js?v=44"></script>
+<script src="js/editor/templates.js?v=44"></script>
+<script src="js/editor/page-icon.js?v=44"></script>
+<script src="js/blocks/image-block.js?v=44"></script>
+<script src="js/blocks/file-block.js?v=44"></script>
+<script src="js/blocks/math.js?v=44"></script>
+<script src="js/props/quick-edit.js?v=44"></script>
+<script src="js/props/filtering.js?v=44"></script>
+<script src="js/views/home.js?v=44"></script>
+<script src="js/views/calendar.js?v=44"></script>
+<script src="js/views/tasks.js?v=44"></script>
+<script src="js/views/databases-page.js?v=44"></script>
+<script src="js/core/utils.js?v=44"></script>
+<script src="js/core/config.js?v=44"></script>
+<script src="js/db/core.js?v=44"></script>
+<script src="js/db/toolbar.js?v=44"></script>
+<script src="js/db/block.js?v=44"></script>
+<script src="js/db/table-view.js?v=44"></script>
+<script src="js/ui/lightbox.js?v=44"></script>
+<script src="js/db/cells-media.js?v=44"></script>
+<script src="js/db/row-doc.js?v=44"></script>
+<script src="js/db/board-view.js?v=44"></script>
+<script src="js/db/calendar-view.js?v=44"></script>
+<script src="js/db/timeline-view.js?v=44"></script>
+<script src="js/db/filters.js?v=44"></script>
+<script src="js/db/page-db.js?v=44"></script>
+<script src="js/db/doc-props.js?v=44"></script>
+<script src="js/props/prop-editor.js?v=44"></script>
+<script src="js/props/options.js?v=44"></script>
+<script src="js/ui/confirm.js?v=44"></script>
+<script src="js/views/all-docs.js?v=44"></script>
+<script src="js/views/overview.js?v=44"></script>
+<script src="js/ui/tilt.js?v=44"></script>
+<script src="js/ui/sidebar.js?v=44"></script>
+<script src="js/ui/sidebar-tree.js?v=44"></script>
+<script src="js/ui/search.js?v=44"></script>
+<script src="js/ui/outline.js?v=44"></script>
+<script src="js/ui/link-hover.js?v=44"></script>
+<script src="js/ui/backlinks.js?v=44"></script>
+<script src="js/core/versions.js?v=44"></script>
+<script src="js/media/blob-gc.js?v=44"></script>
+<script src="js/core/trash.js?v=44"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/cloud/config.js?v=43"></script>
-<script src="js/cloud/sync.js?v=43"></script>
-<script src="js/ui/onboarding.js?v=43"></script>
-<script src="js/core/init.js?v=43"></script>
+<script src="js/cloud/config.js?v=44"></script>
+<script src="js/cloud/sync.js?v=44"></script>
+<script src="js/ui/onboarding.js?v=44"></script>
+<script src="js/core/init.js?v=44"></script>
 
 
 <!-- CONFIG PANEL -->

@@ -1,12 +1,19 @@
 /* ═══════════════════════════════════════════════
    #8 NAVIGATION — history (back/forward) + breadcrumbs
 ═══════════════════════════════════════════════ */
-/* #3 — transient toast + a shake-and-dim animation for rejected actions */
-function toast(msg,ms){
+/* #3 — transient toast + a shake-and-dim animation for rejected actions.
+   Back-compat: toast(msg) and toast(msg, ms) still work. Pass an options object
+   to get a meaning-tinted variant: toast(msg, {type:'success'|'info'|'warn'|'error'|'celebrate', ms}). */
+const TOAST_ICON={success:'✓',info:'ℹ',warn:'!',error:'✕',celebrate:'🔥'};
+function toast(msg,opt){
+  const o=(typeof opt==='number')?{ms:opt}:(opt||{});
   let wrap=document.getElementById('toast-wrap');
   if(!wrap){wrap=document.createElement('div');wrap.id='toast-wrap';wrap.className='toast-wrap';document.body.appendChild(wrap)}
-  const t=document.createElement('div'); t.className='toast'; t.textContent=msg; wrap.appendChild(t);
-  setTimeout(()=>{t.classList.add('out');setTimeout(()=>t.remove(),300)},ms||2400);
+  const t=document.createElement('div'); t.className='toast'+(o.type?(' toast-'+o.type):'');
+  if(o.type&&TOAST_ICON[o.type]){ const ic=document.createElement('span'); ic.className='toast-ic'; ic.textContent=TOAST_ICON[o.type]; t.appendChild(ic); }
+  const tx=document.createElement('span'); tx.textContent=msg; t.appendChild(tx);
+  wrap.appendChild(t);
+  setTimeout(()=>{t.classList.add('out');setTimeout(()=>t.remove(),300)},o.ms||2400);
 }
 /* Sticky toast with a spinner that stays up until .done()/.fail() is called. */
 function progressToast(msg){

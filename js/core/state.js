@@ -49,6 +49,21 @@ const BT = [
 const PH = {paragraph:"Type '/' for blocks…",h1:'Heading 1',h2:'Heading 2',h3:'Heading 3',
   quote:'Quote…',bullet:'List item',numbered:'List item',alpha:'List item',code:'Code…',
   todo:'To-do',toggle:'Toggle'};
+/* ── Color-by-type map (Phase 1 keystone) ──
+   One source of truth mapping each block type to a theme token, so the slash menu,
+   block previews, and any future surface speak the same colour language. Values are
+   CSS vars so they track the active theme (applyCfg overrides the tokens live). */
+const BT_COL = {
+  paragraph:'var(--c-docs)',
+  h1:'var(--pu)', h2:'var(--pu)', h3:'var(--pu)', toggle:'var(--pu)',
+  quote:'var(--go)', callout:'var(--ac)',
+  todo:'var(--gr)', bullet:'var(--gr)', numbered:'var(--gr)', alpha:'var(--gr)',
+  database:'var(--go)', 'db-board':'var(--go)', 'db-calendar':'var(--go)', grid:'var(--go)',
+  image:'var(--c-docs)', carousel:'var(--c-docs)', youtube:'var(--c-docs)', file:'var(--c-docs)',
+  page:'var(--ac)', mention:'var(--ac)', bookmark:'var(--ac)',
+  code:'var(--mu)', math:'var(--mu)', divider:'var(--mu)',
+};
+function btCol(t){ return BT_COL[t] || 'var(--mu)'; }
 const COLORS = ['#E05572','#5DC27A','#8B72D4','#D85858','#4D88E8','#D4A83C','#46B5A6','#9A7355'];
 
 /* Emoji categories for icon picker */

@@ -1,0 +1,89 @@
+/* ═══════════════════════════════════════════════
+   PHASE 1 — "first-look sauce"
+   Date line · colored card strips · ambient home greeting ·
+   grip pill + drag choreography · toast variants · blank-page invitation.
+   Loads last so its overrides win without editing the base files.
+═══════════════════════════════════════════════ */
+
+/* ── Home: date reminder line under the greeting ── */
+.home-date-line{
+  font-size:11px;letter-spacing:var(--ls-label);text-transform:uppercase;
+  color:var(--mu);margin:2px 0 10px;font-family:var(--fn);
+}
+.home-date-line .hd-count{color:var(--ac)}
+
+/* ── Home: ambient time-of-day backdrop behind the header (only when no cover) ── */
+.home-ambient .home-head{position:relative;isolation:isolate}
+.home-ambient .home-head::before{
+  content:"";position:absolute;left:-40px;right:-40px;top:-24px;height:230px;
+  z-index:-1;pointer-events:none;border-radius:26px;opacity:.55;
+  transition:opacity var(--t-slow) ease;
+}
+.home-ambient[data-tod="morning"]   .home-head::before{background:radial-gradient(78% 120% at 6% 0%, color-mix(in srgb,var(--go) 24%,transparent), transparent 60%), radial-gradient(70% 100% at 100% 0%, color-mix(in srgb,var(--ac) 18%,transparent), transparent 64%)}
+.home-ambient[data-tod="afternoon"] .home-head::before{background:radial-gradient(78% 120% at 6% 0%, color-mix(in srgb,var(--c-docs) 22%,transparent), transparent 60%), radial-gradient(70% 100% at 100% 0%, color-mix(in srgb,var(--gr) 14%,transparent), transparent 66%)}
+.home-ambient[data-tod="evening"]   .home-head::before{background:radial-gradient(78% 120% at 6% 0%, color-mix(in srgb,var(--ac) 22%,transparent), transparent 60%), radial-gradient(72% 100% at 100% 0%, color-mix(in srgb,var(--pu) 20%,transparent), transparent 65%)}
+.home-ambient[data-tod="night"]     .home-head::before{background:radial-gradient(80% 120% at 6% 0%, color-mix(in srgb,var(--pu) 22%,transparent), transparent 60%), radial-gradient(72% 100% at 100% 0%, color-mix(in srgb,var(--c-docs) 16%,transparent), transparent 66%)}
+
+/* ── Home cards: colored identity strip across the top ── */
+.home-card{position:relative}
+.home-card-strip{height:4px;width:100%;flex-shrink:0;border-top-left-radius:inherit;border-top-right-radius:inherit}
+
+/* ── Grip handle: fatter pill that hugs the block ── */
+.bk-gut{padding-right:5px}
+.gb.drag{width:19px;height:26px;border-radius:6px;font-size:14px;line-height:1;color:var(--mu)}
+.bk-row:hover .gb.drag{background:color-mix(in srgb,var(--sur2) 90%, transparent);box-shadow:inset 0 0 0 1px var(--bd)}
+.gb.drag:hover{background:var(--bd2);box-shadow:inset 0 0 0 1px var(--bd2);color:var(--tx)}
+.gb.drag:active{transform:scale(.94)}
+
+/* ── Drag choreography ── */
+/* The carried block lifts and tilts under the cursor. */
+.bk-drag-ghost{
+  position:fixed;z-index:1300;pointer-events:none;max-width:300px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  background:var(--sur2);color:var(--tx);border:1px solid var(--bd2);
+  border-left:3px solid var(--ac);border-radius:var(--r-md);
+  padding:7px 13px;font-size:13px;font-family:var(--fn);
+  box-shadow:var(--elev-2);transform:rotate(-2.2deg);opacity:.96;
+}
+/* The source block reads as "picked up" rather than just faded. */
+.bk-row{transition:opacity var(--t-fast) ease, transform var(--t-fast) ease}
+.bk-row.dragging{opacity:.45;transform:scale(.985)}
+.bk-row.dragging > .bk-wrap{outline:1.5px dashed var(--bd2);outline-offset:3px;border-radius:var(--r-md)}
+/* Glowing insertion line on the drop target. */
+.bk-row.dz-top{box-shadow:inset 0 3px 0 var(--ac), 0 -3px 9px -3px var(--ac)}
+.bk-row.dz-bottom{box-shadow:inset 0 -3px 0 var(--ac), 0 3px 9px -3px var(--ac)}
+.bk-row.dz-left{box-shadow:inset 3px 0 0 var(--ac), -3px 0 9px -3px var(--ac)}
+.bk-row.dz-right{box-shadow:inset -3px 0 0 var(--ac), 3px 0 9px -3px var(--ac)}
+
+/* ── Toast variants — unified, tinted by meaning ── */
+.toast-ic{flex:0 0 auto;font-size:13px;line-height:1;display:inline-flex;align-items:center}
+.toast.toast-success{border-left-color:var(--gr)} .toast.toast-success .toast-ic{color:var(--gr)}
+.toast.toast-info{border-left-color:var(--c-docs)} .toast.toast-info .toast-ic{color:var(--c-docs)}
+.toast.toast-warn{border-left-color:var(--go)} .toast.toast-warn .toast-ic{color:var(--go)}
+.toast.toast-error{border-left-color:var(--re)} .toast.toast-error .toast-ic{color:var(--re)}
+.toast.toast-celebrate{border-left-color:var(--go);background:color-mix(in srgb,var(--go) 9%,var(--sur))}
+
+/* ── Slash menu: per-type icon color (keystone payoff) ── */
+.sm-ico{transition:background var(--t-fast),color var(--t-fast),border-color var(--t-fast)}
+
+/* ── Blank-page invitation ── */
+.ed-invite{margin:6px 0 14px;animation:invIn var(--t-slow) ease}
+@keyframes invIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.ed-invite-lead{font-family:var(--fs);font-size:18px;color:var(--tx);margin-bottom:3px}
+.ed-invite-sub{font-size:12px;color:var(--mu);margin-bottom:13px}
+.ed-invite-sub code{font-family:var(--fm);color:var(--gr);background:none}
+.ed-invite-chips{display:flex;flex-wrap:wrap;gap:9px}
+.inv-chip{display:flex;align-items:center;gap:9px;padding:9px 13px;border-radius:var(--r-lg);
+  background:var(--sur);border:1px solid var(--bd);cursor:pointer;
+  transition:border-color var(--t-fast),background var(--t-fast),transform var(--t-fast)}
+.inv-chip:hover{border-color:var(--bd2);transform:translateY(-1px)}
+.inv-chip .ic{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.inv-chip .tx{display:flex;flex-direction:column;line-height:1.25}
+.inv-chip .tx b{font-weight:var(--hw3);font-size:12.5px;color:var(--tx)}
+.inv-chip .tx span{font-size:10.5px;color:var(--mu)}
+
+@media(max-width:860px){
+  .ed-invite-chips{gap:7px}
+  .inv-chip{padding:8px 11px}
+  .home-ambient .home-head::before{height:180px;left:-16px;right:-16px}
+}
