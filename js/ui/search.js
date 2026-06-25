@@ -95,6 +95,6 @@ function focusSidebarSearch(){
 }
 /* ⌘K / Ctrl-K focuses the sidebar search (replaces the old modal stub). */
 document.addEventListener('keydown',e=>{
-  if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){ e.preventDefault(); focusSidebarSearch(); }
+  if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){ e.preventDefault(); if(typeof openCmdK==='function') openCmdK(); else focusSidebarSearch(); }
 });
-function cmdK(){ focusSidebarSearch(); } // legacy callers
+function cmdK(){ if(typeof openCmdK==='function') openCmdK(); else focusSidebarSearch(); } // legacy callers
