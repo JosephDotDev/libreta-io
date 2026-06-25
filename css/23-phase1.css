@@ -38,12 +38,12 @@
 /* ── Drag choreography ── */
 /* The carried block lifts and tilts under the cursor. */
 .bk-drag-ghost{
-  position:fixed;z-index:1300;pointer-events:none;max-width:300px;
+  position:fixed;left:0;top:0;z-index:1300;pointer-events:none;max-width:300px;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   background:var(--sur2);color:var(--tx);border:1px solid var(--bd2);
   border-left:3px solid var(--ac);border-radius:var(--r-md);
   padding:7px 13px;font-size:13px;font-family:var(--fn);
-  box-shadow:var(--elev-2);transform:rotate(-2.2deg);opacity:.96;
+  box-shadow:var(--elev-2);opacity:.96;will-change:transform;
 }
 /* The source block reads as "picked up" rather than just faded. */
 .bk-row{transition:opacity var(--t-fast) ease, transform var(--t-fast) ease}
@@ -67,7 +67,7 @@
 .sm-ico{transition:background var(--t-fast),color var(--t-fast),border-color var(--t-fast)}
 
 /* ── Blank-page invitation ── */
-.ed-invite{margin:6px 0 14px;animation:invIn var(--t-slow) ease}
+.ed-invite{max-width:720px;margin:40px auto 14px;padding-left:56px;padding-right:16px;animation:invIn var(--t-slow) ease}
 @keyframes invIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 .ed-invite-lead{font-family:var(--fs);font-size:18px;color:var(--tx);margin-bottom:3px}
 .ed-invite-sub{font-size:12px;color:var(--mu);margin-bottom:13px}
@@ -83,6 +83,7 @@
 .inv-chip .tx span{font-size:10.5px;color:var(--mu)}
 
 @media(max-width:860px){
+  .ed-invite{padding-left:18px;margin-top:24px}
   .ed-invite-chips{gap:7px}
   .inv-chip{padding:8px 11px}
   .home-ambient .home-head::before{height:180px;left:-16px;right:-16px}

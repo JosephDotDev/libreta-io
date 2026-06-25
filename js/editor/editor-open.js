@@ -104,18 +104,22 @@ function openEditor(id,opts){
 /* ── Blank-page invitation ──
    A brand-new, untitled, empty page shows a warm prompt with quick-start chips
    instead of a bare cursor. It dismisses the moment the user types or picks one. */
+function inviteUp(){ const inv=document.getElementById('ed-invite'); return !!inv && inv.style.display!=='none'; }
 function maybeShowInvite(doc){
   const inv=document.getElementById('ed-invite'); if(!inv) return;
+  const ct=document.getElementById('blocks-ct');
   const b0=S.blocks[0];
   const empty=S.blocks.length<=1 && (!b0 || (b0.type==='paragraph' && !((b0.content||'').replace(/<[^>]+>/g,'').trim())));
   const show=empty && !((doc.title||'').trim());
   inv.style.display=show?'':'none';
-  if(show){
-    const sc=document.getElementById('blocks-sc');
-    if(sc) sc.addEventListener('keydown',dismissInvite,{once:true,capture:true});
-  }
+  // While the invitation stands in for the page, hide the lone empty starter block
+  // so there's no stray editable line glitching above it. Revealed again on dismiss.
+  if(ct) ct.style.display=show?'none':'';
 }
-function dismissInvite(){ const inv=document.getElementById('ed-invite'); if(inv) inv.style.display='none'; }
+function dismissInvite(){
+  const inv=document.getElementById('ed-invite'); if(inv) inv.style.display='none';
+  const ct=document.getElementById('blocks-ct'); if(ct) ct.style.display='';
+}
 function inviteDo(kind){
   dismissInvite();
   if(kind==='write'){ const el=document.querySelector('#blocks-ct .bk'); if(el){el.focus();putCursorEnd(el);} return; }

@@ -49,6 +49,15 @@ function onEditorScroll(e){
 function onBlocksAreaClick(e){
   if(e.target.closest('.bk-row')||e.target.closest('.bk')) return;
   if(e.target.closest('.ed-title-row,.props-bar,#fmt-bar,#ed-cover-wrap,.doc-peek-bar,#peek-title,#peek-props')) return;
+  // Clicking into the body while the blank-page invitation is up dismisses it,
+  // reveals the starter block, and drops the caret in — but a click on the
+  // invitation's own chips is handled by those chips (they stop propagation).
+  if(typeof inviteUp==='function' && inviteUp()){
+    if(e.target.closest('.ed-invite')) return;
+    dismissInvite();
+    const el=document.querySelector('#blocks-ct .bk'); if(el){ el.focus(); putCursorEnd(el); }
+    return;
+  }
   if(!S.blocks||!S.blocks.length) return;
   const ctId=currentCtId();
   const ct=document.getElementById(ctId); if(!ct) return;

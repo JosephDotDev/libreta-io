@@ -8,8 +8,8 @@
 let _bkJustDragged=false;
 /* A floating, tilted preview of the block you're carrying. It's purely visual
    (pointer-events:none, so elementFromPoint still hits the real rows underneath). */
-let _dragGhost=null;
-function _mkDragGhost(srcRow,count){
+let _dragGhost=null,_ghTX=0,_ghTY=0,_ghX=0,_ghY=0,_ghRot=-2,_ghRAF=null;
+function _mkDragGhost(srcRow,count,x,y){
   _rmDragGhost();
   try{
     const g=document.createElement('div'); g.className='bk-drag-ghost';
@@ -18,15 +18,30 @@ function _mkDragGhost(srcRow,count){
     if(!txt){ const ty=srcRow&&srcRow.dataset.type; const bt=(typeof BT!=='undefined')&&BT.find(b=>b.t===ty); txt=(bt&&bt.lbl)||'Empty block'; }
     g.textContent=count>1?`${count} blocks`:txt.slice(0,90);
     document.body.appendChild(g); _dragGhost=g;
+    const z=parseFloat(document.documentElement.style.zoom||'1')||1;
+    _ghTX=_ghX=x/z+16; _ghTY=_ghY=y/z+14; _ghRot=-2;
+    if(!_ghRAF) _ghRAF=requestAnimationFrame(_ghTick);
   }catch(_){}
 }
 function _moveDragGhost(x,y){
-  if(!_dragGhost) return;
   const z=parseFloat(document.documentElement.style.zoom||'1')||1;
-  _dragGhost.style.left=(x/z+14)+'px';
-  _dragGhost.style.top=(y/z+12)+'px';
+  _ghTX=x/z+16; _ghTY=y/z+14;
 }
-function _rmDragGhost(){ if(_dragGhost){ _dragGhost.remove(); _dragGhost=null; } }
+/* Spring chase: the ghost lags behind the cursor (weight) and swings/tilts with
+   horizontal velocity (so flicking the cursor makes it shake), settling to a slight rest tilt. */
+function _ghTick(){
+  if(!_dragGhost){ _ghRAF=null; return; }
+  const k=0.16;                                 // lower = heavier / floatier lag
+  const px=_ghX;
+  _ghX+=(_ghTX-_ghX)*k;
+  _ghY+=(_ghTY-_ghY)*k;
+  const vx=_ghX-px;                             // horizontal velocity → swing
+  const targetRot=Math.max(-16,Math.min(16, vx*1.3 - 2));
+  _ghRot+=(targetRot-_ghRot)*0.18;
+  _dragGhost.style.transform=`translate(${_ghX.toFixed(1)}px,${_ghY.toFixed(1)}px) rotate(${_ghRot.toFixed(2)}deg)`;
+  _ghRAF=requestAnimationFrame(_ghTick);
+}
+function _rmDragGhost(){ if(_ghRAF){ cancelAnimationFrame(_ghRAF); _ghRAF=null; } if(_dragGhost){ _dragGhost.remove(); _dragGhost=null; } }
 function bkGripDown(e,id){
   if(e.button!==0) return;
   e.preventDefault(); e.stopPropagation();
@@ -44,7 +59,7 @@ function bkGripDown(e,id){
       started=true; S.dragId=id;
       dragIds.forEach(d=>document.querySelector(`.bk-row[data-id="${d}"]`)?.classList.add('dragging'));
       document.body.classList.add('bk-ptr-dragging');
-      _mkDragGhost(srcRow,dragIds.length);
+      _mkDragGhost(srcRow,dragIds.length,ev.clientX,ev.clientY);
     }
     _moveDragGhost(ev.clientX,ev.clientY);
     clearDropZones();

@@ -41,7 +41,7 @@ function flushSave(){
   return ok;
 }
 function autoGrowTitle(){ const el=document.getElementById('ed-title'); if(el&&el.tagName==='TEXTAREA'){ el.style.height='auto'; el.style.height=el.scrollHeight+'px'; } }
-function onTitleKey(e){ if(e.key==='Enter'){ e.preventDefault(); const first=document.querySelector('#blocks-ct .bk'); if(first){ first.focus(); if(typeof putCursorStart==='function') putCursorStart(first); } } }
+function onTitleKey(e){ if(e.key==='Enter'){ e.preventDefault(); if(typeof inviteUp==='function'&&inviteUp()) dismissInvite(); const first=document.querySelector('#blocks-ct .bk'); if(first){ first.focus(); if(typeof putCursorStart==='function') putCursorStart(first); } } }
 function onTitleInput(){
   // The host editor's title field sits BEHIND an open side-peek and must never drive a
   // save while the peek owns the shared editing state (S.docId points at the peeked
