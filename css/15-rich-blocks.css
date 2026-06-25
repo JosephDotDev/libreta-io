@@ -28,6 +28,34 @@
 .bk-col-rz{flex:0 0 10px;cursor:col-resize;position:relative;align-self:stretch}
 .bk-col-rz::after{content:'';position:absolute;top:6px;bottom:6px;left:50%;width:2px;transform:translateX(-50%);background:var(--bd);border-radius:var(--r-pill);transition:background var(--t-fast)}
 .bk-col-rz:hover::after,.bk-col-rz.rz-active::after{background:var(--ac)}
+/* ── Columns on mobile ──
+   Side-by-side columns get unreadably cramped on a phone, so below the app's mobile
+   breakpoint they unstack into full-width rows (top → bottom in column order). The
+   resize dividers are hidden (nothing to drag when stacked), inline flex widths from
+   desktop resizing are overridden, and a faint rule + spacing separates each former
+   column so the reader can see where one ends and the next begins. */
+@media(max-width:860px){
+  .bk-cols{flex-direction:column;align-items:stretch}
+  .bk-cols > .bk-col{flex:0 0 auto!important;width:100%;padding:0}
+  .bk-cols > .bk-col-rz{display:none}
+  .bk-cols > .bk-col:not(:first-of-type){margin-top:10px;padding-top:12px;border-top:1px solid var(--bd)}
+  .bk-col .bk-gut{width:40px;padding-right:6px}
+}
+/* ── Web bookmark card ── a link rendered as a Notion-style preview tile. */
+.bk-bookmark{display:flex;align-items:stretch;border:1px solid var(--bd);border-radius:var(--r-lg);overflow:hidden;text-decoration:none;color:var(--tx);background:var(--sur);transition:border-color var(--t-fast),background var(--t-fast)}
+.bk-bookmark:hover{border-color:var(--mu);background:var(--sur2)}
+.bk-bm-info{flex:1;min-width:0;padding:11px 14px;display:flex;flex-direction:column;gap:3px;justify-content:center}
+.bk-bm-title{font-size:14px;font-weight:600;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bk-bm-desc{font-size:11.5px;color:var(--mu);line-height:1.5;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.bk-bm-host{display:flex;align-items:center;gap:6px;margin-top:4px;font-size:11px;color:var(--mu);min-width:0}
+.bk-bm-fav{width:14px;height:14px;border-radius:3px;flex-shrink:0;object-fit:cover}
+.bk-bm-site{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bk-bm-thumb{flex:0 0 30%;max-width:200px;align-self:stretch;min-height:100px;background:var(--bd);overflow:hidden;flex-shrink:0}
+.bk-bm-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.bk-bm-empty{align-items:center;gap:9px;cursor:pointer;color:var(--mu);font-size:13px;padding:14px}
+.bk-bm-empty:hover{color:var(--tx);border-color:var(--mu)}
+.bk-bm-ico{font-size:16px}
+@media(max-width:560px){ .bk-bm-thumb{display:none} }
 .bk-row.dz-left{box-shadow:inset 3px 0 0 var(--ac)}
 .bk-row.dz-right{box-shadow:inset -3px 0 0 var(--ac)}
 .bk-row.dz-top{box-shadow:inset 0 3px 0 var(--ac)}

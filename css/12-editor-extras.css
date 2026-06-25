@@ -100,8 +100,9 @@ body.bk-img-resizing{cursor:ew-resize!important;user-select:none}
 .bk-file-empty{display:flex;align-items:center;gap:10px;padding:14px 18px;background:var(--sur);border:2px dashed var(--bd2);border-radius:var(--r-lg);margin:4px 0;cursor:pointer;transition:border-color var(--t-med),background var(--t-fast);color:var(--mu);font-size:12px}
 .bk-file-empty:hover{border-color:var(--mu);background:var(--sur2);color:var(--tx)}
 
-/* ── DOC CARD COVER ── */
-.dc-cover-thumb{width:calc(100% + 40px);height:82px;object-fit:cover;display:block;margin:-20px -20px 14px -20px}
+/* ── DOC CARD COVER ──
+   Taller, Notion-style gallery covers so the artwork actually reads (was 82px). */
+.dc-cover-thumb{width:calc(100% + 40px);height:150px;object-fit:cover;display:block;margin:-20px -20px 14px -20px}
 
 /* ── PROP FILE TAG ── */
 .prop-file-thumb{width:14px;height:14px;border-radius:var(--r-pill);object-fit:cover;vertical-align:middle;flex-shrink:0}

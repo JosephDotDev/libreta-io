@@ -3,21 +3,24 @@ const CFG_KEY='folio_cfg';
    ac (rose/primary+Home), c_docs (Documents), gr (lime/Tasks), go (gold/Calendar).
    Presets without an explicit c_docs/gr fall back to sensible values in applyCfg(). */
 const THEMES={
+  /* Dark Ink + Light Clean lead the list — they're the OS-matched defaults for new
+     users (see defaultTheme()). --gr stays in the green family in every theme so the
+     success/done semantic (checkboxes, etc.) never turns a non-green colour. */
+  'dark-ink'   :{bg:'#0A0A0A',sur:'#181818',sur2:'#232323',bd:'#343434',bd2:'#444444',tx:'#ECECEC',mu:'#8E8E8E',ac:'#E8C547',c_docs:'#5B9BD5',gr:'#5DC27A',go:'#C47D32'},
+  'light-clean':{bg:'#FAFAFA',sur:'#F0F0F0',sur2:'#E8E8E8',bd:'#E0E0E0',bd2:'#D0D0D0',tx:'#1A1A1A',mu:'#888888',ac:'#2962FF',c_docs:'#1976D2',gr:'#2E9E5B',go:'#FF6D00'},
   /* Surface ramps are tuned for layering on dark UI: gentle bg→sur lift (~1.1:1)
      plus a clearly lighter border (sur→bd ~1.35:1) so cards/components read as
      distinct, and a brighter --mu so muted text clears ~5:1 on a card. */
   'parra'        :{bg:'#0D0C0F',sur:'#1A1822',sur2:'#242031',bd:'#332E40',bd2:'#423C52',tx:'#ECE6DE',mu:'#8B8498',ac:'#E05572',c_docs:'#4D88E8',gr:'#5DC27A',go:'#D4A83C'},
-  /* The two sibling Parra directions, kept as one-click presets. --gr stays in the
-     green family in every theme so the success/done semantic (checkboxes, etc.)
-     never turns a non-green colour. */
   'night-garden' :{bg:'#0B0B10',sur:'#191824',sur2:'#232234',bd:'#322F45',bd2:'#403C55',tx:'#E8E2E4',mu:'#8C8799',ac:'#C44B90',c_docs:'#3CB8A4',gr:'#5DC27A',go:'#D4A83C'},
   'warm-spectrum':{bg:'#0C0B08',sur:'#19160F',sur2:'#231F16',bd:'#352F22',bd2:'#453D2C',tx:'#EFE7D8',mu:'#988B72',ac:'#D45A50',c_docs:'#4ABBA0',gr:'#6FB87A',go:'#D4A83C'},
   'dark-warm'  :{bg:'#0C0B08',sur:'#18150F',sur2:'#221D15',bd:'#332C20',bd2:'#43392A',tx:'#EDE5D6',mu:'#988C74',ac:'#C47D32',c_docs:'#4E7EC4',gr:'#4E9E72',go:'#C9A84C'},
   'dark-cool'  :{bg:'#080C10',sur:'#111B28',sur2:'#1A2738',bd:'#2B3D50',bd2:'#3A4E63',tx:'#D6E6F2',mu:'#7E9EB2',ac:'#4E9E72',c_docs:'#4E9EC4',gr:'#6FC48E',go:'#7EC4B8'},
-  'dark-ink'   :{bg:'#0A0A0A',sur:'#181818',sur2:'#232323',bd:'#343434',bd2:'#444444',tx:'#ECECEC',mu:'#8E8E8E',ac:'#E8C547',c_docs:'#5B9BD5',gr:'#5DC27A',go:'#C47D32'},
   'light-warm' :{bg:'#F5F0E8',sur:'#EDE8DC',sur2:'#E5DDD0',bd:'#D4CCBC',bd2:'#C4BAA8',tx:'#1C1917',mu:'#8B7E6E',ac:'#8B4A2B',c_docs:'#2E5FA8',gr:'#3B7D53',go:'#7A5C20'},
-  'light-clean':{bg:'#FAFAFA',sur:'#F0F0F0',sur2:'#E8E8E8',bd:'#E0E0E0',bd2:'#D0D0D0',tx:'#1A1A1A',mu:'#888888',ac:'#2962FF',c_docs:'#1976D2',gr:'#2E9E5B',go:'#FF6D00'},
 };
+/* New users get a theme matched to their OS appearance; once they pick one it sticks
+   (cfg.theme is set). Hard-falls back to a dark preset if matchMedia is unavailable. */
+function defaultTheme(){ try{ return (window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches)?'light-clean':'dark-ink'; }catch(e){ return 'dark-ink'; } }
 /* Curated content typefaces. `hw` = heading weights [h1,h2,h3] tuned so each reads as bold without faux-bolding.
    `bw` = body (reading) weight, `dw` = display/title weight. Serifs (esp. Cormorant) carry a higher numeric
    weight than sans so every face reads at a similar, solid perceived weight — no thin/washed-out text.
@@ -37,7 +40,7 @@ function normFontKey(v){
 }
 function getCfg(){try{return JSON.parse(localStorage.getItem(CFG_KEY)||'{}')}catch{return{}}}
 function applyCfg(){
-  const c=getCfg(); const tn=c.theme||'parra';
+  const c=getCfg(); const tn=c.theme||defaultTheme();
   const t=(tn==='custom'&&c.customSnapshot)?c.customSnapshot:(THEMES[tn]||THEMES['parra']);
   const r=document.documentElement.style;
   r.setProperty('--bg',  c.bg   ||t.bg);  r.setProperty('--sur', c.sur  ||t.sur);
@@ -92,7 +95,7 @@ function toggleNavItem(k){
 }
 function setCfgColor(k,v){
   const c=getCfg();
-  const tn=c.theme||'parra';
+  const tn=c.theme||defaultTheme();
   const base=(tn==='custom'&&c.customSnapshot)?c.customSnapshot:(THEMES[tn]||THEMES['parra']);
   /* Snapshot every effective color + apply this override. Section hues
      (c_docs/gr) are included so they survive a switch to the custom theme. */
@@ -131,6 +134,21 @@ function setTheme(name){
   localStorage.setItem(CFG_KEY,JSON.stringify(c)); applyCfg();
 }
 function resetCfg(){showConfirm('Reset all themes, colors, and display settings to defaults?',()=>{localStorage.removeItem(CFG_KEY);applyCfg()},'Reset','Reset Settings');}
+/* Delete the saved custom theme (the only user-created entry — presets are built in).
+   Reverts to the OS-matched default if the custom theme was active. */
+function deleteCustomTheme(){
+  const go=()=>{
+    const c=getCfg(); delete c.customSnapshot;
+    ['bg','sur','sur2','bd','bd2','tx','mu','ac','go','c_docs','gr'].forEach(k=>delete c[k]);
+    if(c.theme==='custom') c.theme=defaultTheme();
+    localStorage.setItem(CFG_KEY,JSON.stringify(c)); applyCfg();
+  };
+  if(typeof showConfirm==='function') showConfirm('Delete your custom theme?',go,'Delete','Delete theme'); else go();
+}
+/* Live-follow the OS appearance for users who haven't explicitly picked a theme yet. */
+(function(){ try{ if(window.matchMedia){ const mq=window.matchMedia('(prefers-color-scheme: dark)');
+  const h=()=>{ if(!getCfg().theme && typeof applyCfg==='function') applyCfg(); };
+  mq.addEventListener?mq.addEventListener('change',h):(mq.addListener&&mq.addListener(h)); } }catch(e){} })();
 function openCfg(tab){
   // On mobile the sidebar is an off-canvas drawer (z-index 1000); close it so
   // the settings panel (z-index 800) slides in on top without being occluded.
@@ -226,7 +244,7 @@ function updContrastWarn(c,t){
   else{ cw.style.display='none'; cw.innerHTML=''; }
 }
 function updCfgUI(){
-  const c=getCfg(); const tn=c.theme||'parra';
+  const c=getCfg(); const tn=c.theme||defaultTheme();
   const t=(tn==='custom'&&c.customSnapshot)?c.customSnapshot:(THEMES[tn]||THEMES['parra']);
   const el=document.getElementById('cfg-themes');
   if(el){
@@ -236,7 +254,8 @@ function updCfgUI(){
     el.innerHTML=entries.map(([k,tv])=>{
       const dot=k==='custom'?(c.ac||tv?.ac||'#888'):tv.ac;
       const lbl=k==='custom'?'Custom':k.replace(/-/g,' ').replace(/\b\w/g,x=>x.toUpperCase());
-      return`<button class="t-btn${k===tn?' on':''}" onclick="setTheme('${k}')"><span class="t-dot" style="background:${dot}"></span>${lbl}</button>`;
+      const del=k==='custom'?`<span class="t-del" title="Delete theme" onclick="event.stopPropagation();deleteCustomTheme()">&times;</span>`:'';
+      return`<button class="t-btn${k===tn?' on':''}" onclick="setTheme('${k}')"><span class="t-dot" style="background:${dot}"></span>${lbl}${del}</button>`;
     }).join('');
   }
   const sv=(id,v)=>{const e=document.getElementById(id);if(e)e.value=v};

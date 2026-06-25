@@ -318,8 +318,8 @@ function renderDocList(){
   g.className='dl-grid';
   g.innerHTML=docs.map(d=>{
     const exc=(d.blocks||[])
-      .filter(b=>!['divider','database','image','file','carousel'].includes(b.type))
-      .map(b=>b.content.replace(/<[^>]+>/g,'')).join(' ').slice(0,120)||'';
+      .filter(b=>!['divider','database','image','file','carousel','bookmark','youtube','page','grid','math'].includes(b.type))
+      .map(b=>(b.content||'').replace(/<[^>]+>/g,'')).join(' ').slice(0,120)||'';
     const wc=d.meta?.wordCount||0;
     const rt=d.meta?.readingTime||0;
     const bc=d.meta?.blockCount||0;

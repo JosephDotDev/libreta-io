@@ -71,6 +71,11 @@ function pickSlash(type){
     idbCreateNew(S.slashId, type.slice(3));   // 'board' | 'calendar'
     return;
   }
+  if(type==='bookmark'){
+    const sid=S.slashId; closeSlash();
+    if(typeof insertBookmarkBlock==='function') insertBookmarkBlock(sid);
+    return;
+  }
   if(type==='math'){
     const sid=S.slashId; const el=document.querySelector('.bk[data-id="'+sid+'"]'); if(el){ el.innerHTML=''; saveBlk(sid,''); }
     closeSlash(); xformBlk(sid,'math','');

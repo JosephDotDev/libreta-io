@@ -58,7 +58,7 @@ function reRenderBlock(blkId){
 /* Terminal blocks (database, divider, media, …) have no editable text, so a
    document must always keep a trailing empty paragraph after one — otherwise
    there is nowhere to place the caret, type, or run '/' commands. */
-const TERMINAL_BK=['database','divider','image','file','carousel','youtube','grid','page'];
+const TERMINAL_BK=['database','divider','image','file','carousel','youtube','grid','page','bookmark'];
 function ensureTrailingParagraph(){
   const last=S.blocks[S.blocks.length-1];
   if(!last||TERMINAL_BK.includes(last.type)){ S.blocks.push(mkBlock('paragraph','')); return true; }

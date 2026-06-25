@@ -28,6 +28,7 @@ const BT = [
   {t:'callout',   lbl:'Callout',     ico:'💡',  ds:'Boxed note with an icon'},
   {t:'page',      lbl:'Page',        ico:'📄',  ds:'A nested sub-page (link)'},
   {t:'mention',   lbl:'Link / Mention',ico:'🔗',ds:'A formatted link with title & icon'},
+  {t:'bookmark',  lbl:'Web Bookmark', ico:'🔖', ds:'Show a link as a visual card'},
   {t:'todo',      lbl:'To-do List',  ico:'☑',   ds:'Checkbox / task list item'},
   {t:'toggle',    lbl:'Toggle List', ico:'▸',   ds:'Collapsible block — hide content under a header'},
   {t:'bullet',    lbl:'Bullet List', ico:'•',   ds:'Unordered list item'},

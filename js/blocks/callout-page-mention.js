@@ -42,6 +42,55 @@ function mkPageLinkHtml(blk){
 function setPageDisplay(id,mode){ const b=findBlock(id); if(!b) return; b.display=mode; reRenderBlock(id); sched(); }
 
 /* ═══════════════════════════════════════════════
+   WEB BOOKMARK — show an external link as a rich card (favicon, title, site,
+   description + og:image thumbnail). Metadata is fetched once and cached on the
+   block so the card survives reloads/offline; the rest reuses the mention pipeline.
+═══════════════════════════════════════════════ */
+const _bmFetching=new Set();
+function mkBookmarkHtml(blk){
+  if(!blk.url) return `<div class="bk-bookmark bk-bm-empty" onclick="bookmarkEdit('${blk.id}')"><span class="bk-bm-ico">🔖</span><span>Add a link to bookmark…</span></div>`;
+  const u=normUrl(blk.url), host=hostOf(u);
+  const m=blk.meta||mentionCache.get(u)||quickMeta(u);
+  const fav=m.favicon?`<img class="bk-bm-fav" src="${escHtml(m.favicon)}" alt="" onerror="this.style.display='none'">`:'';
+  const thumb=m.image?`<div class="bk-bm-thumb"><img src="${escHtml(m.image)}" alt="" onerror="this.closest('.bk-bm-thumb').style.display='none'"></div>`:'';
+  const desc=m.desc?`<div class="bk-bm-desc">${escHtml(m.desc)}</div>`:'';
+  const safe=safeUrl(u);
+  return `<a class="bk-bookmark${m.image?' has-thumb':''}" href="${escHtml(safe)}" target="_blank" rel="noopener" data-url="${escHtml(u)}" onclick="event.preventDefault();if(this.getAttribute('href')!=='#')window.open(this.href,'_blank')">
+    <div class="bk-bm-info">
+      <div class="bk-bm-title">${escHtml(m.title||u)}</div>
+      ${desc}
+      <div class="bk-bm-host">${fav}<span class="bk-bm-site">${escHtml(m.site||host)}</span></div>
+    </div>${thumb}</a>`;
+}
+/* Fetch + cache metadata once, then re-render so the card fills in. */
+function bookmarkEnsureMeta(blkId){
+  const blk=findBlock(blkId); if(!blk||!blk.url||(blk.meta&&blk.meta.title)) return;
+  const u=normUrl(blk.url);
+  if(mentionCache.has(u)){ blk.meta=mentionCache.get(u); reRenderBlock(blkId); sched(); return; }
+  if(_bmFetching.has(u)) return; _bmFetching.add(u);
+  fetchLinkMeta(blk.url).then(m=>{ _bmFetching.delete(u); mentionCache.set(u,m);
+    const b=findBlock(blkId); if(b){ b.meta=m; reRenderBlock(blkId); sched(); } })
+    .catch(()=>_bmFetching.delete(u));
+}
+function bookmarkEdit(blkId){
+  const row=document.querySelector(`.bk-row[data-id="${blkId}"]`);
+  promptUrl(row?row.getBoundingClientRect():{bottom:140,left:140},(url)=>{
+    if(!url) return; const b=findBlock(blkId); if(!b) return;
+    b.url=normUrl(url); b.meta=null; reRenderBlock(blkId); bookmarkEnsureMeta(blkId); sched();
+  });
+}
+/* Slash-menu entry point: prompt for a URL, then turn the caret block into a bookmark. */
+function insertBookmarkBlock(sid){
+  const el=document.querySelector('.bk[data-id="'+sid+'"]');
+  promptUrl(el?el.getBoundingClientRect():{bottom:140,left:140},(url)=>{
+    if(!url) return; const loc=locate(sid); if(!loc) return;
+    loc.arr[loc.idx]={id:sid,type:'bookmark',content:'',url:normUrl(url)};
+    if(typeof ensureTrailingParagraph==='function') ensureTrailingParagraph();
+    rerender(); updNums(); bookmarkEnsureMeta(sid); sched();
+  });
+}
+
+/* ═══════════════════════════════════════════════
    #3 FORMATTED LINKS ("mentions") — inline chip with favicon, site (grey) + title (white)
 ═══════════════════════════════════════════════ */
 const mentionCache=new Map(); const _mentionFetching=new Set();
@@ -137,7 +186,7 @@ function insertParsedBlocks(el,parsed){
     saveBlk(el.dataset.id,el.innerHTML); return;
   }
   const id=el.dataset.id; const loc=locate(id);
-  if(!loc){ document.execCommand('insertText',false,parsed.map(b=>b.content.replace(/<[^>]+>/g,'')).join('\n')); return; }
+  if(!loc){ document.execCommand('insertText',false,parsed.map(b=>(b.content||'').replace(/<[^>]+>/g,'')).join('\n')); return; }
   const made=parsed.map(b=>{ const nb=mkBlock(b.type,b.content||''); if(b.checked)nb.checked=true; return nb; });
   const cur=loc.arr[loc.idx];
   const curEmpty=cur.type==='paragraph' && !(cur.content||'').replace(/<[^>]+>/g,'').trim();

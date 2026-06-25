@@ -11,18 +11,23 @@ function bkGripDown(e,id){
   e.preventDefault(); e.stopPropagation();
   const startX=e.clientX, startY=e.clientY;
   let started=false;
+  // If the grabbed block is part of a multi-block selection, the whole selection moves
+  // together (Notion-style). Otherwise it's a plain single-block drag.
+  const multi=(typeof msSel!=='undefined' && msSel.includes(id) && msSel.length>1) ? msSel.slice() : null;
+  const dragIds=multi||[id];
   const srcRow=document.querySelector(`.bk-row[data-id="${id}"]`);
+  const isDragged=rid=>dragIds.includes(rid);
   const mm=(ev)=>{
     if(!started){
       if(Math.abs(ev.clientX-startX)<4 && Math.abs(ev.clientY-startY)<4) return;
       started=true; S.dragId=id;
-      srcRow&&srcRow.classList.add('dragging');
+      dragIds.forEach(d=>document.querySelector(`.bk-row[data-id="${d}"]`)?.classList.add('dragging'));
       document.body.classList.add('bk-ptr-dragging');
     }
     clearDropZones();
     const under=document.elementFromPoint(ev.clientX,ev.clientY);
     const row=under&&under.closest('.bk-row');
-    if(row && row.dataset.id!==id && !row.querySelector(`[data-id="${id}"]`)){
+    if(row && !isDragged(row.dataset.id) && !dragIds.some(d=>row.querySelector(`[data-id="${d}"]`))){
       // If hovering inside a columns container, check whether the cursor is
       // near the bottom edge of the whole block — if so, snap to "below columns"
       // so the user can easily drop a block under both columns at once.
@@ -55,12 +60,15 @@ function bkGripDown(e,id){
     document.removeEventListener('mouseup',mu);
     _asStop();
     document.body.classList.remove('bk-ptr-dragging');
-    srcRow&&srcRow.classList.remove('dragging');
+    dragIds.forEach(d=>document.querySelector(`.bk-row[data-id="${d}"]`)?.classList.remove('dragging'));
     if(!started){ S.dragId=null; return; } // no movement → treat as a click (opens block menu)
     _bkJustDragged=true; setTimeout(()=>_bkJustDragged=false,260);
     const tId=S.dropTargetId, zone=S.dropZone;
     clearDropZones(); S.dropTargetId=null;
-    if(tId){ S.dragId=id; S.dropZone=zone; onDrop({preventDefault(){},stopPropagation(){}},tId); }
+    if(tId){
+      if(multi){ doMultiMove(multi, tId, (zone==='right'||zone==='bottom')?'bottom':'top'); }
+      else { S.dragId=id; S.dropZone=zone; onDrop({preventDefault(){},stopPropagation(){}},tId); }
+    }
     else { S.dragId=null; }
   };
   document.addEventListener('mousemove',mm);
@@ -172,6 +180,22 @@ function onDrop(e,targetId){
   }
   // Vertical reorder (works in nested arrays too)
   doVerticalMove(srcId,targetId,zone);
+}
+/* Move a whole multi-block selection together. Selections are always top-level blocks
+   (see multiselect.js), so they live in S.blocks; a target inside a columns block snaps
+   to just above/below the whole columns block. The selection stays highlighted after. */
+function doMultiMove(ids,targetId,zone){
+  S.dragId=null;
+  const set=new Set(ids); if(set.has(targetId)) return;
+  const t=locate(targetId);
+  if(t && t.arr!==S.blocks){ if(t.colsBlock){ targetId=t.colsBlock.id; if(set.has(targetId)) return; } else return; }
+  const objs=S.blocks.filter(b=>set.has(b.id)); if(!objs.length) return;
+  S.blocks=S.blocks.filter(b=>!set.has(b.id));
+  const ti=S.blocks.findIndex(b=>b.id===targetId);
+  if(ti<0) S.blocks.push(...objs);
+  else S.blocks.splice(zone==='bottom'?ti+1:ti,0,...objs);
+  rerender(); updNums(); sched();
+  if(typeof msSel!=='undefined'){ msSel=objs.map(b=>b.id); if(typeof _msApply==='function') _msApply(); }
 }
 function doVerticalMove(srcId,targetId,zone){
   const s=locate(srcId); if(!s) return;

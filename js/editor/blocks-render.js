@@ -91,6 +91,9 @@ function mkBkEl(blk){
   } else if(blk.type==='math'){
     row.innerHTML=gutter+`<div class="bk-wrap"><div class="bk-math-wrap" data-id="${blk.id}"><div class="bk-math" data-id="${blk.id}" onclick="mathEdit('${blk.id}')"></div><textarea class="bk-math-src" data-id="${blk.id}" spellcheck="false" placeholder="LaTeX — e.g. E = mc^2   or   \\int_0^\\infty e^{-x}\\,dx" oninput="mathOnInput('${blk.id}',this.value)" onblur="mathBlur('${blk.id}')" style="display:none">${escHtml(blk.content||'')}</textarea></div></div>`;
     if(typeof renderMathInto==='function') renderMathInto(row.querySelector('.bk-math'), blk.content);
+  } else if(blk.type==='bookmark'){
+    row.innerHTML=gutter+`<div class="bk-wrap">${mkBookmarkHtml(blk)}</div>`;
+    if(blk.url && !(blk.meta&&blk.meta.title) && typeof bookmarkEnsureMeta==='function') bookmarkEnsureMeta(blk.id);
   } else {
     row.innerHTML=gutter+`<div class="bk-wrap"><div class="bk" contenteditable="true" data-t="${blk.type}" data-id="${blk.id}" data-ph="${PH[blk.type]||''}" spellcheck="true">${blk.content}</div></div>`;
     const el=row.querySelector('.bk');
