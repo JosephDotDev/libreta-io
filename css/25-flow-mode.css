@@ -1,0 +1,44 @@
+/* ═══════════════════════════════════════════════
+   FLOW MODE — distraction-free writing
+═══════════════════════════════════════════════ */
+
+/* Topbar entry button (sits beside Customize). */
+.tp-flow{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;
+  background:none;border:1px solid var(--bd);border-radius:var(--r-md);color:var(--mu);cursor:pointer;
+  transition:color var(--t-fast),border-color var(--t-fast)}
+.tp-flow:hover{color:var(--tx);border-color:var(--bd2)}
+.tp-flow svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.6}
+
+/* ── While in flow: melt the chrome away ── */
+body.flow-mode .sb,
+body.flow-mode .topbar{display:none!important}
+body.flow-mode .bk-gut{display:none}
+body.flow-mode .props-bar,
+body.flow-mode #fmt-bar,
+body.flow-mode .ed-actions-row,
+body.flow-mode #backlinks-sec,
+body.flow-mode .outline-panel{display:none!important}
+
+/* Center + relax the writing column for calm reading/writing. */
+body.flow-mode .blocks-sc{padding-top:5vh}
+body.flow-mode .ed-title-row{max-width:640px;margin:0 auto;padding:40px 0 8px}
+body.flow-mode .blocks-ct{max-width:640px;padding-top:34px}
+body.flow-mode .bk{line-height:1.85}
+
+/* ── Floating stats bar ── */
+.flow-bar{display:none}
+body.flow-mode .flow-bar{display:flex;align-items:center;gap:13px;position:fixed;left:50%;bottom:24px;
+  transform:translateX(-50%);z-index:1100;background:var(--sur);border:1px solid var(--bd2);
+  border-radius:var(--r-pill);padding:8px 16px;box-shadow:var(--elev-2);
+  font-family:var(--fm);font-size:11px;color:var(--mu);animation:flowBarIn var(--t-slow) ease}
+@keyframes flowBarIn{from{opacity:0;transform:translate(-50%,8px)}to{opacity:1;transform:translate(-50%,0)}}
+.flow-stat b{color:var(--tx);font-weight:500}
+.flow-dot{width:3px;height:3px;border-radius:50%;background:var(--bd2);flex-shrink:0}
+.flow-exit{background:none;border:none;color:var(--ac);font-family:var(--fm);font-size:11px;cursor:pointer;padding:0 0 0 4px;display:inline-flex;align-items:center;gap:5px}
+.flow-exit svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:1.6}
+
+@media(max-width:860px){
+  body.flow-mode .ed-title-row,
+  body.flow-mode .blocks-ct{padding-left:16px;padding-right:16px}
+  body.flow-mode .flow-bar{bottom:16px}
+}
