@@ -1,0 +1,31 @@
+/* ═══════════════════════════════════════════════
+   APPEARANCE — theme wardrobe + width/type switcher polish
+═══════════════════════════════════════════════ */
+
+/* ── Theme wardrobe: each theme as a live mini-preview card ── */
+#cfg-themes{display:grid;grid-template-columns:repeat(auto-fill,minmax(94px,1fr));gap:8px}
+.t-card{display:flex;flex-direction:column;border:1px solid var(--bd);border-radius:var(--r-lg);overflow:hidden;
+  cursor:pointer;background:none;padding:0;text-align:left;
+  transition:border-color var(--t-fast),transform var(--t-fast),box-shadow var(--t-fast)}
+.t-card:hover{border-color:var(--mu);transform:translateY(-1px)}
+.t-card.on{border-color:var(--ac);box-shadow:0 0 0 1px var(--ac)}
+.t-prev{display:flex;flex-direction:column;gap:4px;justify-content:center;padding:11px 10px;min-height:56px}
+.t-bar{height:5px;border-radius:3px}
+.t-dots{display:flex;gap:4px;margin-top:5px}
+.t-dots i{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.t-name{display:flex;align-items:center;gap:4px;padding:6px 9px;font-size:11px;color:var(--tx);
+  font-family:var(--fm);border-top:1px solid var(--bd);background:var(--sur);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.t-check{margin-left:auto;color:var(--gr);font-size:11px;flex-shrink:0}
+.t-card .t-del{margin-left:auto;width:15px;height:15px;display:inline-flex;align-items:center;justify-content:center;
+  border-radius:var(--r-xs);color:var(--mu);font-size:13px;line-height:1;opacity:.6;flex-shrink:0;
+  transition:opacity var(--t-fast),color var(--t-fast),background var(--t-fast)}
+.t-card .t-del:hover{opacity:1;color:var(--re);background:var(--bd)}
+
+/* ── Width & type switcher: fonts as full-width preview rows with an active check ── */
+.ps-fonts{grid-template-columns:1fr;gap:6px}
+.ps-font{font-size:15px;padding:9px 12px;position:relative;line-height:1.2}
+.ps-fonts>.ps-font.on{padding-right:30px}
+.ps-fonts>.ps-font.on::after{content:"\2713";position:absolute;right:11px;top:50%;transform:translateY(-50%);
+  color:var(--ac);font-family:var(--fm);font-size:12px}
+.ps-font-up{font-size:12px!important;color:var(--mu);font-family:var(--fm)}

@@ -252,10 +252,20 @@ function updCfgUI(){
     const hasCustom=!!(c.customSnapshot);
     const entries=(hasCustom||tn==='custom')?[...presets,['custom',c.customSnapshot||t]]:presets;
     el.innerHTML=entries.map(([k,tv])=>{
-      const dot=k==='custom'?(c.ac||tv?.ac||'#888'):tv.ac;
+      tv=tv||{};
       const lbl=k==='custom'?'Custom':k.replace(/-/g,' ').replace(/\b\w/g,x=>x.toUpperCase());
       const del=k==='custom'?`<span class="t-del" title="Delete theme" onclick="event.stopPropagation();deleteCustomTheme()">&times;</span>`:'';
-      return`<button class="t-btn${k===tn?' on':''}" onclick="setTheme('${k}')"><span class="t-dot" style="background:${dot}"></span>${lbl}${del}</button>`;
+      // Live mini-preview of the theme: its own bg, two surface bars, and the four section hues.
+      const bg=tv.bg||'#111', sur=tv.sur||'#222', sur2=tv.sur2||sur,
+            ac=(k==='custom'?(c.ac||tv.ac):tv.ac)||'#888', docs=tv.c_docs||'#4D88E8', gr=tv.gr||'#5DC27A', go=tv.go||'#D4A83C';
+      return`<button class="t-card${k===tn?' on':''}" onclick="setTheme('${k}')" title="${lbl}">
+        <span class="t-prev" style="background:${bg}">
+          <span class="t-bar" style="background:${sur2};width:60%"></span>
+          <span class="t-bar" style="background:${sur};width:84%"></span>
+          <span class="t-dots"><i style="background:${ac}"></i><i style="background:${docs}"></i><i style="background:${gr}"></i><i style="background:${go}"></i></span>
+        </span>
+        <span class="t-name">${lbl}${k===tn?'<span class="t-check">&#10003;</span>':''}${del}</span>
+      </button>`;
     }).join('');
   }
   const sv=(id,v)=>{const e=document.getElementById(id);if(e)e.value=v};
