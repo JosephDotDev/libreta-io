@@ -1,0 +1,23 @@
+/* ═══════════════════════════════════════════════
+   REDUCE MOTION — manual toggle (body.reduce-motion) + OS preference.
+   Loaded last so these neutralise the redesign's animations/transitions.
+═══════════════════════════════════════════════ */
+body.reduce-motion *,
+body.reduce-motion *::before,
+body.reduce-motion *::after{
+  animation-duration:1ms !important;
+  animation-delay:0ms !important;
+  animation-iteration-count:1 !important;
+  transition-duration:1ms !important;
+  transition-delay:0ms !important;
+  scroll-behavior:auto !important;
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{
+    animation-duration:1ms !important;
+    animation-delay:0ms !important;
+    animation-iteration-count:1 !important;
+    transition-duration:1ms !important;
+    transition-delay:0ms !important;
+  }
+}

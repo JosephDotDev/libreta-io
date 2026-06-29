@@ -21,7 +21,8 @@
 
 /* ── Side-peek polish (Phase 3): a springier entrance + a touch more focus ── */
 .doc-peek-backdrop{background:rgba(0,0,0,.52)}
-.doc-peek.mode-side .doc-peek-panel{animation:peekSlideSpring .42s cubic-bezier(.16,1.08,.3,1)}
-@keyframes peekSlideSpring{from{transform:translateX(44px);opacity:.15}62%{transform:translateX(-5px)}to{transform:translateX(0);opacity:1}}
-.doc-peek.mode-center .doc-peek-panel{animation:peekPopSpring .34s cubic-bezier(.16,1.12,.3,1)}
-@keyframes peekPopSpring{from{transform:translate(-50%,-46%) scale(.95);opacity:.2}64%{transform:translate(-50%,-50%) scale(1.012)}to{transform:translate(-50%,-50%) scale(1);opacity:1}}
+/* Gentle, unhurried entrance — eases in slowly at the start, then a soft settle. */
+.doc-peek.mode-side .doc-peek-panel{animation:peekSlideSpring .85s cubic-bezier(.38,.05,.2,1)}
+@keyframes peekSlideSpring{0%{transform:translateX(48px);opacity:0}72%{transform:translateX(-4px)}100%{transform:translateX(0);opacity:1}}
+.doc-peek.mode-center .doc-peek-panel{animation:peekPopSpring .55s cubic-bezier(.38,.05,.2,1)}
+@keyframes peekPopSpring{0%{transform:translate(-50%,-46%) scale(.94);opacity:0}74%{transform:translate(-50%,-50%) scale(1.012)}100%{transform:translate(-50%,-50%) scale(1);opacity:1}}

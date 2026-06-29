@@ -72,6 +72,7 @@ function applyCfg(){
   if(document.body){
     [...document.body.classList].forEach(cl=>{ if(cl.indexOf('vf-')===0) document.body.classList.remove(cl); });
     const vf=c.filter||'none'; if(vf!=='none') document.body.classList.add('vf-'+vf);
+    document.body.classList.toggle('reduce-motion', !!c.reduceMotion);
   }
   applyNavVisibility();
   if(typeof loadCustomFonts==='function') loadCustomFonts(); // register any user-uploaded fonts
@@ -292,6 +293,9 @@ function updCfgUI(){
   // Sidebar shortcut visibility — "on" = shown
   const nh=c.navHidden||{};
   document.querySelectorAll('.cfg-opt[data-navtoggle]').forEach(b=>b.classList.toggle('on',!nh[b.dataset.navtoggle]));
+  // Motion preference — "on" highlights the active choice
+  const rm=c.reduceMotion?'off':'on';
+  document.querySelectorAll('.cfg-opt[data-motion]').forEach(b=>b.classList.toggle('on',b.dataset.motion===rm));
   // Visual filter active button
   const vf=c.filter||'none';
   document.querySelectorAll('.cfg-opt[data-filter]').forEach(b=>b.classList.toggle('on',b.dataset.filter===vf));

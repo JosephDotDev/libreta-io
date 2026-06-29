@@ -40,6 +40,9 @@ function _msMarqueeHide(){ const m=document.getElementById('ms-marquee'); if(m) 
 document.addEventListener('mousedown', e=>{
   if(e.button!==0) return;
   const ct=msCt();
+  // Clicking the floating multi-select bar (or its pop-over) must NOT clear the
+  // selection — otherwise the action runs against an already-emptied msSel.
+  if(e.target.closest('#ms-bar,#msb-pop')) return;
   if(!ct||!ct.contains(e.target)){ clearMsSel(); _msDrag=null; return; }
   // Don't hijack the block drag-handle or interactive controls (buttons, inputs,
   // tables, media) — let them do their own thing. [draggable="true"] covers every
