@@ -42,12 +42,22 @@
   .cal-daypanel.open{width:240px}
 }
 
-/* Month-grid event chips: larger, and allowed to wrap to ~2 lines. The title lives
-   in .cal-ev (compact mode) or .cal-ev-inner (details mode) — fix both. A max-height
-   clamp is used rather than -webkit-line-clamp (which blockification can break here). */
-.cal-cell .cal-ev{font-size:12px;line-height:1.3;white-space:normal;text-overflow:clip;overflow:hidden;max-height:2.7em}
-.cal-cell .cal-ev-inner{font-size:12px;line-height:1.3;white-space:normal;text-overflow:clip;overflow:hidden;max-height:2.7em}
+/* Month-grid event chips — clean 2-line wrap with an ellipsis, never a mid-word
+   horizontal clip. The title is direct text in .cal-ev (compact) or in .cal-ev-inner
+   (details); clamp whichever holds it, but never clamp the details chip's outer wrapper
+   (it also holds the cover + property chips). overflow-wrap lets long words break so a
+   word wider than the narrow cell wraps instead of being sliced. */
+.cal-cell .cal-ev:not(:has(.cal-ev-inner)),
+.cal-cell .cal-ev-inner{
+  font-size:12.5px!important;line-height:1.3;white-space:normal;overflow-wrap:anywhere;
+  display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;max-height:none;
+}
+.cal-cell .cal-ev:has(.cal-ev-inner){max-height:none;overflow:visible}
 .cal-cell{min-height:124px}
+/* Week + Day views — bigger, wrap freely (no clamp; the rows have room). */
+.calw-body .cal-ev,.calw-body .cal-ev-inner{font-size:13.5px!important;line-height:1.35;white-space:normal;overflow-wrap:anywhere}
+.cald-body .cal-ev,.cald-body .cal-ev-inner{font-size:15px!important;line-height:1.4;white-space:normal;overflow-wrap:anywhere}
+.calw-body .cal-ev-inner,.cald-body .cal-ev-inner{display:block;-webkit-line-clamp:none;max-height:none}
 /* Day-rail card titles also wrap rather than truncate. */
 .cdc-t{font-size:14.5px}
 .cdc-t>span{white-space:normal;overflow-wrap:anywhere}

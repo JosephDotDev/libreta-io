@@ -167,7 +167,9 @@ function dropZone(e,row){
   const r=wrap.getBoundingClientRect();
   const z=parseFloat(document.documentElement.style.zoom||'1')||1;
   const x=e.clientX/z, y=e.clientY/z, left=r.left/z, right=r.right/z, top=r.top/z, bottom=r.bottom/z;
-  const w=right-left, edge=Math.min(80,w*0.28);
+  // Narrow side zones (column-creation) so the much larger middle band reliably reads
+  // as a between-blocks insert (top/bottom) — making it forgiving to drop between rows.
+  const w=right-left, edge=Math.min(52,w*0.16);
   if(x<left+edge) return 'left';
   if(x>right-edge) return 'right';
   return (y<(top+bottom)/2)?'top':'bottom';
