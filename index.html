@@ -42,33 +42,35 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&family=Newsreader:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&family=Inter:wght@300;400;500;600;700&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap" rel="stylesheet">
 <!-- Pixel/terminal fonts for the Pixel-art & CRT visual filters (loaded lazily-ish; only used when those filters are on) -->
 <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&family=VT323&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/01-tokens.css?v=49">
-<link rel="stylesheet" href="css/02-layout.css?v=49">
-<link rel="stylesheet" href="css/03-home-docs.css?v=49">
-<link rel="stylesheet" href="css/04-editor.css?v=49">
-<link rel="stylesheet" href="css/05-menus.css?v=49">
-<link rel="stylesheet" href="css/06-calendar-tables.css?v=49">
-<link rel="stylesheet" href="css/07-chrome.css?v=49">
-<link rel="stylesheet" href="css/08-database.css?v=49">
-<link rel="stylesheet" href="css/09-prop-editor.css?v=49">
-<link rel="stylesheet" href="css/10-scale.css?v=49">
-<link rel="stylesheet" href="css/11-overview.css?v=49">
-<link rel="stylesheet" href="css/12-editor-extras.css?v=49">
-<link rel="stylesheet" href="css/13-home-redesign.css?v=49">
-<link rel="stylesheet" href="css/14-sidebar-misc.css?v=49">
-<link rel="stylesheet" href="css/15-rich-blocks.css?v=49">
-<link rel="stylesheet" href="css/16-components.css?v=49">
-<link rel="stylesheet" href="css/17-versions.css?v=49">
-<link rel="stylesheet" href="css/18-sidebar-tree.css?v=49">
-<link rel="stylesheet" href="css/19-page-settings.css?v=49">
-<link rel="stylesheet" href="css/20-cloud.css?v=49">
-<link rel="stylesheet" href="css/21-trash.css?v=49">
-<link rel="stylesheet" href="css/22-filters.css?v=49">
-<link rel="stylesheet" href="css/23-phase1.css?v=49">
-<link rel="stylesheet" href="css/24-command-palette.css?v=49">
-<link rel="stylesheet" href="css/25-flow-mode.css?v=49">
-<link rel="stylesheet" href="css/26-sidebar-personality.css?v=49">
-<link rel="stylesheet" href="css/27-appearance.css?v=49">
+<link rel="stylesheet" href="css/01-tokens.css?v=52">
+<link rel="stylesheet" href="css/02-layout.css?v=52">
+<link rel="stylesheet" href="css/03-home-docs.css?v=52">
+<link rel="stylesheet" href="css/04-editor.css?v=52">
+<link rel="stylesheet" href="css/05-menus.css?v=52">
+<link rel="stylesheet" href="css/06-calendar-tables.css?v=52">
+<link rel="stylesheet" href="css/07-chrome.css?v=52">
+<link rel="stylesheet" href="css/08-database.css?v=52">
+<link rel="stylesheet" href="css/09-prop-editor.css?v=52">
+<link rel="stylesheet" href="css/10-scale.css?v=52">
+<link rel="stylesheet" href="css/11-overview.css?v=52">
+<link rel="stylesheet" href="css/12-editor-extras.css?v=52">
+<link rel="stylesheet" href="css/13-home-redesign.css?v=52">
+<link rel="stylesheet" href="css/14-sidebar-misc.css?v=52">
+<link rel="stylesheet" href="css/15-rich-blocks.css?v=52">
+<link rel="stylesheet" href="css/16-components.css?v=52">
+<link rel="stylesheet" href="css/17-versions.css?v=52">
+<link rel="stylesheet" href="css/18-sidebar-tree.css?v=52">
+<link rel="stylesheet" href="css/19-page-settings.css?v=52">
+<link rel="stylesheet" href="css/20-cloud.css?v=52">
+<link rel="stylesheet" href="css/21-trash.css?v=52">
+<link rel="stylesheet" href="css/22-filters.css?v=52">
+<link rel="stylesheet" href="css/23-phase1.css?v=52">
+<link rel="stylesheet" href="css/24-command-palette.css?v=52">
+<link rel="stylesheet" href="css/25-flow-mode.css?v=52">
+<link rel="stylesheet" href="css/26-sidebar-personality.css?v=52">
+<link rel="stylesheet" href="css/27-appearance.css?v=52">
+<link rel="stylesheet" href="css/28-shortcuts.css?v=52">
+<link rel="stylesheet" href="css/29-onboarding-checklist.css?v=52">
 </head>
 <body>
 
@@ -159,6 +161,7 @@
         <div class="home-date-line" id="home-date"></div>
         <input id="home-title-input" class="home-title-input" placeholder="Untitled" oninput="onHomeTitleInput()">
       </div>
+      <div id="home-checklist" class="home-checklist"></div>
       <div id="home-sections"></div>
       <div id="home-hidden-bar"></div>
     </div></div>
@@ -340,6 +343,18 @@
   <span class="flow-dot"></span>
   <button class="flow-exit" onclick="exitFlow()"><svg viewBox="0 0 16 16"><path d="M6 2H2v4M10 2h4v4M6 14H2v-4M10 14h4v-4"/></svg>Esc to exit</button>
 </div>
+
+<!-- ═══ KEYBOARD SHORTCUT CHEAT-SHEET ═══ -->
+<div id="shortcuts" class="sheet" onclick="shortcutsBackdrop(event)">
+  <div class="sheet-box">
+    <div class="sheet-hd">
+      <span class="sheet-ic"><svg viewBox="0 0 16 16"><rect x="1" y="3" width="14" height="10" rx="1.5"/><line x1="4" y1="6" x2="4" y2="6"/><line x1="7" y1="6" x2="7" y2="6"/><line x1="10" y1="6" x2="10" y2="6"/><line x1="5" y1="10" x2="11" y2="10"/></svg></span>
+      <span class="sheet-ttl">Keyboard shortcuts</span>
+      <span class="sheet-kbd">?</span>
+    </div>
+    <div class="sheet-body" id="shortcuts-body"></div>
+  </div>
+</div>
 <!-- CRT scanline/flicker overlay (shown only by the "CRT" visual filter) -->
 <div id="crt-overlay" aria-hidden="true"></div>
 <!-- Shared full-screen overlay for the other visual filters (frost / hologram /
@@ -367,79 +382,81 @@
 <input type="file" id="custom-font-input" accept=".woff2,.woff,.ttf,.otf" style="display:none" onchange="onCustomFontFile(this)">
 
 
-<script src="js/core/state.js?v=49"></script>
-<script src="js/core/security.js?v=49"></script>
-<script src="js/core/storage.js?v=49"></script>
-<script src="js/core/router.js?v=49"></script>
-<script src="js/ui/feedback.js?v=49"></script>
-<script src="js/core/history.js?v=49"></script>
-<script src="js/editor/editor-open.js?v=49"></script>
-<script src="js/editor/blocks-render.js?v=49"></script>
-<script src="js/editor/block-model.js?v=49"></script>
-<script src="js/editor/keyboard.js?v=49"></script>
-<script src="js/editor/block-ops.js?v=49"></script>
-<script src="js/editor/drag.js?v=49"></script>
-<script src="js/editor/slash-menu.js?v=49"></script>
-<script src="js/editor/block-menu.js?v=49"></script>
-<script src="js/editor/multiselect.js?v=49"></script>
-<script src="js/blocks/carousel.js?v=49"></script>
-<script src="js/blocks/grid-table.js?v=49"></script>
-<script src="js/blocks/youtube.js?v=49"></script>
-<script src="js/blocks/callout-page-mention.js?v=49"></script>
-<script src="js/props/properties.js?v=49"></script>
-<script src="js/core/save.js?v=49"></script>
-<script src="js/editor/undo.js?v=49"></script>
-<script src="js/ui/overlay.js?v=49"></script>
-<script src="js/media/compress.js?v=49"></script>
-<script src="js/editor/cover.js?v=49"></script>
-<script src="js/editor/templates.js?v=49"></script>
-<script src="js/editor/page-icon.js?v=49"></script>
-<script src="js/blocks/image-block.js?v=49"></script>
-<script src="js/blocks/file-block.js?v=49"></script>
-<script src="js/blocks/math.js?v=49"></script>
-<script src="js/props/quick-edit.js?v=49"></script>
-<script src="js/props/filtering.js?v=49"></script>
-<script src="js/views/home.js?v=49"></script>
-<script src="js/views/calendar.js?v=49"></script>
-<script src="js/views/tasks.js?v=49"></script>
-<script src="js/views/databases-page.js?v=49"></script>
-<script src="js/core/utils.js?v=49"></script>
-<script src="js/core/config.js?v=49"></script>
-<script src="js/db/core.js?v=49"></script>
-<script src="js/db/toolbar.js?v=49"></script>
-<script src="js/db/block.js?v=49"></script>
-<script src="js/db/table-view.js?v=49"></script>
-<script src="js/ui/lightbox.js?v=49"></script>
-<script src="js/db/cells-media.js?v=49"></script>
-<script src="js/db/row-doc.js?v=49"></script>
-<script src="js/db/board-view.js?v=49"></script>
-<script src="js/db/calendar-view.js?v=49"></script>
-<script src="js/db/timeline-view.js?v=49"></script>
-<script src="js/db/filters.js?v=49"></script>
-<script src="js/db/page-db.js?v=49"></script>
-<script src="js/db/doc-props.js?v=49"></script>
-<script src="js/props/prop-editor.js?v=49"></script>
-<script src="js/props/options.js?v=49"></script>
-<script src="js/ui/confirm.js?v=49"></script>
-<script src="js/views/all-docs.js?v=49"></script>
-<script src="js/views/overview.js?v=49"></script>
-<script src="js/ui/tilt.js?v=49"></script>
-<script src="js/ui/sidebar.js?v=49"></script>
-<script src="js/ui/sidebar-tree.js?v=49"></script>
-<script src="js/ui/search.js?v=49"></script>
-<script src="js/ui/command-palette.js?v=49"></script>
-<script src="js/ui/flow-mode.js?v=49"></script>
-<script src="js/ui/outline.js?v=49"></script>
-<script src="js/ui/link-hover.js?v=49"></script>
-<script src="js/ui/backlinks.js?v=49"></script>
-<script src="js/core/versions.js?v=49"></script>
-<script src="js/media/blob-gc.js?v=49"></script>
-<script src="js/core/trash.js?v=49"></script>
+<script src="js/core/state.js?v=52"></script>
+<script src="js/core/security.js?v=52"></script>
+<script src="js/core/storage.js?v=52"></script>
+<script src="js/core/router.js?v=52"></script>
+<script src="js/ui/feedback.js?v=52"></script>
+<script src="js/core/history.js?v=52"></script>
+<script src="js/editor/editor-open.js?v=52"></script>
+<script src="js/editor/blocks-render.js?v=52"></script>
+<script src="js/editor/block-model.js?v=52"></script>
+<script src="js/editor/keyboard.js?v=52"></script>
+<script src="js/editor/block-ops.js?v=52"></script>
+<script src="js/editor/drag.js?v=52"></script>
+<script src="js/editor/slash-menu.js?v=52"></script>
+<script src="js/editor/block-menu.js?v=52"></script>
+<script src="js/editor/multiselect.js?v=52"></script>
+<script src="js/blocks/carousel.js?v=52"></script>
+<script src="js/blocks/grid-table.js?v=52"></script>
+<script src="js/blocks/youtube.js?v=52"></script>
+<script src="js/blocks/callout-page-mention.js?v=52"></script>
+<script src="js/props/properties.js?v=52"></script>
+<script src="js/core/save.js?v=52"></script>
+<script src="js/editor/undo.js?v=52"></script>
+<script src="js/ui/overlay.js?v=52"></script>
+<script src="js/media/compress.js?v=52"></script>
+<script src="js/editor/cover.js?v=52"></script>
+<script src="js/editor/templates.js?v=52"></script>
+<script src="js/editor/page-icon.js?v=52"></script>
+<script src="js/blocks/image-block.js?v=52"></script>
+<script src="js/blocks/file-block.js?v=52"></script>
+<script src="js/blocks/math.js?v=52"></script>
+<script src="js/props/quick-edit.js?v=52"></script>
+<script src="js/props/filtering.js?v=52"></script>
+<script src="js/views/home.js?v=52"></script>
+<script src="js/views/calendar.js?v=52"></script>
+<script src="js/views/tasks.js?v=52"></script>
+<script src="js/views/databases-page.js?v=52"></script>
+<script src="js/core/utils.js?v=52"></script>
+<script src="js/core/config.js?v=52"></script>
+<script src="js/db/core.js?v=52"></script>
+<script src="js/db/toolbar.js?v=52"></script>
+<script src="js/db/block.js?v=52"></script>
+<script src="js/db/table-view.js?v=52"></script>
+<script src="js/ui/lightbox.js?v=52"></script>
+<script src="js/db/cells-media.js?v=52"></script>
+<script src="js/db/row-doc.js?v=52"></script>
+<script src="js/db/board-view.js?v=52"></script>
+<script src="js/db/calendar-view.js?v=52"></script>
+<script src="js/db/timeline-view.js?v=52"></script>
+<script src="js/db/filters.js?v=52"></script>
+<script src="js/db/page-db.js?v=52"></script>
+<script src="js/db/doc-props.js?v=52"></script>
+<script src="js/props/prop-editor.js?v=52"></script>
+<script src="js/props/options.js?v=52"></script>
+<script src="js/ui/confirm.js?v=52"></script>
+<script src="js/views/all-docs.js?v=52"></script>
+<script src="js/views/overview.js?v=52"></script>
+<script src="js/ui/tilt.js?v=52"></script>
+<script src="js/ui/sidebar.js?v=52"></script>
+<script src="js/ui/sidebar-tree.js?v=52"></script>
+<script src="js/ui/search.js?v=52"></script>
+<script src="js/ui/command-palette.js?v=52"></script>
+<script src="js/ui/flow-mode.js?v=52"></script>
+<script src="js/ui/shortcuts.js?v=52"></script>
+<script src="js/ui/sidebar-flyout.js?v=52"></script>
+<script src="js/ui/outline.js?v=52"></script>
+<script src="js/ui/link-hover.js?v=52"></script>
+<script src="js/ui/backlinks.js?v=52"></script>
+<script src="js/core/versions.js?v=52"></script>
+<script src="js/media/blob-gc.js?v=52"></script>
+<script src="js/core/trash.js?v=52"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/cloud/config.js?v=49"></script>
-<script src="js/cloud/sync.js?v=49"></script>
-<script src="js/ui/onboarding.js?v=49"></script>
-<script src="js/core/init.js?v=49"></script>
+<script src="js/cloud/config.js?v=52"></script>
+<script src="js/cloud/sync.js?v=52"></script>
+<script src="js/ui/onboarding.js?v=52"></script>
+<script src="js/core/init.js?v=52"></script>
 
 
 <!-- CONFIG PANEL -->

@@ -227,6 +227,56 @@ function renderHome(){
   if(cfg.order.includes('notes') && !cfg.hidden['notes'] && !cfg.collapsed['notes'] && document.getElementById('home-blocks-ct')){
     renderBlocks('home-blocks-ct'); initHistory();
   }
+  if(typeof renderHomeChecklist==='function') renderHomeChecklist();
+}
+/* ── Get-started checklist (Phase 2) — a dismissible Home card with a colored
+   progress ring + steps derived from real workspace state. Auto-hides when every
+   step is done or the user dismisses it. ── */
+function _homeChecklistDismissed(){ try{ return localStorage.getItem('libreta_checklist_done')==='1'; }catch(e){ return false; } }
+function dismissHomeChecklist(){ try{ localStorage.setItem('libreta_checklist_done','1'); }catch(e){} renderHomeChecklist(); }
+function _homeChecklistSteps(){
+  let docs=[]; try{ docs=DB.getDocs().filter(d=>d.id!==HOME_ID && (typeof sbIsForeignDbEntry!=='function'||!sbIsForeignDbEntry(d))); }catch(e){}
+  let usedSlash=false; try{ usedSlash=localStorage.getItem('libreta_used_slash')==='1'; }catch(e){}
+  let hasDb=false; try{ hasDb=((typeof DB!=='undefined'&&DB.getTbls)?DB.getTbls():[]).length>0; }catch(e){}
+  let synced=false; try{ synced=!!(typeof Cloud!=='undefined'&&Cloud.user); }catch(e){}
+  return [
+    {done:docs.length>0, color:'var(--c-docs)', lbl:'Create your first page', act:"newDoc()"},
+    {done:usedSlash,     color:'var(--gr)',     lbl:'Try the slash menu',     act:"homeChecklistTrySlash()"},
+    {done:hasDb,         color:'var(--go)',     lbl:'Build a database',       act:"nav('databases')"},
+    {done:synced,        color:'var(--pu)',     lbl:'Turn on sync (optional)'},
+  ];
+}
+function homeChecklistTrySlash(){
+  let docs=[]; try{ docs=DB.getDocs().filter(d=>d.id!==HOME_ID && (typeof sbIsForeignDbEntry!=='function'||!sbIsForeignDbEntry(d))).sort((a,b)=>(b.updatedAt||'').localeCompare(a.updatedAt||'')); }catch(e){}
+  if(docs.length) nav('editor',docs[0].id); else newDoc();
+  if(typeof toast==='function') toast('Type / on any empty line to add a block',{type:'info'});
+}
+function renderHomeChecklist(){
+  const host=document.getElementById('home-checklist'); if(!host) return;
+  if(_homeChecklistDismissed()){ host.innerHTML=''; return; }
+  const steps=_homeChecklistSteps();
+  const done=steps.filter(s=>s.done).length, total=steps.length;
+  if(done>=total){ host.innerHTML=''; return; }
+  const circ=264, off=Math.round(circ*(1-done/total));
+  const rows=steps.map(s=>{
+    const box=s.done
+      ? `<span class="hck-box hck-done" style="background:${s.color};border-color:${s.color}">&#10003;</span>`
+      : `<span class="hck-box" style="border-color:${s.color}"></span>`;
+    const arrow=(!s.done&&s.act)?`<span class="hck-arrow">&#8594;</span>`:'';
+    const click=(!s.done&&s.act)?` onclick="${s.act}"`:'';
+    return `<div class="hck-step${s.done?' is-done':''}${(!s.done&&s.act)?' hck-clickable':''}"${click}>${box}<span class="hck-lbl">${s.lbl}</span>${arrow}</div>`;
+  }).join('');
+  host.innerHTML=`<div class="home-checklist-card">
+    <div class="hck-top">
+      <div class="hck-ring">
+        <svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="42" fill="none" stroke="var(--bd)" stroke-width="10"/><circle cx="50" cy="50" r="42" fill="none" stroke="var(--gr)" stroke-width="10" stroke-linecap="round" stroke-dasharray="${circ}" stroke-dashoffset="${off}" transform="rotate(-90 50 50)"/></svg>
+        <span class="hck-frac">${done}/${total}</span>
+      </div>
+      <div class="hck-head"><div class="hck-ttl">Get started</div><div class="hck-sub">A few steps to make Libreta yours.</div></div>
+      <button class="hck-x" onclick="dismissHomeChecklist()" title="Dismiss" aria-label="Dismiss">&times;</button>
+    </div>
+    <div class="hck-steps">${rows}</div>
+  </div>`;
 }
 function setDocView(v){S.docView=v;localStorage.setItem('folio_doc_view',v);renderDocList()}
 function setDocSort(v){const[col,dir]=v.split('-');S.docSort={col,dir};localStorage.setItem('folio_doc_sort',v);renderDocList()}

@@ -41,3 +41,18 @@ body.sb-collapsed .nav-it[data-nav="documents"].active{box-shadow:inset 0 0 0 1.
 body.sb-collapsed .nav-it[data-nav="calendar"].active {box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--go) 55%,transparent)}
 body.sb-collapsed .nav-it[data-nav="tasks"].active    {box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--gr) 55%,transparent)}
 body.sb-collapsed .nav-it[data-nav="databases"].active{box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--pu) 55%,transparent)}
+
+/* ── Collapsed-rail hover fly-out ── */
+.sb-flyout{position:fixed;z-index:1001;display:none;min-width:200px;max-width:248px;
+  background:var(--sur);border:1px solid var(--bd2);border-radius:var(--r-lg);
+  box-shadow:var(--elev-2);padding:6px;animation:cmdkIn var(--t-fast) ease}
+.sb-flyout.open{display:block}
+.sbf-hd{font-size:10px;letter-spacing:var(--ls-label);text-transform:uppercase;padding:5px 8px 6px}
+.sbf-row{display:flex;align-items:center;gap:9px;padding:7px 8px;border-radius:var(--r-md);cursor:pointer;font-size:12.5px;color:var(--tx)}
+.sbf-row:hover{background:var(--sur2)}
+.sbf-ico{width:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--mu)}
+.sbf-ico svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.5}
+.sbf-nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sbf-sep{height:1px;background:var(--bd);margin:5px 4px}
+.sbf-empty{padding:9px;color:var(--mu);font-size:11px;text-align:center}
+.sbf-label{padding:7px 11px;font-size:12.5px;color:var(--tx);border-radius:0}

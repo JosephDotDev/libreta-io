@@ -2,6 +2,7 @@
    SLASH MENU
 ═══════════════════════════════════════════════ */
 function openSlash(el,id){
+  try{ localStorage.setItem('libreta_used_slash','1'); }catch(e){} // feeds the home get-started checklist
   S.slashId=id; S.slashQ=''; S.slashFoc=0; S.slashSub=false;
   const rect=el.getBoundingClientRect();
   const m=document.getElementById('slash-menu');

@@ -1,0 +1,29 @@
+/* ═══════════════════════════════════════════════
+   GET-STARTED CHECKLIST — dismissible Home card
+═══════════════════════════════════════════════ */
+.home-checklist{margin:0 0 6px}
+.home-checklist-card{background:var(--sur);border:1px solid var(--bd);border-radius:var(--r-xl);
+  padding:16px 18px 14px;animation:invIn var(--t-slow) ease}
+.hck-top{display:flex;align-items:center;gap:15px;margin-bottom:14px}
+.hck-ring{position:relative;width:48px;height:48px;flex-shrink:0}
+.hck-ring svg{width:48px;height:48px}
+.hck-frac{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-family:var(--fm);font-size:12px;color:var(--tx);font-weight:500}
+.hck-head{flex:1;min-width:0}
+.hck-ttl{font-family:var(--fs);font-size:19px;color:var(--tx);line-height:1.1}
+.hck-sub{font-size:12px;color:var(--mu);margin-top:2px}
+.hck-x{background:none;border:none;color:var(--mu);font-size:19px;line-height:1;cursor:pointer;
+  width:26px;height:26px;border-radius:var(--r-sm);flex-shrink:0;transition:background var(--t-fast),color var(--t-fast)}
+.hck-x:hover{background:var(--bd);color:var(--tx)}
+
+.hck-steps{display:flex;flex-direction:column;gap:4px}
+.hck-step{display:flex;align-items:center;gap:11px;padding:8px 10px;border-radius:var(--r-md);font-size:13px;color:var(--tx)}
+.hck-clickable{cursor:pointer;transition:background var(--t-fast)}
+.hck-clickable:hover{background:var(--sur2)}
+.hck-box{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--bd2);flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:11px;line-height:1}
+.hck-box.hck-done{color:#fff}
+.hck-step.is-done .hck-lbl{color:var(--mu);text-decoration:line-through}
+.hck-lbl{flex:1}
+.hck-arrow{color:var(--mu);font-size:15px;flex-shrink:0;transition:transform var(--t-fast),color var(--t-fast)}
+.hck-clickable:hover .hck-arrow{color:var(--tx);transform:translateX(2px)}
