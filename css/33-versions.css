@@ -1,0 +1,15 @@
+/* ═══════════════════════════════════════════════
+   VERSION TIME MACHINE — scrubbable snapshot timeline (Phase 3)
+═══════════════════════════════════════════════ */
+.vh-timeline{position:relative;padding:12px 6px 14px;margin-bottom:8px;border-bottom:1px solid var(--bd);overflow-x:auto}
+.vh-tl-dots{display:flex;min-width:max-content;position:relative}
+/* The connecting rail runs through the dot centres. */
+.vh-tl-dots::before{content:"";position:absolute;left:24px;right:24px;top:5px;height:2px;background:var(--bd2)}
+.vh-tl-dot{flex:1 0 auto;min-width:48px;display:flex;flex-direction:column;align-items:center;gap:8px;
+  background:none;border:none;cursor:pointer;position:relative;z-index:1;padding:0}
+.vh-tl-pt{width:11px;height:11px;border-radius:50%;background:var(--bd2);border:2px solid var(--sur);
+  transition:background var(--t-fast),transform var(--t-fast)}
+.vh-tl-dot:hover .vh-tl-pt{background:var(--c-docs);transform:scale(1.15)}
+.vh-tl-dot.latest .vh-tl-pt{background:var(--gr);width:13px;height:13px}
+.vh-tl-t{font-size:9px;color:var(--mu);font-family:var(--fm);white-space:nowrap}
+.vh-tl-dot.latest .vh-tl-t{color:var(--gr)}

@@ -77,7 +77,7 @@ function idbTableView(blk,tbl){
       bodyRows+=`<tr class="idb-grp-hidden-row"><td colspan="${span}"><span class="idb-grp-hidden-lbl">${hiddenList.length} hidden group${hiddenList.length>1?'s':''}: ${names}</span><button class="idb-grp-show-all" onclick="idbShowAllGroups('${blk.id}')">Show all</button></td></tr>`;
     }
   } else bodyRows=rows.map(rowHtml).join('');
-  const empty=rows.length?'':`<tr><td colspan="${span}" class="idb-empty">${tbl.rows.length?'No entries match the filters.':'No entries yet \u2014 click \u201c+ New\u201d.'}</td></tr>`;
+  const empty=rows.length?'':`<tr><td colspan="${span}" class="idb-empty">${tbl.rows.length?'No entries match the filters.':`<div class="idb-empty-rich"><div class="idb-empty-ico">\u{1F5C2}\u{FE0F}</div><div class="idb-empty-h">Your table is ready</div><div class="idb-empty-sub">Add a first row to get going.</div><button class="btn btn-a" onclick="idbAddRow('${blk.id}')">+ Add first row</button></div>`}</td></tr>`;
   return `<div class="idb-sc"><table class="idb-tbl${useFixed?' fixed':''}"${useFixed?` style="width:${tblW}px"`:''}>${colgroup}<thead>${gcol?'':`<tr>${th}</tr>`}</thead><tbody>${bodyRows}${empty}</tbody></table></div>
     ${gcol?'':`<div class="idb-foot" onclick="idbAddRow('${blk.id}')" ondragover="idbFootDragOver(event,'${blk.id}')" ondragleave="idbFootDragLeave(event)" ondrop="idbFootDrop(event,'${blk.id}')"><span class="np-pill">+ New Page</span></div>`}`;
 }

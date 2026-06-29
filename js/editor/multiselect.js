@@ -20,8 +20,8 @@ function _msRowAtY(rows,y){
   }
   return best;
 }
-function _msApply(){ const ct=msCt(); if(!ct) return; _msRows(ct).forEach(r=>r.classList.toggle('bk-row-sel', msSel.includes(r.dataset.id))); }
-function clearMsSel(){ if(msSel.length||document.querySelector('.bk-row-sel')){ msSel=[]; document.querySelectorAll('.bk-row-sel').forEach(r=>r.classList.remove('bk-row-sel')); } _msMarqueeHide&&_msMarqueeHide(); }
+function _msApply(){ const ct=msCt(); if(ct) _msRows(ct).forEach(r=>r.classList.toggle('bk-row-sel', msSel.includes(r.dataset.id))); if(typeof renderMsBar==='function') renderMsBar(); }
+function clearMsSel(){ if(msSel.length||document.querySelector('.bk-row-sel')){ msSel=[]; document.querySelectorAll('.bk-row-sel').forEach(r=>r.classList.remove('bk-row-sel')); } _msMarqueeHide&&_msMarqueeHide(); if(typeof renderMsBar==='function') renderMsBar(); }
 function _msTopRowOf(node,ct){ let r=node&&node.closest?node.closest('.bk-row'):null; while(r&&r.parentElement!==ct) r=r.parentElement.closest('.bk-row'); return r; }
 /* ── Marquee lasso (drag from the page margin) ──
    A visible rectangle so you can SEE which blocks a margin-drag is about to grab.

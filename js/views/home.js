@@ -392,8 +392,8 @@ function renderDocList(){
     const rt=d.meta?.readingTime||0;
     const bc=d.meta?.blockCount||0;
     const cover=d.meta?.cover
-      ? (isAccentCover(d.meta.cover)
-          ? `<div class="dc-cover-thumb dc-cover-accent" style="background:var(--ac)"></div>`
+      ? (isPresetCover(d.meta.cover)
+          ? `<div class="dc-cover-thumb dc-cover-accent" style="${coverThumbBg(d.meta.cover)}"></div>`
           : `<img class="dc-cover-thumb" src="${srcFor(d.meta.cover)}" alt="" style="object-position:center ${d.meta.coverPos!=null?d.meta.coverPos:50}%">`)
       : '';
     const ico=d.meta?.icon?`<span class="card-ico">${iconHtml(d.meta.icon,'1.1em')}</span>`:'';

@@ -148,9 +148,10 @@ function renderTrashPanel(){
     const extra=g.length-1;
     const at=root._trash.at;
     const left=Math.max(0, TRASH_TTL_DAYS-Math.floor((Date.now()-new Date(at).getTime())/864e5));
+    const urg=left<=3?'urgent':(left<=7?'soon':'');
     return `<div class="vh-item trash-item">
       <div class="vh-it-top">${icon(root)}<span class="vh-it-time">${escHtml(root.title||'Untitled')}</span>${extra?`<span class="vh-it-lbl">+${extra} sub-page${extra>1?'s':''}</span>`:''}</div>
-      <div class="vh-it-meta">Deleted ${fmtDate(at)} · ${left} day${left!==1?'s':''} left</div>
+      <div class="vh-it-meta">Deleted ${fmtDate(at)} <span class="trash-left ${urg}">${left}d left</span></div>
       <div class="trash-actions">
         <button class="trash-btn" onclick="restoreFromTrash('${root._trash.batch}')">Restore</button>
         <button class="trash-btn danger" onclick="confirmPurge('${root._trash.batch}','${escAttr(root.title||'Untitled')}')">Delete forever</button>

@@ -126,7 +126,16 @@ function renderVersionList(){
   const el=document.getElementById('vh-list'); if(!el) return;
   const list=getVersions(S.docId).slice().reverse(); // newest first
   if(!list.length){ el.innerHTML='<div class="vh-empty">No saved versions yet.<br>Versions are captured automatically as you edit.</div>'; return; }
-  el.innerHTML=list.map((v,i)=>{
+  // Scrubbable timeline (oldest → newest, left → right) above the detailed list.
+  const chrono=getVersions(S.docId);
+  const timeline = chrono.length>1
+    ? `<div class="vh-timeline"><div class="vh-tl-dots">${chrono.map((v,i)=>{
+        const isLatest=i===chrono.length-1;
+        const t=isLatest?'now':new Date(v.ts).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}).replace(' ','');
+        return `<button class="vh-tl-dot${isLatest?' latest':''}" onclick="previewVersion('${S.docId}','${v.ts}')" title="${escHtml(fmtVersionTime(v.ts))}"><span class="vh-tl-pt"></span><span class="vh-tl-t">${escHtml(t)}</span></button>`;
+      }).join('')}</div></div>`
+    : '';
+  const items=list.map((v,i)=>{
     const isCurrent=i===0;
     const snip=versionSnippet(v);
     const wc=(typeof flattenBlocks==='function'?flattenBlocks(v.blocks||[]):[]).length;
@@ -136,6 +145,7 @@ function renderVersionList(){
       <div class="vh-it-meta">${wc} block${wc!==1?'s':''}${v.meta&&v.meta.icon?' · has icon':''}${v.meta&&v.meta.cover?' · has cover':''}</div>
     </div>`;
   }).join('');
+  el.innerHTML=timeline+items;
 }
 
 /* ── Read-only preview of a snapshot (centered modal) ── */
@@ -180,6 +190,7 @@ function previewVersion(docId,ts){
         <div><div class="vh-pv-when">${escHtml(fmtVersionTime(v.ts))}</div><div class="vh-pv-sub">Read-only preview</div></div>
         <div class="vh-pv-acts">
           <button class="vh-btn" onclick="closeVersionPreview()">Close</button>
+          <button class="vh-btn" onclick="versionOpenAsCopy('${docId}','${v.ts}')">Open as copy</button>
           <button class="vh-btn primary" onclick="restoreVersion('${docId}','${v.ts}')">Restore this version</button>
         </div>
       </div>
@@ -188,3 +199,14 @@ function previewVersion(docId,ts){
   requestAnimationFrame(()=>m.classList.add('open'));
 }
 function closeVersionPreview(){ const m=document.getElementById('vh-preview'); if(m){ m.classList.remove('open'); setTimeout(()=>{ if(!m.classList.contains('open'))m.innerHTML=''; },180); } }
+/* Spin a snapshot off into a brand-new page instead of overwriting the current one. */
+function versionOpenAsCopy(docId,ts){
+  const v=getVersions(docId).find(x=>x.ts===ts); if(!v) return;
+  const d=blankDoc(); d.title=(v.title||'Untitled')+' (copy)';
+  d.blocks=JSON.parse(JSON.stringify(v.blocks&&v.blocks.length?v.blocks:[mkBlock('paragraph')]));
+  if(v.meta){ d.meta=d.meta||{}; if(v.meta.icon) d.meta.icon=v.meta.icon; if(v.meta.cover) d.meta.cover=v.meta.cover; }
+  DB.saveDoc(d);
+  closeVersionPreview(); closeVersionPanel();
+  nav('editor',d.id);
+  if(typeof toast==='function') toast('Opened as a copy',{type:'success'});
+}

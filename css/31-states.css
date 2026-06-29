@@ -1,0 +1,15 @@
+/* ═══════════════════════════════════════════════
+   EMPTY & TRASH STATES (Phase 3)
+═══════════════════════════════════════════════ */
+
+/* Friendly empty-database state. */
+.idb-empty-rich{padding:30px 16px;text-align:center}
+.idb-empty-ico{font-size:26px;margin-bottom:9px;opacity:.9}
+.idb-empty-h{font-family:var(--fs);font-size:18px;color:var(--tx);margin-bottom:3px}
+.idb-empty-sub{font-size:12px;color:var(--mu);margin-bottom:14px}
+
+/* Trash countdown chip — calm by default, warms then reddens as the purge nears. */
+.trash-left{display:inline-block;font-size:10px;padding:2px 8px;border-radius:var(--r-pill);
+  background:var(--sur2);color:var(--mu);margin-left:6px;vertical-align:1px}
+.trash-left.soon{background:color-mix(in srgb,var(--go) 16%,transparent);color:var(--go)}
+.trash-left.urgent{background:color-mix(in srgb,var(--re) 16%,transparent);color:var(--re)}

@@ -2,12 +2,26 @@
    COVER IMAGE SYSTEM
 ═══════════════════════════════════════════════ */
 const BLANK_COVER='__accent__';
+/* Palette-matched cover presets — solids in the section hues + a few two-tone /
+   diagonal blends, all built from theme tokens so covers stay cohesive with the
+   active theme. Stored on doc.meta.cover as 'cv:<key>'. */
+const COVER_PRESETS={
+  rose:'var(--ac)', blue:'var(--c-docs)', lime:'var(--gr)', gold:'var(--go)', purple:'var(--pu)', teal:'#46B5A6',
+  'rose-blue':'linear-gradient(90deg,var(--ac) 50%,var(--c-docs) 50%)',
+  'gold-rose':'linear-gradient(90deg,var(--go) 50%,var(--ac) 50%)',
+  sunset:'linear-gradient(120deg,var(--go),var(--ac))',
+  aurora:'linear-gradient(120deg,var(--c-docs),var(--pu))',
+  meadow:'linear-gradient(120deg,var(--gr),var(--go))',
+  twilight:'linear-gradient(120deg,var(--pu),var(--ac))',
+};
 function isAccentCover(c){ return c===BLANK_COVER; }
-/* Background style for a cover thumbnail on cards/calendar. The "blank" cover is a
-   solid accent fill, not an image — rendering it through an <img> shows a broken
-   image, so callers use this to get a correct background either way. */
+function isPresetCover(c){ return c===BLANK_COVER || (typeof c==='string'&&c.indexOf('cv:')===0); }
+function coverCss(c){ if(c===BLANK_COVER) return 'var(--ac)'; if(typeof c==='string'&&c.indexOf('cv:')===0) return COVER_PRESETS[c.slice(3)]||'var(--ac)'; return ''; }
+/* Background style for a cover thumbnail on cards/calendar. Preset covers (accent
+   solid or 'cv:<key>') are CSS backgrounds, not images — rendering them through an
+   <img> shows a broken image, so callers use this to get a correct background. */
 function coverThumbBg(cover,pos){
-  if(cover===BLANK_COVER) return 'background:var(--ac)';
+  if(isPresetCover(cover)) return 'background:'+coverCss(cover);
   return `background-image:url('${srcFor(cover)}');background-position:center ${(pos!=null?pos:50)}%`;
 }
 function renderCover(doc){
@@ -20,21 +34,22 @@ function renderCover(doc){
   const linkBtn=document.getElementById(home?'home-cover-link-btn':'cover-link-btn');
   if(doc?.meta?.cover){
     const cover=doc.meta.cover;
-    const isBlank=cover===BLANK_COVER;
+    const isPreset=isPresetCover(cover);
     const pos=doc.meta.coverPos!=null?doc.meta.coverPos:50;
     wrap.style.display='block';
     // Reset any leftover collapse state from a previously-scrolled doc
     wrap.style.maxHeight=''; wrap.style.opacity=''; wrap._fullH=0;
-    // Blank cover = solid accent fill; an image/link can be added from the actions overlay.
-    const media=isBlank
-      ? `<div class="cover-img-el" id="cover-img-el" style="background:var(--ac)"></div>`
+    // Preset cover = solid/gradient fill; an image/link can be added from the actions overlay.
+    const media=isPreset
+      ? `<div class="cover-img-el" id="cover-img-el" style="background:${coverCss(cover)}"></div>`
       : `<img class="cover-img-el" id="cover-img-el" src="${srcFor(cover)}" alt="Cover" draggable="false" style="object-position:center ${pos}%">`;
     wrap.innerHTML=`<div class="cover-wrap" id="cover-wrap">
       ${media}
       <div class="cover-actions" id="cover-actions">
-        ${isBlank?'':`<button class="cover-btn" onclick="startReposition()">Reposition</button>`}
-        <button class="cover-btn" onclick="triggerCoverUpload()">${isBlank?'Add image':'Change cover'}</button>
-        <button class="cover-btn" onclick="coverFromUrlPrompt(event)">${isBlank?'Add by URL':'Link'}</button>
+        <button class="cover-btn" onclick="openCoverGallery()">Covers</button>
+        ${isPreset?'':`<button class="cover-btn" onclick="startReposition()">Reposition</button>`}
+        <button class="cover-btn" onclick="triggerCoverUpload()">${isPreset?'Add image':'Change cover'}</button>
+        <button class="cover-btn" onclick="coverFromUrlPrompt(event)">${isPreset?'Add by URL':'Link'}</button>
         <button class="cover-btn" onclick="removeCover()">Remove</button>
       </div>
       <div class="cover-reposition-bar" id="cover-reposition-bar" style="display:none">
@@ -60,14 +75,15 @@ function renderPeekCover(doc){
   const addBtn=document.getElementById('peek-cover-add-btn');
   const linkBtn=document.getElementById('peek-cover-link-btn');
   if(doc&&doc.meta&&doc.meta.cover){
-    const cover=doc.meta.cover, isBlank=cover===BLANK_COVER;
+    const cover=doc.meta.cover, isPreset=isPresetCover(cover);
     const pos=doc.meta.coverPos!=null?doc.meta.coverPos:50;
     wrap.style.display='block';
-    const media=isBlank?`<div class="cover-img-el" style="background:var(--ac)"></div>`
+    const media=isPreset?`<div class="cover-img-el" style="background:${coverCss(cover)}"></div>`
       :`<img class="cover-img-el" src="${srcFor(cover)}" alt="Cover" draggable="false" style="object-position:center ${pos}%">`;
     wrap.innerHTML=`<div class="cover-wrap peek-cover">${media}
       <div class="cover-actions">
-        <button class="cover-btn" onclick="triggerCoverUpload()">${isBlank?'Add image':'Change cover'}</button>
+        <button class="cover-btn" onclick="openCoverGallery()">Covers</button>
+        <button class="cover-btn" onclick="triggerCoverUpload()">${isPreset?'Add image':'Change cover'}</button>
         <button class="cover-btn" onclick="coverFromUrlPrompt(event)">${isBlank?'Add by URL':'Link'}</button>
         <button class="cover-btn" onclick="removeCover()">Remove</button>
       </div></div>`;
@@ -81,11 +97,35 @@ function renderPeekCover(doc){
 }
 /* "Add cover" → start with a solid accent-fill cover; the user can then swap in
    an uploaded or URL-linked image from the cover's hover actions. */
-function addBlankCover(){
+/* "Add cover" now opens the gallery so the first pick can be a palette-matched
+   preset (or an upload / link) rather than always defaulting to a solid accent. */
+function addBlankCover(){ openCoverGallery(); }
+/* ── Cover gallery: palette-matched presets + upload / link ── */
+function setCoverPreset(key){
   const doc=getActiveDoc(); if(!doc) return;
-  doc.meta=doc.meta||{}; doc.meta.cover=BLANK_COVER; delete doc.meta.coverPos;
-  saveActiveDoc(doc); renderCover(doc);
+  doc.meta=doc.meta||{}; doc.meta.cover=(key==='__accent__')?BLANK_COVER:('cv:'+key); delete doc.meta.coverPos;
+  saveActiveDoc(doc); renderCover(doc); closeCoverGallery();
 }
+function openCoverGallery(){
+  if(!getActiveDoc()) return;
+  let m=document.getElementById('cover-gallery');
+  if(!m){ m=document.createElement('div'); m.id='cover-gallery'; m.className='cover-gallery';
+    m.addEventListener('click',e=>{ if(e.target===m) closeCoverGallery(); });
+    document.body.appendChild(m);
+  }
+  const sw=Object.keys(COVER_PRESETS).map(k=>`<button class="cg-sw" style="background:${COVER_PRESETS[k]}" title="${k}" onclick="setCoverPreset('${k}')"></button>`).join('');
+  m.innerHTML=`<div class="cg-box">
+    <div class="cg-hd"><span>Choose a cover</span><button class="cg-x" onclick="closeCoverGallery()" aria-label="Close">&times;</button></div>
+    <div class="cg-lbl">Palette · matched to your theme</div>
+    <div class="cg-grid">${sw}</div>
+    <div class="cg-row">
+      <button class="cg-act" onclick="closeCoverGallery();triggerCoverUpload()">&#8593; Upload image</button>
+      <button class="cg-act" onclick="closeCoverGallery();coverFromUrlPrompt(event)">&#128279; Link a URL</button>
+    </div>
+  </div>`;
+  m.classList.add('open');
+}
+function closeCoverGallery(){ const m=document.getElementById('cover-gallery'); if(m) m.classList.remove('open'); }
 /* ═══════════════════════════════════════════════
    PAGE BACKGROUND  (Craft-style — content floats as a centered card over a full-bleed
    background image/gradient). Stored on doc.meta.bg as either a preset key (bg:<name>)

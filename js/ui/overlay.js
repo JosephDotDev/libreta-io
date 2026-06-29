@@ -6,7 +6,7 @@ function openOvl(){ovlRef++;document.getElementById('ovl').classList.add('open')
 function closeOvlSafe(){ovlRef=Math.max(0,ovlRef-1);if(ovlRef===0)document.getElementById('ovl').classList.remove('open')}
 function closeAll(){
   ovlRef=0; document.getElementById('ovl').classList.remove('open');
-  ['slash-menu','bk-menu','pm-sel','pm-dp','pm-ptp','prop-editor','color-pal','icon-picker','filter-pop','col-chooser','link-pop','idb-colpop','idb-filterpop','idb-rowmenu','idb-pop','fmt-color-pop','cmdk','shortcuts'].forEach(id=>document.getElementById(id)?.classList.remove('open'));
+  ['slash-menu','bk-menu','pm-sel','pm-dp','pm-ptp','prop-editor','color-pal','icon-picker','filter-pop','col-chooser','link-pop','idb-colpop','idb-filterpop','idb-rowmenu','idb-pop','fmt-color-pop','cmdk','shortcuts','cover-gallery'].forEach(id=>document.getElementById(id)?.classList.remove('open'));
   const _dd=document.getElementById('tbl-dd'); if(_dd&&_dd.style.display==='block'&&_selCtx&&_selCtx.rerender){const cb=_selCtx.rerender;_selCtx=null;cb();}
   document.getElementById('tbl-dd').style.display='none';
   const _sbm=document.getElementById('sb-menu'); if(_sbm) _sbm.style.display='none';

@@ -1,0 +1,27 @@
+/* ═══════════════════════════════════════════════
+   BOARD VIEW — dressed up (Phase 3)
+   Lane colour rides each card as a top strip + tints the lane header, so the
+   board reads at a glance. Lane colour is passed in as --lane per column/card.
+═══════════════════════════════════════════════ */
+
+/* Card top strip in the lane's colour. */
+.idb-card::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;
+  background:var(--lane,var(--bd2));border-radius:var(--r-md) var(--r-md) 0 0}
+.idb-card{padding-top:11px}
+
+/* Lane header gets a faint colour wash + a colour-matched count pill. */
+.idb-bcol-h{background:color-mix(in srgb,var(--lane,var(--bd2)) 8%,var(--sur2));
+  border-bottom:1px solid color-mix(in srgb,var(--lane,var(--bd2)) 22%,var(--bd))}
+.idb-bcol-ct{margin-left:auto;font-size:10px;color:color-mix(in srgb,var(--lane,var(--mu)) 75%,var(--tx));
+  background:color-mix(in srgb,var(--lane,var(--bd2)) 16%,transparent);
+  padding:1px 8px;border-radius:var(--r-pill);min-width:18px;text-align:center}
+
+/* The drop-target lane echoes its own hue instead of the generic accent. */
+.idb-bcol.idb-bcol-drop .idb-bcol-b{background:color-mix(in srgb,var(--lane,var(--ac)) 12%,transparent)}
+
+/* ── Side-peek polish (Phase 3): a springier entrance + a touch more focus ── */
+.doc-peek-backdrop{background:rgba(0,0,0,.52)}
+.doc-peek.mode-side .doc-peek-panel{animation:peekSlideSpring .42s cubic-bezier(.16,1.08,.3,1)}
+@keyframes peekSlideSpring{from{transform:translateX(44px);opacity:.15}62%{transform:translateX(-5px)}to{transform:translateX(0);opacity:1}}
+.doc-peek.mode-center .doc-peek-panel{animation:peekPopSpring .34s cubic-bezier(.16,1.12,.3,1)}
+@keyframes peekPopSpring{from{transform:translate(-50%,-46%) scale(.95);opacity:.2}64%{transform:translate(-50%,-50%) scale(1.012)}to{transform:translate(-50%,-50%) scale(1);opacity:1}}

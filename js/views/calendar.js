@@ -100,6 +100,54 @@ function calEvChip(ev,color,full){
 }
 function calUnschedule(id,propId){ const doc=DB.getDoc(id); if(doc){ const p=(doc.props||[]).find(x=>x.id===propId); if(p){ p.value=null; DB.saveDoc(doc);} } renderCal(); }
 
+/* ── Selected-day card stack (Phase 3) ──
+   Clicking a month-grid day opens a side rail with the full cards (cover +
+   property pills) for that day, so the month stays compact while the rich
+   card view stays one click away. */
+function _calDayCardHtml(ev,color){
+  const c=color[ev.srcId]||'var(--ac)';
+  const open=ev.kind==='row'?`calOpenRow('${ev.tblId}','${ev.rowId}')`:`nav('editor','${ev.id}')`;
+  let cover='',chips='',icon='';
+  const chip=(lbl,cc)=>`<span class="cdc-chip" style="background:${cc}22;color:${cc}">${escHtml(lbl)}</span>`;
+  if(ev.kind==='row'){
+    const tbl=DB.getTbl(ev.tblId), row=tbl&&(tbl.rows||[]).find(r=>r.id===ev.rowId);
+    if(tbl&&row){
+      const imgCol=tbl.columns.find(x=>x.type==='image');
+      const doc=row.docId?DB.getDoc(row.docId):null;
+      const cvSrc=(imgCol&&row.cells[imgCol.id]&&srcFor(row.cells[imgCol.id]))||(doc&&doc.meta&&doc.meta.cover?srcFor(doc.meta.cover):'');
+      if(cvSrc) cover=`<div class="cdc-cover" style="background-image:url('${cvSrc}')"></div>`;
+      const parts=[];
+      tbl.columns.filter(hasOpts).forEach(col=>msVals(row.cells[col.id]).forEach(lbl=>{const o=(col.options||[]).find(x=>x.l===lbl);parts.push(chip(lbl,o?o.c:'var(--mu)'));}));
+      chips=parts.slice(0,4).join('');
+      if(doc&&doc.meta&&doc.meta.icon&&typeof iconHtml==='function') icon=`<span class="cdc-ico">${iconHtml(doc.meta.icon,'1.1em')}</span>`;
+    }
+  } else {
+    const doc=DB.getDoc(ev.id);
+    if(doc){
+      const cvr=doc.meta&&doc.meta.cover; const pos=doc.meta&&doc.meta.coverPos!=null?doc.meta.coverPos:50;
+      if(cvr) cover=`<div class="cdc-cover" style="${coverThumbBg(cvr,pos)}"></div>`;
+      if(doc.meta&&doc.meta.icon&&typeof iconHtml==='function') icon=`<span class="cdc-ico">${iconHtml(doc.meta.icon,'1.1em')}</span>`;
+      chips=(doc.props||[]).filter(p=>p.type==='select'&&p.value).slice(0,4).map(p=>{const o=(p.options||[]).find(x=>x.l===p.value);return chip(p.value,o?o.c:'var(--mu)');}).join('');
+    }
+  }
+  return `<div class="cdc" style="--ev:${c}" onclick="${open}">${cover}<div class="cdc-b"><div class="cdc-t">${icon}<span>${escHtml(ev.title||'Untitled')}</span></div>${chips?`<div class="cdc-chips">${chips}</div>`:''}</div></div>`;
+}
+function calSelectDay(ds){
+  S.calSelDay=ds;
+  const panel=document.getElementById('cal-daypanel'); if(!panel) return;
+  const data=calBuildEvents();
+  const evList=data.evts[ds]||[];
+  const d=_calParseDS(ds);
+  const header=`<div class="cdp-hd"><div><div class="cdp-eyebrow">${WDAYS[d.getDay()]}</div><div class="cdp-date">${MONTHS[d.getMonth()].slice(0,3)} ${d.getDate()}</div></div><button class="cdp-x" onclick="event.stopPropagation();closeCalDay()" aria-label="Close">&times;</button></div>`;
+  const body=evList.length?evList.map(ev=>_calDayCardHtml(ev,data.color)).join(''):`<div class="cdp-empty">Nothing scheduled.</div>`;
+  const add=`<button class="cdp-add" onclick="newDocOnDate('${ds}')"><span class="np-pill">+ New on this day</span></button>`;
+  panel.innerHTML=header+`<div class="cdp-body">${body}${add}</div>`;
+  panel.classList.add('open');
+  document.querySelectorAll('.cal-cell.cal-cell-sel').forEach(c=>c.classList.remove('cal-cell-sel'));
+  const cell=document.querySelector(`.cal-cell[data-ds="${ds}"]`); if(cell) cell.classList.add('cal-cell-sel');
+}
+function closeCalDay(){ S.calSelDay=null; const p=document.getElementById('cal-daypanel'); if(p) p.classList.remove('open'); document.querySelectorAll('.cal-cell.cal-cell-sel').forEach(c=>c.classList.remove('cal-cell-sel')); }
+
 function calLabel(){
   if(S.calView==='week'){ const s=_calWeekStart(S.calAnchorDS), e=new Date(s); e.setDate(s.getDate()+6);
     return `${MONTHS[s.getMonth()].slice(0,3)} ${s.getDate()} – ${MONTHS[e.getMonth()].slice(0,3)} ${e.getDate()}, ${e.getFullYear()}`; }
@@ -117,6 +165,7 @@ function renderCal(){
   if(S.calView==='week') renderCalWeek(grid,data);
   else if(S.calView==='day') renderCalDay(grid,data);
   else renderCalMonth(grid,data);
+  if(S.calView!=='month' && typeof closeCalDay==='function') closeCalDay();
   const detBtn=document.getElementById('cal-det-btn');
   if(detBtn){ detBtn.style.display=S.calView==='month'?'':'none'; detBtn.style.color=S.calShowDetails?'var(--ac)':''; detBtn.style.borderColor=S.calShowDetails?'var(--ac)':''; }
 }
@@ -129,7 +178,7 @@ function renderCalMonth(grid,{evts,color}){
     const evH=evList.slice(0,limit).map(ev=>calEvChip(ev,color,S.calShowDetails)).join('');
     const more=(evList.length>limit)?`<span class="cal-ev" style="color:var(--mu)">+${evList.length-limit} more</span>`:'';
     return evH+more; };
-  const cell=(ds,dnum,extraCls)=>`<div class="cal-cell${extraCls}" data-ds="${ds}" ondragover="calCellDragOver(event)" ondragleave="this.classList.remove('cal-drop')" ondrop="calCellDrop(event,'${ds}')"><div class="cal-numrow"><span class="cal-num">${dnum}</span><button class="cal-add" onclick="event.stopPropagation();newDocOnDate('${ds}')" data-tip="New page">+</button></div>${cellEventsHtml(ds)}</div>`;
+  const cell=(ds,dnum,extraCls)=>`<div class="cal-cell${extraCls}${S.calSelDay===ds?' cal-cell-sel':''}" data-ds="${ds}" onclick="calSelectDay('${ds}')" ondragover="calCellDragOver(event)" ondragleave="this.classList.remove('cal-drop')" ondrop="calCellDrop(event,'${ds}')"><div class="cal-numrow"><span class="cal-num">${dnum}</span><button class="cal-add" onclick="event.stopPropagation();newDocOnDate('${ds}')" data-tip="New page">+</button></div>${cellEventsHtml(ds)}</div>`;
   let html=WDAYS.map(d=>`<div class="cal-dh">${d}</div>`).join('');
   for(let i=fd-1;i>=0;i--){ const dnum=pdim-i; html+=cell(`${prevY}-${pad(prevM+1)}-${pad(dnum)}`,dnum,' om'); }
   for(let d=1;d<=dim;d++){ const ds=`${y}-${pad(m+1)}-${pad(d)}`; html+=cell(ds,d,ds===tod?' tod':''); }
