@@ -153,6 +153,9 @@ const Cloud = (()=>{
     // can strip the token from the address bar (a refresh shouldn't replay it)
     // without losing the session we need for updateUser().
     if(recovery) cleanRecoveryUrl();
+    // Explicit auth intent (?signin/?signup/?auth) always wins over a saved
+    // "use without account" choice, so a local-only user can still sign in later.
+    let _wantAuth=false; try{ const _p=new URLSearchParams(location.search); _wantAuth=_p.has('signin')||_p.has('signup')||_p.has('auth'); }catch(e){}
     if(recovery && session){
       // Password-recovery deep link: Supabase signed us in with a short-lived
       // recovery session. Don't treat it as a normal login — make the user set
@@ -162,15 +165,23 @@ const Cloud = (()=>{
       // Already signed in: cover the screen while we pull + render so the user
       // never sees the un-themed default shell flash before their data loads.
       user = session.user; showLoadingGate();
+    }else if(localStorage.getItem('libreta_local') && !_wantAuth){
+      // User chose "Start writing — no account": run fully local, no gate, no sync.
+      user = null;
     }else{
+      if(_wantAuth){ try{ localStorage.removeItem('libreta_local'); }catch(e){} } // signing in leaves local-only mode
       user = await showAuthGate(recovery);
     }
-    await pull();              // bring the cloud copy down before the app reads storage
-    purgeStaleMonolith();      // one-time: drop the obsolete state.json once on records mode
-    installAutosync();         // start watching for local changes to push back up
-    installRealtime();         // subscribe to cross-device push notifications
-    startPoll();               // slow fallback poll (30s) for events Realtime missed
-    mountStatusChip();
+    // Sync only when authenticated — a local-only session skips all of it.
+    if(user){
+      try{ localStorage.removeItem('libreta_local'); }catch(e){}
+      await pull();              // bring the cloud copy down before the app reads storage
+      purgeStaleMonolith();      // one-time: drop the obsolete state.json once on records mode
+      installAutosync();         // start watching for local changes to push back up
+      installRealtime();         // subscribe to cross-device push notifications
+      startPoll();               // slow fallback poll (30s) for events Realtime missed
+      mountStatusChip();
+    }
   }
 
   /* ── PULL: download the remote snapshot and apply it locally.
@@ -538,9 +549,14 @@ const Cloud = (()=>{
       const wrap=document.createElement('div');
       wrap.id='auth-gate';
       wrap.innerHTML=`
-        <div class="ag-card">
+        <div class="ag-card ag-card-v2">
           <div class="ag-logo">Libre<span>ta</span></div>
-          <div class="ag-sub">Sign in to sync your workspace across devices.</div>
+          <h1 class="ag-promise">Your workspace.<br>Your data.</h1>
+          <div class="ag-promise-sub">No subscription required to think. Everything lives on your device — sync is a layer you opt into, never a wall.</div>
+          <div class="ag-pills"><span class="ag-pill ag-pill-g">Works offline</span><span class="ag-pill ag-pill-b">Private by default</span></div>
+          <button id="ag-skip" type="button" class="ag-btn ag-btn-primary">Start writing — no account</button>
+          <div class="ag-skipnote">Jump straight in. Add sync whenever you like.</div>
+          <div class="ag-syncdiv"><span>Or sync across devices</span></div>
           <form id="ag-form" autocomplete="on" novalidate>
             <input id="ag-email" type="email" placeholder="Email" autocomplete="username" required>
             <input id="ag-pass" type="password" placeholder="Password" autocomplete="current-password" required>
@@ -618,6 +634,9 @@ const Cloud = (()=>{
         }catch(e){ err('Could not start sign-in. Try again.'); }
       }
       $('#ag-google').onclick=()=> oauth('google');
+      /* "Start writing — no account": remember the local-only choice and let boot
+         continue without a session (resolve with no user). */
+      $('#ag-skip').onclick=()=>{ try{ localStorage.setItem('libreta_local','1'); }catch(e){} wrap.remove(); resolve(null); };
       // Apple button hidden for now — re-add a button with id="ag-apple" and
       // `$('#ag-apple').onclick=()=>oauth('apple')` once it's set up in Supabase.
       /* Passwordless magic link — works for new and existing users alike. */

@@ -1,0 +1,29 @@
+/* ═══════════════════════════════════════════════
+   SIGN-IN / FIRST-RUN — local-first promise (Phase 4)
+   Leads with identity + a "no account" primary; sync is demoted to secondary.
+   Matches the auth gate's pre-theme hardcoded palette (warm dark + blue accent).
+═══════════════════════════════════════════════ */
+#auth-gate .ag-card-v2{ width:400px; max-width:100%; max-height:94vh; overflow-y:auto; text-align:center; }
+#auth-gate .ag-card-v2 .ag-logo{ font-size:40px; margin-bottom:18px; }
+
+#auth-gate .ag-promise{ font-family:Cormorant,Georgia,serif; font-weight:600; font-size:33px;
+  line-height:1.08; color:#ECE6DE; margin:0 0 12px; letter-spacing:.01em; }
+#auth-gate .ag-promise-sub{ color:#8a8276; font-size:13px; line-height:1.6; max-width:330px; margin:0 auto 16px; }
+
+#auth-gate .ag-pills{ display:flex; gap:8px; justify-content:center; margin-bottom:20px; flex-wrap:wrap; }
+#auth-gate .ag-pill{ font-size:11px; padding:5px 12px; border-radius:999px; white-space:nowrap; }
+#auth-gate .ag-pill-g{ color:#86c08c; background:rgba(93,194,122,.12); }
+#auth-gate .ag-pill-b{ color:#7fb0f0; background:rgba(77,136,232,.13); }
+
+/* Primary "no account" CTA — the hero action. */
+#auth-gate .ag-btn-primary{ width:100%; padding:13px; font-size:15px; margin-top:0; }
+#auth-gate .ag-skipnote{ font-size:11px; color:#6f685d; margin:9px 0 0; }
+
+/* "Or sync across devices" divider. */
+#auth-gate .ag-syncdiv{ display:flex; align-items:center; gap:12px; margin:24px 0 16px;
+  color:#6f685d; font-size:10px; letter-spacing:.12em; text-transform:uppercase; }
+#auth-gate .ag-syncdiv::before,#auth-gate .ag-syncdiv::after{ content:""; flex:1; height:1px; background:#2a2620; }
+
+/* Demote the sync sign-in submit to a quiet outline so the no-account CTA leads. */
+#auth-gate #ag-submit{ background:transparent; color:#E4DDD0; border:1px solid #2a2620; font-weight:500; }
+#auth-gate #ag-submit:hover{ border-color:#4D88E8; color:#fff; }

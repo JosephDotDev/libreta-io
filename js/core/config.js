@@ -197,15 +197,41 @@ function cfgInitCollapsible(){
     sec.classList.toggle('collapsed', !!s[sl.dataset.seckey]);
   });
 }
-/* Account section — shown only when signed in to cloud sync. Hosts the email + Log out. */
+/* Account home — a profile + plan card at the top of Settings. Adapts to the two
+   states: signed in (avatar, name, email, synced) or local-only (no account, with
+   a sign-in CTA). Always shown — it's the identity header for the panel. */
 function renderAccountStatus(){
   const el=document.getElementById('cfg-account'), sec=document.getElementById('cfg-account-sec');
-  let user=null; try{ if(typeof Cloud!=='undefined') user=Cloud.user; }catch(e){}
-  if(!user || !el){ if(sec) sec.style.display='none'; return; }
+  if(!el||!sec) return;
   sec.style.display='';
-  el.innerHTML=`<div style="font-size:12px;color:var(--mu);margin-bottom:6px">Signed in as</div>
-    <div class="cfg-email-pill" title="${escAttr(user.email)}">${escHtml(user.email)}</div>
-    <button class="cfg-opt" onclick="cloudSignOut()" style="color:var(--re);border-color:rgba(196,84,84,.4)">Log out</button>`;
+  let user=null; try{ if(typeof Cloud!=='undefined') user=Cloud.user; }catch(e){}
+  const plan=`<div class="acct-plan">
+      <div><div class="acct-plan-eyebrow">Current plan</div><div class="acct-plan-name">Free — forever</div><div class="acct-plan-sub">Every feature · unlimited · yours</div></div>
+    </div>`;
+  if(user){
+    const email=user.email||'';
+    const m=(user.user_metadata)||{};
+    const name=(m.full_name||m.name||m.display_name||(email?email.split('@')[0]:'')||'You').toString();
+    const initial=(name.trim()[0]||email[0]||'U').toUpperCase();
+    el.innerHTML=`<div class="acct-home">
+      <div class="acct-id">
+        <span class="acct-av">${escHtml(initial)}</span>
+        <div class="acct-meta"><div class="acct-name">${escHtml(name)}</div><div class="acct-email" title="${escAttr(email)}">${escHtml(email)}</div></div>
+      </div>
+      <div class="acct-sync acct-sync-on"><span class="acct-dot"></span>Synced across your devices</div>
+      ${plan}
+      <button class="cfg-opt acct-signout" onclick="cloudSignOut()">Log out</button>
+    </div>`;
+  }else{
+    el.innerHTML=`<div class="acct-home">
+      <div class="acct-id">
+        <span class="acct-av acct-av-local"><svg viewBox="0 0 16 16"><rect x="1.5" y="2.5" width="13" height="9" rx="1.2"/><path d="M5 13.5h6"/></svg></span>
+        <div class="acct-meta"><div class="acct-name">Local workspace</div><div class="acct-email">No account — everything lives on this device</div></div>
+      </div>
+      ${plan}
+      <a class="acct-cta" href="index.html?signin=1">Sign in to sync &rarr;</a>
+    </div>`;
+  }
 }
 function cloudSignOut(){ if(typeof Cloud!=='undefined' && Cloud.signOut) Cloud.signOut(); }
 /* Danger Zone — wipe all data locally + in the cloud, then sign out. Double-confirm
@@ -491,7 +517,8 @@ function renderPageSettings(){
     ${bgSec}
     ${propsSec}
     <div class="ps-sec">
-      <button class="ps-actbtn" onclick="closePageSettings();openVersionPanel()">&#128336; Version history</button>
+      <button class="ps-actbtn" onclick="closePageSettings();publishPage(S.docId)">&#10138; Share as a web page</button>
+      <button class="ps-actbtn" onclick="closePageSettings();openVersionPanel()" style="margin-top:6px">&#128336; Version history</button>
       <button class="ps-actbtn ps-danger" onclick="closePageSettings();deleteSbDoc(event,S.docId)" style="margin-top:6px"><svg class="lic" viewBox="0 0 24 24" width="13" height="13" style="vertical-align:-2px;margin-right:5px"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13"/></svg>Delete page</button>
     </div>`;
 }

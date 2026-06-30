@@ -1,6 +1,14 @@
 /* ═══════════════════════════════════════════════
    SLASH MENU
 ═══════════════════════════════════════════════ */
+let _slashKbListen=null;
+/* On phones the slash menu becomes a bottom sheet (.slash-m styling in the mobile
+   media query). Sit it just above the on-screen keyboard using the visual viewport. */
+function _slashSheetLift(m){
+  const vv=window.visualViewport;
+  const kb = vv ? Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop)) : 0;
+  m.style.bottom = kb + 'px';
+}
 function openSlash(el,id){
   try{ localStorage.setItem('libreta_used_slash','1'); }catch(e){} // feeds the home get-started checklist
   S.slashId=id; S.slashQ=''; S.slashFoc=0; S.slashSub=false;
@@ -9,11 +17,26 @@ function openSlash(el,id){
   // Restore the canonical structure each open — some submenus (e.g. Database)
   // replace the menu's contents, which would otherwise destroy #sm-its.
   m.innerHTML='<div class="sm-hdr">Block type — type to filter</div><div id="sm-its" class="sm-its"></div>';
-  m.style.top=(rect.bottom+4)+'px';
-  m.style.left=Math.min(rect.left,window.innerWidth-268)+'px';
+  const mobile = window.matchMedia && window.matchMedia('(max-width:860px)').matches;
+  if(mobile){
+    // Bottom sheet: clear the caret-anchored position; CSS pins left/right, JS sets bottom.
+    m.style.top=''; m.style.left='';
+    _slashSheetLift(m);
+    _slashKbListen=()=>_slashSheetLift(m);
+    if(window.visualViewport) window.visualViewport.addEventListener('resize',_slashKbListen);
+  }else{
+    m.style.bottom='';
+    m.style.top=(rect.bottom+4)+'px';
+    m.style.left=Math.min(rect.left,window.innerWidth-268)+'px';
+  }
   renderSlashItems(); m.classList.add('open'); openOvl();
 }
-function closeSlash(){document.getElementById('slash-menu').classList.remove('open');S.slashId=null;S.slashQ='';S.slashSub=false;closeOvlSafe()}
+function closeSlash(){
+  const m=document.getElementById('slash-menu');
+  m.classList.remove('open'); m.style.bottom='';
+  if(_slashKbListen&&window.visualViewport){ window.visualViewport.removeEventListener('resize',_slashKbListen); _slashKbListen=null; }
+  S.slashId=null;S.slashQ='';S.slashSub=false;closeOvlSafe();
+}
 /* Highlight item `idx` among whatever items are currently shown (canonical list
    OR a submenu like the Database picker) without rebuilding the menu — so arrow
    keys work the same in both. */

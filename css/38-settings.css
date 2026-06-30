@@ -1,0 +1,33 @@
+/* ═══════════════════════════════════════════════
+   SETTINGS — account home (Phase 4)
+   A profile + plan card at the top of the Workspace tab. Adapts to signed-in
+   vs local-only. Uses theme tokens (the panel renders inside the themed app).
+═══════════════════════════════════════════════ */
+.cfg-acct-sec{border-bottom:1px solid var(--bd);padding-bottom:16px;margin-bottom:4px}
+.acct-home{display:flex;flex-direction:column;gap:12px}
+
+.acct-id{display:flex;align-items:center;gap:12px}
+.acct-av{width:46px;height:46px;border-radius:13px;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  background:var(--pu);color:#fff;font-family:var(--fn);font-weight:500;font-size:18px}
+.acct-av-local{background:color-mix(in srgb,var(--mu) 22%,transparent);color:var(--mu)}
+.acct-av-local svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.4;stroke-linecap:round}
+.acct-meta{min-width:0}
+.acct-name{font-family:var(--fs);font-size:18px;color:var(--tx);line-height:1.15}
+.acct-email{font-size:12px;color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.acct-sync{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--gr)}
+.acct-sync .acct-dot{width:7px;height:7px;border-radius:50%;background:var(--gr)}
+
+/* Plan card — warm accent wash, like the mockup. */
+.acct-plan{display:flex;align-items:center;gap:12px;
+  background:color-mix(in srgb,var(--ac) 10%,var(--sur));border:1px solid color-mix(in srgb,var(--ac) 22%,var(--bd));
+  border-radius:var(--r-xl);padding:13px 15px}
+.acct-plan-eyebrow{font-size:10px;letter-spacing:var(--ls-label);text-transform:uppercase;color:var(--ac);margin-bottom:3px}
+.acct-plan-name{font-size:15px;color:var(--tx);font-weight:500}
+.acct-plan-sub{font-size:11px;color:var(--mu);margin-top:2px}
+
+.acct-cta{align-self:flex-start;display:inline-flex;align-items:center;gap:6px;text-decoration:none;
+  background:var(--go);color:#0D0C0F;font-size:12px;font-weight:500;font-family:var(--fn);
+  padding:9px 15px;border-radius:var(--r-md);transition:filter var(--t-fast)}
+.acct-cta:hover{filter:brightness(1.07)}
+.acct-signout{align-self:flex-start;color:var(--re);border-color:rgba(196,84,84,.4)}

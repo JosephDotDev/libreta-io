@@ -1,0 +1,24 @@
+/* ═══════════════════════════════════════════════
+   MOBILE BOTTOM-SHEET — the slash menu, thumb-friendly (Phase 4)
+   On phones the caret-anchored popover becomes a full-width bottom sheet with a
+   grab handle and big, tappable, colour-coded rows. JS (openSlash) clears the
+   caret position and sets `bottom` above the keyboard; CSS handles the rest.
+═══════════════════════════════════════════════ */
+@media(max-width:860px){
+  .slash-m.open{
+    left:0; right:0; width:auto; max-width:100%;
+    border-radius:18px 18px 0 0; border-bottom:none;
+    box-shadow:0 -16px 44px rgba(0,0,0,.5);
+    padding-top:6px; animation:slashSheetUp var(--t-slow) ease;
+  }
+  /* grab handle */
+  .slash-m.open::before{ content:""; display:block; width:38px; height:4px; border-radius:999px;
+    background:var(--bd2); margin:4px auto 6px; }
+  .slash-m .sm-hdr{ padding:6px 16px 6px; font-size:10px; }
+  .slash-m .sm-its{ max-height:52vh; padding:4px 0 8px; }
+  .slash-m .sm-it{ padding:13px 16px; gap:13px; }
+  .slash-m .sm-ico{ width:40px; height:40px; font-size:16px; border-radius:var(--r-md); }
+  .slash-m .sm-nm{ font-size:15px; }
+  .slash-m .sm-ds{ font-size:12px; }
+}
+@keyframes slashSheetUp{ from{ transform:translateY(100%) } to{ transform:translateY(0) } }
