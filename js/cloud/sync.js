@@ -166,9 +166,10 @@ const Cloud = (()=>{
       user = await showAuthGate(recovery);
     }
     await pull();              // bring the cloud copy down before the app reads storage
+    purgeStaleMonolith();      // one-time: drop the obsolete state.json once on records mode
     installAutosync();         // start watching for local changes to push back up
     installRealtime();         // subscribe to cross-device push notifications
-    startPoll();               // 2-minute fallback poll for missed realtime events
+    startPoll();               // slow fallback poll (30s) for events Realtime missed
     mountStatusChip();
   }
 
@@ -418,16 +419,20 @@ const Cloud = (()=>{
     }catch(e){ console.warn('[cloud] realtime init failed',e); }
   }
 
-  /* Near-live poll: every few seconds, while the tab is visible and the user isn't
-     mid-edit, download the tiny meta.json pointer and pull the full snapshot only
-     when it actually changed. Lands cross-device updates within seconds even if
-     Realtime broadcasts don't arrive, without downloading the snapshot every tick. */
+  /* FALLBACK poll: Realtime broadcasts (installRealtime) are the PRIMARY near-instant
+     cross-device signal; this poll only catches events Realtime missed (dropped socket,
+     backgrounded tab that suppressed the channel, etc.). So it runs on a slow cadence:
+     while the tab is visible and the user isn't mid-edit, download the tiny meta.json
+     pointer and pull only when it actually changed. Keeping this slow matters for egress
+     — every tick is a signed-URL fetch on every open tab, indefinitely; at the old 3 s it
+     was ~20 reads/min/tab of constant background egress for a path Realtime already covers. */
+  const POLL_MS = 30_000;
   async function checkRemote(){
     if(activelyEditing()||_busy||document.visibilityState!=='visible') return;
     const stamp = await remoteInfo();
     if(stamp && stamp!==_remoteStamp) pullInPlace();
   }
-  function startPoll(){ setInterval(checkRemote, 3_000); }
+  function startPoll(){ setInterval(checkRemote, POLL_MS); }
 
   /* ───────────────────────── Password recovery ───────────────────────── */
   /* Supabase recovery links carry `type=recovery` (in the hash for the implicit
@@ -730,6 +735,11 @@ const Cloud = (()=>{
   async function syncNow(){
     if(_busy) return;
     setStatus('syncing');
+    // Per-record mode: state.json is not authoritative (and may be a stale multi-MB
+    // monolith from the mono era). A forced sync must reconcile records, NOT download
+    // and apply the old snapshot — doing so would both cost a full-snapshot egress hit
+    // and clobber current data with stale content. Mirror the other entry points.
+    if(_syncMode()==='records'){ try{ await reconcileRecords(); setStatus('synced'); }catch(e){ console.warn('[cloud] sync-now (records) failed',e); setStatus('error'); } return; }
     try{
       const txt = await dlText(STATE_PATH());
       if(txt){
@@ -745,6 +755,23 @@ const Cloud = (()=>{
       if(localChanged()){ clearTimeout(_uploadTimer); await push(true); }
       else setStatus('synced');
     }catch(e){ console.warn('[cloud] sync-now failed',e); setStatus('error'); }
+  }
+
+  /* One-time cleanup: in per-record mode the old whole-workspace `state.json` is dead
+     weight — nothing reads it anymore, but if it lingers it's a ~multi-MB egress trap
+     (any accidental mono/syncNow read re-downloads the whole thing) and wasted storage.
+     RLS only lets the *signed-in user* delete their own object, so this can't be done
+     server-side — it runs once under the user's session on the first records-mode boot,
+     gated by a device-local flag (non-folio_, so it never rides the snapshot). meta.json
+     is KEPT: records mode still uses it as the cross-device change pointer. Best-effort. */
+  const MONOLITH_PURGED_KEY = 'libreta_monolith_purged';
+  async function purgeStaleMonolith(){
+    if(_syncMode()!=='records') return;            // only safe once records is authoritative
+    try{ if(localStorage.getItem(MONOLITH_PURGED_KEY)) return; }catch(e){ return; }
+    try{
+      await sb.storage.from(SUPABASE_BUCKET).remove([STATE_PATH()]);   // leave META_PATH() in place
+      localStorage.setItem(MONOLITH_PURGED_KEY, String(Date.now()));
+    }catch(e){ console.warn('[cloud] stale monolith purge failed (will retry next boot)',e); }
   }
 
   /* Sign out — exposed so the Settings panel can host the control. */
