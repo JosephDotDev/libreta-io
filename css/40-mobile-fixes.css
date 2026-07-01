@@ -1,0 +1,22 @@
+/* ═══════════════════════════════════════════════
+   MOBILE PAGE FIXES
+   The editor's desktop side padding (60px) + 56px block gutter waste most of a
+   phone's width and push body text far right. Tighten both, and strengthen the
+   heading hierarchy so an H1 reads as a heading, not just bold body text.
+═══════════════════════════════════════════════ */
+@media(max-width:860px){
+  /* Reclaim the width: smaller side padding, slimmer gutter. */
+  .ed-title-row{ padding-left:16px; padding-right:16px; padding-top:22px; }
+  .blocks-ct{ padding-left:6px; padding-right:10px; }
+  .bk-gut{ width:22px; padding-right:2px; }
+  .bk-toggle-body .bk-gut{ width:16px; }
+  /* Full-width pages: don't double the title's gutter indent on mobile. */
+  #view-editor.pw-full:not(.has-pagebg) .ed-title-row{ padding-left:16px; padding-right:16px; }
+  #view-editor.pw-full:not(.has-pagebg) .blocks-ct.w-full{ padding-left:6px; padding-right:10px; }
+
+  /* Stronger heading scale on the narrow layout (was 2.3/1.8/1.45em of a 15px base
+     — too close to the 18px reading size to register as a heading). */
+  .bk[data-t="h1"]{ font-size:40px!important; line-height:1.18; }
+  .bk[data-t="h2"]{ font-size:30px!important; line-height:1.25; }
+  .bk[data-t="h3"]{ font-size:23px!important; line-height:1.3; }
+}

@@ -623,7 +623,10 @@ const Cloud = (()=>{
         err(''); if(signup) refreshStrength();
       }
       $('#ag-pass').addEventListener('input', ()=>{ if(mode==='signup') refreshStrength(); });
-      $('#ag-toggle').onclick=()=> setMode(mode==='signin'?'signup':'signin');
+      /* "Create an account" / "Have an account?" navigate to the dedicated setup vs
+         sign-in screen instead of toggling creation fields inline — keeps the sign-in
+         gate clean, and account creation gets its own focused page (?signup). */
+      $('#ag-toggle').onclick=()=>{ location.href = (mode==='signin') ? 'index.html?signup=1' : 'index.html?signin=1'; };
       /* One-tap OAuth. signInWithOAuth redirects the whole page to the provider;
          on return the session is in the URL and boot() picks it up automatically. */
       async function oauth(provider){

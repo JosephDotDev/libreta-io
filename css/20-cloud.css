@@ -11,8 +11,9 @@
 #auth-gate{
   position:fixed; inset:0; z-index:99999;
   background:#0D0C0F;
-  display:flex; align-items:center; justify-content:center;
+  display:flex; align-items:safe center; justify-content:center;
   padding:24px;
+  overflow-y:auto;   /* a tall card scrolls instead of clipping the logo / Google button */
   transition:opacity .3s ease;
 }
 /* Ink-swoosh backdrop — flat brush strokes (blue lead + rose/lime/gold pops),
