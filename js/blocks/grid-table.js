@@ -5,19 +5,107 @@ function defaultGrid(){return {header:true, rows:[['Column 1','Column 2','Column
 function mkGridHtml(blk){
   const g=blk.grid||defaultGrid();
   const ncol=g.rows[0]?g.rows[0].length:0;
+  const colW=g.colW||[];
+  const fixed=colW.some(w=>w);
+  const colgroup=`<colgroup><col style="width:16px">${Array.from({length:ncol},(_,ci)=>`<col${colW[ci]?` style="width:${colW[ci]}px"`:''}>`).join('')}</colgroup>`;
   const colRow=`<tr class="bk-grid-chrow"><td class="bk-grid-corner"></td>${Array.from({length:ncol},(_,ci)=>`<td class="bk-grid-chandle" draggable="true" onclick="gridHandleMenu(event,'${blk.id}','col',${ci})" ondragstart="gridColDragStart(event,'${blk.id}',${ci})" ondragover="gridColDragOver(event)" ondragleave="gridColDragLeave(event)" ondrop="gridColDrop(event,'${blk.id}',${ci})" ondragend="gridDragEnd()" title="Click for options · drag to move">⠿</td>`).join('')}</tr>`;
-  const rowsH=g.rows.map((r,ri)=>`<tr class="${g.header&&ri===0?'bk-grid-hdr':''}" ondragover="gridRowDragOver(event)" ondragleave="gridRowDragLeave(event)" ondrop="gridRowDrop(event,'${blk.id}',${ri})"><td class="bk-grid-rhandle" draggable="true" onclick="gridHandleMenu(event,'${blk.id}','row',${ri})" ondragstart="gridRowDragStart(event,'${blk.id}',${ri})" ondragend="gridDragEnd()" title="Click for options · drag to move">⠿</td>`+r.map((c,ci)=>`<td contenteditable="true" onkeydown="gridCellKey(event,this)" onpaste="onGridPaste(event,this)" oninput="gridSet('${blk.id}',${ri},${ci},this.innerHTML)">${gridCellHtml(c)}</td>`).join('')+'</tr>').join('');
-  return `<div class="bk-grid-wrap"><table class="bk-grid${g.header?' has-header':''}">${colRow}${rowsH}</table></div>`;
+  const rowsH=g.rows.map((r,ri)=>{
+    const rh=g.rowH&&g.rowH[ri]?` style="height:${g.rowH[ri]}px"`:'';
+    return `<tr${rh} class="${g.header&&ri===0?'bk-grid-hdr':''}" ondragover="gridRowDragOver(event)" ondragleave="gridRowDragLeave(event)" ondrop="gridRowDrop(event,'${blk.id}',${ri})"><td class="bk-grid-rhandle" draggable="true" onclick="gridHandleMenu(event,'${blk.id}','row',${ri})" ondragstart="gridRowDragStart(event,'${blk.id}',${ri})" ondragend="gridDragEnd()" title="Click for options · drag to move">⠿</td>`+r.map((c,ci)=>`<td contenteditable="true" onkeydown="gridCellKey(event,this)" onpaste="onGridPaste(event,this)" oninput="gridSet('${blk.id}',${ri},${ci},this.innerHTML)">${gridCellHtml(c)}</td>`).join('')+'</tr>';
+  }).join('');
+  return `<div class="bk-grid-wrap"><table class="bk-grid${g.header?' has-header':''}${fixed?' bk-grid-fixed':''}">${colgroup}${colRow}${rowsH}</table></div>`;
+}
+/* ── Column/row resize: thin overlay grips positioned over the real column/row
+   boundaries (measured from live layout, so they work before any manual sizing
+   too). A ResizeObserver keeps them aligned as cells wrap/grow while typing. ── */
+function gridSyncGrips(id){
+  const wrap=document.querySelector(`.bk-row[data-id="${id}"] .bk-grid-wrap`); if(!wrap) return;
+  wrap.querySelectorAll('.bk-grid-colgrip,.bk-grid-rowgrip').forEach(el=>el.remove());
+  const table=wrap.querySelector('table.bk-grid'); if(!table) return;
+  const tblH=table.offsetHeight, tblW=table.offsetWidth;
+  const active=S._gridResize;
+  table.querySelectorAll(':scope > tbody > tr.bk-grid-chrow > td.bk-grid-chandle, :scope > tr.bk-grid-chrow > td.bk-grid-chandle').forEach((td,ci)=>{
+    const g=document.createElement('div');
+    g.className='bk-grid-colgrip'+(active&&active.id===id&&active.kind==='col'&&active.idx===ci?' rz-active':'');
+    g.style.left=(td.offsetLeft+td.offsetWidth-3)+'px'; g.style.height=tblH+'px';
+    g.title='Drag to resize column';
+    g.addEventListener('mousedown',e=>gridColResizeStart(e,id,ci));
+    wrap.appendChild(g);
+  });
+  const dataRows=[...table.rows].filter(tr=>!tr.classList.contains('bk-grid-chrow'));
+  dataRows.forEach((tr,ri)=>{
+    const td=tr.querySelector('.bk-grid-rhandle'); if(!td) return;
+    const g=document.createElement('div');
+    g.className='bk-grid-rowgrip'+(active&&active.id===id&&active.kind==='row'&&active.idx===ri?' rz-active':'');
+    g.style.top=(td.offsetTop+td.offsetHeight-3)+'px'; g.style.width=tblW+'px';
+    g.title='Drag to resize row';
+    g.addEventListener('mousedown',e=>gridRowResizeStart(e,id,ri));
+    wrap.appendChild(g);
+  });
+  if(!wrap._gridRO){
+    wrap._gridRO=new ResizeObserver(()=>gridSyncGrips(id));
+    wrap._gridRO.observe(table);
+  }
+}
+function gridColResizeStart(e,id,ci){
+  e.preventDefault(); e.stopPropagation();
+  const b=findBlock(id); if(!b||!b.grid) return;
+  const wrap=document.querySelector(`.bk-row[data-id="${id}"] .bk-grid-wrap`); if(!wrap) return;
+  const table=wrap.querySelector('table.bk-grid'); if(!table) return;
+  table.classList.add('bk-grid-fixed');
+  const cols=table.querySelectorAll('colgroup col');
+  const col=cols[ci+1]; const chandle=table.querySelectorAll('.bk-grid-chrow .bk-grid-chandle')[ci];
+  if(!col||!chandle) return;
+  const z=parseFloat(document.documentElement.style.zoom||'1')||1;
+  const startX=e.clientX/z, startW=chandle.offsetWidth;
+  S._gridResize={id,kind:'col',idx:ci};
+  document.body.classList.add('bk-grid-resizing');
+  const prevCursor=document.body.style.cursor; document.body.style.cursor='col-resize';
+  const move=ev=>{
+    const w=Math.max(40,Math.round(startW+(ev.clientX/z-startX)));
+    col.style.width=w+'px';
+  };
+  const up=()=>{
+    document.removeEventListener('mousemove',move); document.removeEventListener('mouseup',up);
+    document.body.classList.remove('bk-grid-resizing'); document.body.style.cursor=prevCursor; S._gridResize=null;
+    b.grid.colW=b.grid.colW||[]; b.grid.colW[ci]=parseInt(col.style.width)||null;
+    sched(); gridSyncGrips(id);
+  };
+  document.addEventListener('mousemove',move); document.addEventListener('mouseup',up);
+}
+function gridRowResizeStart(e,id,ri){
+  e.preventDefault(); e.stopPropagation();
+  const b=findBlock(id); if(!b||!b.grid) return;
+  const wrap=document.querySelector(`.bk-row[data-id="${id}"] .bk-grid-wrap`); if(!wrap) return;
+  const table=wrap.querySelector('table.bk-grid'); if(!table) return;
+  const dataRows=[...table.rows].filter(tr=>!tr.classList.contains('bk-grid-chrow'));
+  const tr=dataRows[ri]; if(!tr) return;
+  const z=parseFloat(document.documentElement.style.zoom||'1')||1;
+  const startY=e.clientY/z, startH=tr.offsetHeight;
+  S._gridResize={id,kind:'row',idx:ri};
+  document.body.classList.add('bk-grid-resizing');
+  const prevCursor=document.body.style.cursor; document.body.style.cursor='row-resize';
+  const move=ev=>{
+    const h=Math.max(28,Math.round(startH+(ev.clientY/z-startY)));
+    tr.style.height=h+'px';
+  };
+  const up=()=>{
+    document.removeEventListener('mousemove',move); document.removeEventListener('mouseup',up);
+    document.body.classList.remove('bk-grid-resizing'); document.body.style.cursor=prevCursor; S._gridResize=null;
+    b.grid.rowH=b.grid.rowH||[]; b.grid.rowH[ri]=parseInt(tr.style.height)||null;
+    sched(); gridSyncGrips(id);
+  };
+  document.addEventListener('mousemove',move); document.addEventListener('mouseup',up);
 }
 let _gridColDrag=null,_gridRowDrag=null;
 function gridColDragStart(e,id,ci){_gridColDrag={id,ci};try{e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain','c');}catch(_){}e.stopPropagation();}
 function gridColDragOver(e){if(!_gridColDrag)return;e.preventDefault();e.stopPropagation();e.currentTarget.classList.add('bk-grid-col-drop');}
 function gridColDragLeave(e){e.currentTarget.classList.remove('bk-grid-col-drop');}
-function gridColDrop(e,id,ci){e.preventDefault();e.stopPropagation();e.currentTarget.classList.remove('bk-grid-col-drop');if(!_gridColDrag)return;const b=findBlock(id);if(b&&b.grid&&_gridColDrag.ci!==ci){b.grid.rows.forEach(r=>{const[c]=r.splice(_gridColDrag.ci,1);r.splice(ci,0,c);});}_gridColDrag=null;reRenderBlock(id);sched();}
+function gridColDrop(e,id,ci){e.preventDefault();e.stopPropagation();e.currentTarget.classList.remove('bk-grid-col-drop');if(!_gridColDrag)return;const b=findBlock(id);if(b&&b.grid&&_gridColDrag.ci!==ci){b.grid.rows.forEach(r=>{const[c]=r.splice(_gridColDrag.ci,1);r.splice(ci,0,c);});if(b.grid.colW){const[w]=b.grid.colW.splice(_gridColDrag.ci,1);b.grid.colW.splice(ci,0,w);}}_gridColDrag=null;reRenderBlock(id);sched();}
 function gridRowDragStart(e,id,ri){_gridRowDrag={id,ri};try{e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain','r');}catch(_){}e.stopPropagation();}
 function gridRowDragOver(e){if(!_gridRowDrag)return;e.preventDefault();e.stopPropagation();e.currentTarget.classList.add('bk-grid-row-drop');}
 function gridRowDragLeave(e){e.currentTarget.classList.remove('bk-grid-row-drop');}
-function gridRowDrop(e,id,ri){e.preventDefault();e.stopPropagation();e.currentTarget.classList.remove('bk-grid-row-drop');if(!_gridRowDrag)return;const b=findBlock(id);if(b&&b.grid&&_gridRowDrag.ri!==ri){const[r]=b.grid.rows.splice(_gridRowDrag.ri,1);b.grid.rows.splice(ri,0,r);}_gridRowDrag=null;reRenderBlock(id);sched();}
+function gridRowDrop(e,id,ri){e.preventDefault();e.stopPropagation();e.currentTarget.classList.remove('bk-grid-row-drop');if(!_gridRowDrag)return;const b=findBlock(id);if(b&&b.grid&&_gridRowDrag.ri!==ri){const[r]=b.grid.rows.splice(_gridRowDrag.ri,1);b.grid.rows.splice(ri,0,r);if(b.grid.rowH){const[h]=b.grid.rowH.splice(_gridRowDrag.ri,1);b.grid.rowH.splice(ri,0,h);}}_gridRowDrag=null;reRenderBlock(id);sched();}
 function gridDragEnd(){_gridColDrag=null;_gridRowDrag=null;document.querySelectorAll('.bk-grid-col-drop,.bk-grid-row-drop').forEach(t=>t.classList.remove('bk-grid-col-drop','bk-grid-row-drop'));}
 /* Older grid cells were stored as plain text; new ones store HTML (so mentions persist) */
 function gridCellHtml(c){ c=c||''; return /<(a|img|span)\b/.test(c)?c:escHtml(c); }
@@ -49,13 +137,13 @@ function onGridPaste(e,td){
 function gridToggleHeader(id){const b=findBlock(id);if(!b||!b.grid)return;b.grid.header=!b.grid.header;reRenderBlock(id);sched()}
 function gridAddRow(id){const b=findBlock(id);if(!b||!b.grid)return;const n=b.grid.rows[0]?b.grid.rows[0].length:1;b.grid.rows.push(new Array(n).fill(''));reRenderBlock(id);sched()}
 function gridAddCol(id){const b=findBlock(id);if(!b||!b.grid)return;b.grid.rows.forEach(r=>r.push(''));reRenderBlock(id);sched()}
-function gridDelRow(id){const b=findBlock(id);if(!b||!b.grid||b.grid.rows.length<=1)return;b.grid.rows.pop();reRenderBlock(id);sched()}
-function gridDelCol(id){const b=findBlock(id);if(!b||!b.grid||(b.grid.rows[0]&&b.grid.rows[0].length<=1))return;b.grid.rows.forEach(r=>r.pop());reRenderBlock(id);sched()}
+function gridDelRow(id){const b=findBlock(id);if(!b||!b.grid||b.grid.rows.length<=1)return;b.grid.rows.pop();if(b.grid.rowH)b.grid.rowH.pop();reRenderBlock(id);sched()}
+function gridDelCol(id){const b=findBlock(id);if(!b||!b.grid||(b.grid.rows[0]&&b.grid.rows[0].length<=1))return;b.grid.rows.forEach(r=>r.pop());if(b.grid.colW)b.grid.colW.pop();reRenderBlock(id);sched()}
 /* ── Per-row / per-column edit: click a handle for an insert/delete menu ── */
-function gridDelRowAt(id,ri){const b=findBlock(id);if(!b||!b.grid||b.grid.rows.length<=1)return;b.grid.rows.splice(ri,1);reRenderBlock(id);sched()}
-function gridDelColAt(id,ci){const b=findBlock(id);if(!b||!b.grid||(b.grid.rows[0]&&b.grid.rows[0].length<=1))return;b.grid.rows.forEach(r=>r.splice(ci,1));reRenderBlock(id);sched()}
-function gridInsRowAt(id,ri,side){const b=findBlock(id);if(!b||!b.grid)return;const n=b.grid.rows[0]?b.grid.rows[0].length:1;b.grid.rows.splice(side==='after'?ri+1:ri,0,new Array(n).fill(''));reRenderBlock(id);sched()}
-function gridInsColAt(id,ci,side){const b=findBlock(id);if(!b||!b.grid)return;const at=side==='after'?ci+1:ci;b.grid.rows.forEach(r=>r.splice(at,0,''));reRenderBlock(id);sched()}
+function gridDelRowAt(id,ri){const b=findBlock(id);if(!b||!b.grid||b.grid.rows.length<=1)return;b.grid.rows.splice(ri,1);if(b.grid.rowH)b.grid.rowH.splice(ri,1);reRenderBlock(id);sched()}
+function gridDelColAt(id,ci){const b=findBlock(id);if(!b||!b.grid||(b.grid.rows[0]&&b.grid.rows[0].length<=1))return;b.grid.rows.forEach(r=>r.splice(ci,1));if(b.grid.colW)b.grid.colW.splice(ci,1);reRenderBlock(id);sched()}
+function gridInsRowAt(id,ri,side){const b=findBlock(id);if(!b||!b.grid)return;const n=b.grid.rows[0]?b.grid.rows[0].length:1;const at=side==='after'?ri+1:ri;b.grid.rows.splice(at,0,new Array(n).fill(''));if(b.grid.rowH)b.grid.rowH.splice(at,0,null);reRenderBlock(id);sched()}
+function gridInsColAt(id,ci,side){const b=findBlock(id);if(!b||!b.grid)return;const at=side==='after'?ci+1:ci;b.grid.rows.forEach(r=>r.splice(at,0,''));if(b.grid.colW)b.grid.colW.splice(at,0,null);reRenderBlock(id);sched()}
 function gridCloseMenu(){const m=document.getElementById('grid-handle-menu');if(m)m.style.display='none';document.removeEventListener('mousedown',_gridMenuOutside);}
 function _gridMenuOutside(ev){const m=document.getElementById('grid-handle-menu');if(m&&!m.contains(ev.target))gridCloseMenu();}
 function gridHandleMenu(e,id,kind,idx){

@@ -35,6 +35,7 @@ function mkBkEl(blk){
     row.innerHTML=gutter+`<div class="bk-wrap">${mkCarouselHtml(blk)}</div>`;
   } else if(blk.type==='grid'){
     row.innerHTML=gutter+`<div class="bk-wrap">${mkGridHtml(blk)}</div>`;
+    requestAnimationFrame(()=>gridSyncGrips(blk.id));
   } else if(blk.type==='youtube'){
     row.innerHTML=gutter+`<div class="bk-wrap">${mkYoutubeHtml(blk)}</div>`;
   } else if(blk.type==='page'){
