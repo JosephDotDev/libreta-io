@@ -902,6 +902,114 @@ const Cloud = (()=>{
   async function _uploadJson(path,obj){ try{ const b=new Blob([JSON.stringify(obj)],{type:'application/json'}); const {error}=await sb.storage.from(SUPABASE_BUCKET).upload(path,b,{upsert:true,contentType:'application/json',cacheControl:'0'}); return !error; }catch(e){ return false; } }
   async function _dlJson(path){ const t=await dlText(path); if(!t) return null; try{ return JSON.parse(t); }catch(e){ return null; } }
 
+  /* ═══════════════════════════════════════════════════════════════════════
+     MEDIA SYNC (flag-gated, spec: docs/media-sync-spec.md) — per-blob,
+     content-addressed cross-device sync of IndexedDB media blobs (images etc).
+     Device-local flag, default OFF until verified on two real devices:
+       localStorage 'libreta_media_sync' = 'on' | anything else = off.
+     Cloud layout (additive to the rec/ layout):
+       <uid>/blob/<ref>      — one immutable object per blob (ref = img_<hash>)
+       <uid>/rec/blobs.json  — { v, refs:{ "<ref>":uploadedAtISO } }  (union set,
+                                 entries are only ever added, never removed — see
+                                 "no cloud GC in v1" in the spec)
+     Blobs are content-addressed (blobId() hashes the bytes) so a ref's bytes never
+     change: no cache-busting on download, and a device never re-downloads a ref it
+     already holds. Both diffs below (what's missing locally, what's unconfirmed in
+     the cloud) are computed from LOCAL state first — blobs.json is only fetched when
+     there's real work on either side, so an idle workspace costs zero network here. */
+  function _mediaSyncOn(){ try{ return localStorage.getItem('libreta_media_sync')==='on'; }catch(e){ return false; } }
+  function setMediaSync(on){ try{ localStorage.setItem('libreta_media_sync', on?'on':'off'); }catch(e){} return _mediaSyncOn(); }
+  const BLOBS_PATH = ()=> `${user.id}/rec/blobs.json`;
+  const BLOB_PATH = ref => `${user.id}/blob/${ref}`;
+  // Device-local record of refs already confirmed present in the cloud (we uploaded
+  // them, or downloaded them from another device) — lets steady-state reconciles skip
+  // blobs.json entirely once everything referenced locally is known-synced.
+  function _knownBlobs(){ try{ return new Set(JSON.parse(localStorage.getItem('libreta_blob_known')||'[]')); }catch(e){ return new Set(); } }
+  function _saveKnownBlobs(set){ try{ localStorage.setItem('libreta_blob_known', JSON.stringify([...set])); }catch(e){} }
+  /* Fetch a Storage object as a Blob. No cache-buster (unlike dlText for state.json /
+     manifests): blob bytes are immutable, so any cached response is correct. */
+  async function _dlBlob(path){
+    try{
+      const { data, error } = await sb.storage.from(SUPABASE_BUCKET).createSignedUrl(path, 120);
+      if(!error && data && data.signedUrl){ const r = await fetch(data.signedUrl); if(r.ok) return await r.blob(); }
+    }catch(e){}
+    try{ const { data, error } = await sb.storage.from(SUPABASE_BUCKET).download(path); if(error||!data) return null; return data; }
+    catch(e){ return null; }
+  }
+  async function _uploadBlobObject(ref, blob){
+    try{
+      const { error } = await sb.storage.from(SUPABASE_BUCKET)
+        .upload(BLOB_PATH(ref), blob, { upsert:true, contentType: blob.type||'application/octet-stream', cacheControl:'31536000' });
+      return !error;
+    }catch(e){ return false; }
+  }
+  /* PURE (no IO): "is there any real work for media sync to do?" True the moment a
+     referenced blob is either absent from this device's IndexedDB, or present but not
+     yet confirmed synced to the cloud. Gates the ENTIRE network path in reconcileMedia
+     — when this is false, a workspace with no new/missing media costs zero requests.
+     (We can't yet tell whether a "missing" ref is actually in the cloud without
+     fetching blobs.json, so any missing ref conservatively counts as work; planMedia,
+     below, does the real classification once the remote set is known.) Unit-tested via
+     tests/media-reconcile-tests.js, mirroring planReconcile's truth-table pattern. */
+  function needsMediaSync(refs, idbKeys, known){
+    const idbSet=new Set(idbKeys||[]), knownSet=new Set(known||[]);
+    for(const ref of (refs||[])){
+      if(!idbSet.has(ref)) return true;    // referenced but not on this device — worth a look
+      if(!knownSet.has(ref)) return true;  // held locally but never confirmed synced
+    }
+    return false;
+  }
+  /* PURE (no IO): classify each referenced ref against local IndexedDB state, the
+     device's known-synced set, and the cloud's blobs.json refs — exactly the same
+     shape of decision as planReconcile, one level simpler (no LWW/tombstones needed;
+     content-addressed blobs are immutable, so "exists" is the only fact that matters).
+       download — referenced + missing locally + the cloud actually has it
+       upload   — referenced + held locally + NOT already in the cloud
+       skip     — referenced + held locally + the cloud already has it (dedup: just
+                  mark it known, no redundant re-upload)
+     A ref that's missing locally AND absent from the cloud lands in none of the three
+     — left alone, retried on the next reconcile once the originating device catches up. */
+  function planMedia(refs, idbKeys, known, remoteRefs){
+    const idbSet=new Set(idbKeys||[]), knownSet=new Set(known||[]), rrefs=remoteRefs||{};
+    const plan={ download:[], upload:[], skip:[] };
+    for(const ref of (refs||[])){
+      const inIdb=idbSet.has(ref), inCloud=!!rrefs[ref];
+      if(!inIdb){ if(inCloud) plan.download.push(ref); continue; }
+      if(!knownSet.has(ref)){ if(inCloud) plan.skip.push(ref); else plan.upload.push(ref); }
+    }
+    return plan;
+  }
+  /* Two-way per-blob reconcile: called from reconcileRecords AFTER doc/table downloads
+     are applied and DB.load() has refreshed the cache (so collectRefs() sees any blob
+     ref that just arrived via a downloaded doc), and BEFORE this device uploads its own
+     changed docs/tables (so a doc we're about to push never points at a blob the cloud
+     doesn't have yet — best-effort; a residual race is covered by the missing-blob
+     retry on the next reconcile). No-ops instantly if the flag is off. */
+  async function reconcileMedia(){
+    if(!_mediaSyncOn()) return;
+    let refs; try{ refs = [...collectRefs()]; }catch(e){ return; }
+    if(!refs.length) return;
+    const known = _knownBlobs();
+    let idbKeys; try{ idbKeys = await IDB.keys(); }catch(e){ idbKeys = []; }
+    if(!needsMediaSync(refs, idbKeys, known)) return;   // steady state — zero network
+    const remote = (await _dlJson(BLOBS_PATH())) || { v:1, refs:{} };
+    const plan = planMedia(refs, idbKeys, known, remote.refs);
+    let cloudChanged=false, landed=false;
+    for(const ref of plan.download){
+      const blob = await _dlBlob(BLOB_PATH(ref));
+      if(blob){ try{ await IDB.put(ref, blob); known.add(ref); landed=true; }catch(e){} }
+    }
+    plan.skip.forEach(ref=> known.add(ref));   // already in the cloud — record locally, no re-upload
+    for(const ref of plan.upload){
+      let blob; try{ blob = await IDB.get(ref); }catch(e){ blob=null; }
+      if(!blob) continue;
+      if(await _uploadBlobObject(ref, blob)){ remote.refs[ref]=new Date().toISOString(); known.add(ref); cloudChanged=true; }
+    }
+    if(cloudChanged) await _uploadJson(BLOBS_PATH(), remote);
+    _saveKnownBlobs(known);
+    if(landed){ try{ await preloadBlobs(); }catch(e){} }   // rebuild object URLs for newly-arrived blobs
+  }
+
   /* Two-way per-record reconcile. Downloads remote-newer records, applies remote
      deletions, uploads local-newer records, propagates local deletions as tombstones,
      then writes the merged manifest + meta pointer. Returns the executed plan. */
@@ -921,6 +1029,7 @@ const Cloud = (()=>{
       dataChanged=true;
     }
     if(dataChanged) await DB.load();   // refresh cache before reading it for uploads / re-render
+    await reconcileMedia();            // flag-gated; no-op instantly unless libreta_media_sync==='on'
     const localNow = localManifest();
     for(const k of plan.upload){
       if(k==='kv'){ await _uploadJson(RECKV(), _kvBundle()); continue; }
@@ -952,5 +1061,5 @@ const Cloud = (()=>{
     return plan;
   }
 
-  return { boot, push, signOut, deleteEverything, reconcileRecords, planReconcile, localManifest, setSyncMode, get user(){ return user; } };
+  return { boot, push, signOut, deleteEverything, reconcileRecords, planReconcile, localManifest, setSyncMode, setMediaSync, planMedia, needsMediaSync, get mediaSyncOn(){ return _mediaSyncOn(); }, get user(){ return user; } };
 })();
