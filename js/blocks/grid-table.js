@@ -28,12 +28,21 @@ function gridSyncGrips(id){
   const wrap=document.querySelector(`.bk-row[data-id="${id}"] .bk-grid-wrap`); if(!wrap) return;
   wrap.querySelectorAll('.bk-grid-colgrip,.bk-grid-rowgrip').forEach(el=>el.remove());
   const table=wrap.querySelector('table.bk-grid'); if(!table) return;
-  const tblH=table.offsetHeight, tblW=table.offsetWidth;
+  // Position grips from getBoundingClientRect (the browser's actual rendered pixels,
+  // scaled by the UI-scale CSS zoom), not offsetLeft/offsetWidth (unscaled local
+  // layout values) — offsetLeft math drifts from the true rendered border-collapse
+  // boundary at non-integer zoom ratios (e.g. 120%/135%), throwing grips off by a
+  // few px. Every other resize handler in the app follows this same rect/z pattern.
+  const z=parseFloat(document.documentElement.style.zoom||'1')||1;
+  const wrapR=wrap.getBoundingClientRect();
+  const tblR=table.getBoundingClientRect();
+  const tblH=tblR.height/z, tblW=tblR.width/z;
   const active=S._gridResize;
   table.querySelectorAll(':scope > tbody > tr.bk-grid-chrow > td.bk-grid-chandle, :scope > tr.bk-grid-chrow > td.bk-grid-chandle').forEach((td,ci)=>{
     const g=document.createElement('div');
     g.className='bk-grid-colgrip'+(active&&active.id===id&&active.kind==='col'&&active.idx===ci?' rz-active':'');
-    g.style.left=(td.offsetLeft+td.offsetWidth)+'px'; g.style.height=tblH+'px';
+    const r=td.getBoundingClientRect();
+    g.style.left=((r.right-wrapR.left)/z)+'px'; g.style.height=tblH+'px';
     g.title='Drag to resize column';
     g.addEventListener('mousedown',e=>gridColResizeStart(e,id,ci));
     wrap.appendChild(g);
@@ -43,7 +52,8 @@ function gridSyncGrips(id){
     const td=tr.querySelector('.bk-grid-rhandle'); if(!td) return;
     const g=document.createElement('div');
     g.className='bk-grid-rowgrip'+(active&&active.id===id&&active.kind==='row'&&active.idx===ri?' rz-active':'');
-    g.style.top=(td.offsetTop+td.offsetHeight)+'px'; g.style.width=tblW+'px';
+    const r=td.getBoundingClientRect();
+    g.style.top=((r.bottom-wrapR.top)/z)+'px'; g.style.width=tblW+'px';
     g.title='Drag to resize row';
     g.addEventListener('mousedown',e=>gridRowResizeStart(e,id,ri));
     wrap.appendChild(g);
@@ -61,13 +71,15 @@ function gridColResizeStart(e,id,ci){
   const cols=table.querySelectorAll('colgroup col');
   const chandles=table.querySelectorAll('.bk-grid-chrow .bk-grid-chandle');
   const col=cols[ci+1]; if(!col||!chandles[ci]) return;
+  const z=parseFloat(document.documentElement.style.zoom||'1')||1;
   // Freeze every column's CURRENT (auto-layout) width before switching to fixed
   // layout — otherwise the browser redistributes every un-pinned column equally
   // the instant fixed layout kicks in, snapping other boundaries out of place.
-  const widths=[...chandles].map(td=>td.offsetWidth);
+  // Measured via getBoundingClientRect/z (matches gridSyncGrips) rather than
+  // offsetWidth so the frozen width matches what's actually rendered on screen.
+  const widths=[...chandles].map(td=>Math.round(td.getBoundingClientRect().width/z));
   cols.forEach((c,i)=>{ if(i>0&&widths[i-1]) c.style.width=widths[i-1]+'px'; });
   table.classList.add('bk-grid-fixed');
-  const z=parseFloat(document.documentElement.style.zoom||'1')||1;
   const startX=e.clientX/z, startW=widths[ci];
   S._gridResize={id,kind:'col',idx:ci};
   document.body.classList.add('bk-grid-resizing');
@@ -94,7 +106,7 @@ function gridRowResizeStart(e,id,ri){
   const dataRows=[...table.rows].filter(tr=>!tr.classList.contains('bk-grid-chrow'));
   const tr=dataRows[ri]; if(!tr) return;
   const z=parseFloat(document.documentElement.style.zoom||'1')||1;
-  const startY=e.clientY/z, startH=tr.offsetHeight;
+  const startY=e.clientY/z, startH=Math.round(tr.getBoundingClientRect().height/z);
   S._gridResize={id,kind:'row',idx:ri};
   document.body.classList.add('bk-grid-resizing');
   const prevCursor=document.body.style.cursor; document.body.style.cursor='row-resize';
