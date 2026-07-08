@@ -49,7 +49,7 @@ document.addEventListener('mousedown', e=>{
   // native-DnD source (board cards, row handles, columns): the marquee must NOT
   // engage on them, or the brief mousemove before `dragstart` activates the lasso
   // and native DnD then swallows `mouseup`, leaving a stuck vertical line.
-  if(e.target.closest('[draggable="true"],.gb,button,input,textarea,select,a,.idb-sc,.idb-tbl,.bk-img-wrap,.car-thumb,.bk-yt')){ _msDrag=null; return; }
+  if(e.target.closest('[draggable="true"],.gb,button,input,textarea,select,a,.idb-sc,.idb-tbl,.bk-img-wrap,.car-thumb,.bk-yt,.bk-col-rz,.bk-grid-colgrip,.bk-grid-rowgrip')){ _msDrag=null; return; }
   clearMsSel();
   const rows=_msRows(ct); if(!rows.length){ _msDrag=null; return; }
   // Start row: the row under the pointer (top-level), else the nearest by Y so a

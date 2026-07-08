@@ -19,6 +19,12 @@ function mkGridHtml(blk){
    boundaries (measured from live layout, so they work before any manual sizing
    too). A ResizeObserver keeps them aligned as cells wrap/grow while typing. ── */
 function gridSyncGrips(id){
+  // While a resize is actively in progress on this table, a row-height drag keeps
+  // changing the table's outer height, which re-triggers the ResizeObserver below on
+  // every frame — tearing down/rebuilding every grip mid-drag causes visible flicker
+  // (lines flashing missing/duplicated). Skip the churn; the drag's own `up` handler
+  // calls this once more for a final, accurate sync.
+  if(S._gridResize&&S._gridResize.id===id) return;
   const wrap=document.querySelector(`.bk-row[data-id="${id}"] .bk-grid-wrap`); if(!wrap) return;
   wrap.querySelectorAll('.bk-grid-colgrip,.bk-grid-rowgrip').forEach(el=>el.remove());
   const table=wrap.querySelector('table.bk-grid'); if(!table) return;
@@ -27,7 +33,7 @@ function gridSyncGrips(id){
   table.querySelectorAll(':scope > tbody > tr.bk-grid-chrow > td.bk-grid-chandle, :scope > tr.bk-grid-chrow > td.bk-grid-chandle').forEach((td,ci)=>{
     const g=document.createElement('div');
     g.className='bk-grid-colgrip'+(active&&active.id===id&&active.kind==='col'&&active.idx===ci?' rz-active':'');
-    g.style.left=(td.offsetLeft+td.offsetWidth-3)+'px'; g.style.height=tblH+'px';
+    g.style.left=(td.offsetLeft+td.offsetWidth)+'px'; g.style.height=tblH+'px';
     g.title='Drag to resize column';
     g.addEventListener('mousedown',e=>gridColResizeStart(e,id,ci));
     wrap.appendChild(g);
@@ -37,7 +43,7 @@ function gridSyncGrips(id){
     const td=tr.querySelector('.bk-grid-rhandle'); if(!td) return;
     const g=document.createElement('div');
     g.className='bk-grid-rowgrip'+(active&&active.id===id&&active.kind==='row'&&active.idx===ri?' rz-active':'');
-    g.style.top=(td.offsetTop+td.offsetHeight-3)+'px'; g.style.width=tblW+'px';
+    g.style.top=(td.offsetTop+td.offsetHeight)+'px'; g.style.width=tblW+'px';
     g.title='Drag to resize row';
     g.addEventListener('mousedown',e=>gridRowResizeStart(e,id,ri));
     wrap.appendChild(g);
@@ -52,12 +58,17 @@ function gridColResizeStart(e,id,ci){
   const b=findBlock(id); if(!b||!b.grid) return;
   const wrap=document.querySelector(`.bk-row[data-id="${id}"] .bk-grid-wrap`); if(!wrap) return;
   const table=wrap.querySelector('table.bk-grid'); if(!table) return;
-  table.classList.add('bk-grid-fixed');
   const cols=table.querySelectorAll('colgroup col');
-  const col=cols[ci+1]; const chandle=table.querySelectorAll('.bk-grid-chrow .bk-grid-chandle')[ci];
-  if(!col||!chandle) return;
+  const chandles=table.querySelectorAll('.bk-grid-chrow .bk-grid-chandle');
+  const col=cols[ci+1]; if(!col||!chandles[ci]) return;
+  // Freeze every column's CURRENT (auto-layout) width before switching to fixed
+  // layout — otherwise the browser redistributes every un-pinned column equally
+  // the instant fixed layout kicks in, snapping other boundaries out of place.
+  const widths=[...chandles].map(td=>td.offsetWidth);
+  cols.forEach((c,i)=>{ if(i>0&&widths[i-1]) c.style.width=widths[i-1]+'px'; });
+  table.classList.add('bk-grid-fixed');
   const z=parseFloat(document.documentElement.style.zoom||'1')||1;
-  const startX=e.clientX/z, startW=chandle.offsetWidth;
+  const startX=e.clientX/z, startW=widths[ci];
   S._gridResize={id,kind:'col',idx:ci};
   document.body.classList.add('bk-grid-resizing');
   const prevCursor=document.body.style.cursor; document.body.style.cursor='col-resize';
@@ -68,7 +79,9 @@ function gridColResizeStart(e,id,ci){
   const up=()=>{
     document.removeEventListener('mousemove',move); document.removeEventListener('mouseup',up);
     document.body.classList.remove('bk-grid-resizing'); document.body.style.cursor=prevCursor; S._gridResize=null;
-    b.grid.colW=b.grid.colW||[]; b.grid.colW[ci]=parseInt(col.style.width)||null;
+    // Persist every column's frozen width, not just the one dragged — otherwise the
+    // next render only pins one column and the equal-split jump comes back.
+    b.grid.colW=[...cols].slice(1).map(c=>parseInt(c.style.width)||null);
     sched(); gridSyncGrips(id);
   };
   document.addEventListener('mousemove',move); document.addEventListener('mouseup',up);
