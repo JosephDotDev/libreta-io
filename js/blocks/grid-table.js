@@ -37,23 +37,43 @@ function gridSyncGrips(id){
   const wrapR=wrap.getBoundingClientRect();
   const tblR=table.getBoundingClientRect();
   const tblH=tblR.height/z, tblW=tblR.width/z;
+  // Grip strips are absolutely positioned INSIDE the scrollable wrap, so:
+  //  - add scrollLeft/scrollTop (rects are visual, abs-positioning is in content space);
+  //  - clamp each strip fully inside the wrap's content box. An overhanging strip
+  //    silently makes the wrap scrollable by a few px in BOTH axes (overflow-x:auto
+  //    forces overflow-y:auto too), and any accidental micro-scroll then clips grips
+  //    out of view or shifts them off the boundary. --line-x/--line-y keep the visible
+  //    line exactly on the boundary even when the strip itself had to be clamped.
+  const GRIP=13;
   const active=S._gridResize;
+  // Lines are anchored to the table's VISIBLE area: below the (invisible) column-handle
+  // strip and right of the (invisible) row-handle column — not the table's outer box.
+  const dataRows=[...table.rows].filter(tr=>!tr.classList.contains('bk-grid-chrow'));
+  const firstHandle=dataRows[0]&&dataRows[0].querySelector('.bk-grid-rhandle');
+  const visTop=dataRows[0]?(dataRows[0].getBoundingClientRect().top-wrapR.top)/z+wrap.scrollTop:0;
+  const visLeft=firstHandle?(firstHandle.getBoundingClientRect().right-wrapR.left)/z+wrap.scrollLeft:0;
   table.querySelectorAll(':scope > tbody > tr.bk-grid-chrow > td.bk-grid-chandle, :scope > tr.bk-grid-chrow > td.bk-grid-chandle').forEach((td,ci)=>{
     const g=document.createElement('div');
     g.className='bk-grid-colgrip'+(active&&active.id===id&&active.kind==='col'&&active.idx===ci?' rz-active':'');
-    const r=td.getBoundingClientRect();
-    g.style.left=((r.right-wrapR.left)/z)+'px'; g.style.height=tblH+'px';
+    const bx=(td.getBoundingClientRect().right-wrapR.left)/z+wrap.scrollLeft;      // boundary x in wrap content space
+    const left=Math.max(0,Math.min(bx-GRIP/2,wrap.clientWidth+wrap.scrollLeft-GRIP));
+    g.style.left=left+'px'; g.style.top=visTop+'px'; g.style.height=(tblH-visTop)+'px';
+    // The 3px line is clamped inside the wrap as well — even a 1px overhang past the
+    // content box makes the wrap scrollable and re-introduces the micro-scroll bug.
+    g.style.setProperty('--line-x',(Math.min(bx,wrap.clientWidth+wrap.scrollLeft-2)-left)+'px');
     g.title='Drag to resize column';
     g.addEventListener('mousedown',e=>gridColResizeStart(e,id,ci));
     wrap.appendChild(g);
   });
-  const dataRows=[...table.rows].filter(tr=>!tr.classList.contains('bk-grid-chrow'));
   dataRows.forEach((tr,ri)=>{
     const td=tr.querySelector('.bk-grid-rhandle'); if(!td) return;
     const g=document.createElement('div');
     g.className='bk-grid-rowgrip'+(active&&active.id===id&&active.kind==='row'&&active.idx===ri?' rz-active':'');
-    const r=td.getBoundingClientRect();
-    g.style.top=((r.bottom-wrapR.top)/z)+'px'; g.style.width=tblW+'px';
+    const by=(td.getBoundingClientRect().bottom-wrapR.top)/z+wrap.scrollTop;       // boundary y in wrap content space
+    const top=Math.max(0,Math.min(by-GRIP/2,wrap.clientHeight+wrap.scrollTop-GRIP));
+    g.style.top=top+'px'; g.style.left=visLeft+'px';
+    g.style.width=(Math.min(tblW,wrap.clientWidth+wrap.scrollLeft)-visLeft)+'px';
+    g.style.setProperty('--line-y',(Math.min(by,wrap.clientHeight+wrap.scrollTop-2)-top)+'px');
     g.title='Drag to resize row';
     g.addEventListener('mousedown',e=>gridRowResizeStart(e,id,ri));
     wrap.appendChild(g);
@@ -61,6 +81,11 @@ function gridSyncGrips(id){
   if(!wrap._gridRO){
     wrap._gridRO=new ResizeObserver(()=>gridSyncGrips(id));
     wrap._gridRO.observe(table);
+    // Column widths can redistribute while the table's outer box stays the same size
+    // (auto layout reflowing as you type), which the table observer can't see.
+    table.querySelectorAll(':scope .bk-grid-chrow .bk-grid-chandle').forEach(td=>wrap._gridRO.observe(td));
+    // A genuinely wide table scrolls horizontally — grips must follow the content.
+    wrap.addEventListener('scroll',()=>gridSyncGrips(id),{passive:true});
   }
 }
 function gridColResizeStart(e,id,ci){
