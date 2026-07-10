@@ -2,18 +2,23 @@
    #7 SIMPLE TABLE (grid) BLOCK
 ═══════════════════════════════════════════════ */
 function defaultGrid(){return {header:true, rows:[['Column 1','Column 2','Column 3'],['','',''],['','','']]}}
+const GRID_HANDLE_W=16, GRID_DEF_COLW=120, GRID_MIN_COLW=40;
 function mkGridHtml(blk){
   const g=blk.grid||defaultGrid();
   const ncol=g.rows[0]?g.rows[0].length:0;
   const colW=g.colW||[];
   const fixed=colW.some(w=>w);
-  const colgroup=`<colgroup><col style="width:16px">${Array.from({length:ncol},(_,ci)=>`<col${colW[ci]?` style="width:${colW[ci]}px"`:''}>`).join('')}</colgroup>`;
+  // Notion model: an untouched table spans the page (auto layout); once any column
+  // has been resized the table's width IS the sum of its column widths — shrinking
+  // a column shrinks the whole table instead of inflating its siblings.
+  const wsum=fixed?Array.from({length:ncol},(_,ci)=>colW[ci]||GRID_DEF_COLW).reduce((s,w)=>s+w,0)+GRID_HANDLE_W:0;
+  const colgroup=`<colgroup><col style="width:${GRID_HANDLE_W}px">${Array.from({length:ncol},(_,ci)=>`<col${fixed?` style="width:${colW[ci]||GRID_DEF_COLW}px"`:''}>`).join('')}</colgroup>`;
   const colRow=`<tr class="bk-grid-chrow"><td class="bk-grid-corner"></td>${Array.from({length:ncol},(_,ci)=>`<td class="bk-grid-chandle" draggable="true" onclick="gridHandleMenu(event,'${blk.id}','col',${ci})" ondragstart="gridColDragStart(event,'${blk.id}',${ci})" ondragover="gridColDragOver(event)" ondragleave="gridColDragLeave(event)" ondrop="gridColDrop(event,'${blk.id}',${ci})" ondragend="gridDragEnd()" title="Click for options · drag to move">⠿</td>`).join('')}</tr>`;
   const rowsH=g.rows.map((r,ri)=>{
     const rh=g.rowH&&g.rowH[ri]?` style="height:${g.rowH[ri]}px"`:'';
     return `<tr${rh} class="${g.header&&ri===0?'bk-grid-hdr':''}" ondragover="gridRowDragOver(event)" ondragleave="gridRowDragLeave(event)" ondrop="gridRowDrop(event,'${blk.id}',${ri})"><td class="bk-grid-rhandle" draggable="true" onclick="gridHandleMenu(event,'${blk.id}','row',${ri})" ondragstart="gridRowDragStart(event,'${blk.id}',${ri})" ondragend="gridDragEnd()" title="Click for options · drag to move">⠿</td>`+r.map((c,ci)=>`<td contenteditable="true" onkeydown="gridCellKey(event,this)" onpaste="onGridPaste(event,this)" oninput="gridSet('${blk.id}',${ri},${ci},this.innerHTML)">${gridCellHtml(c)}</td>`).join('')+'</tr>';
   }).join('');
-  return `<div class="bk-grid-wrap"><table class="bk-grid${g.header?' has-header':''}${fixed?' bk-grid-fixed':''}">${colgroup}${colRow}${rowsH}</table></div>`;
+  return `<div class="bk-grid-outer"><div class="bk-grid-wrap"><table class="bk-grid${g.header?' has-header':''}${fixed?' bk-grid-fixed':''}"${fixed?` style="width:${wsum}px"`:''}>${colgroup}${colRow}${rowsH}</table></div><div class="bk-grid-addcol" onclick="gridAddCol('${blk.id}')" title="Add column">+</div><div class="bk-grid-addrow" onclick="gridAddRow('${blk.id}')" title="Add row">+</div></div>`;
 }
 /* ── Column/row resize: thin overlay grips positioned over the real column/row
    boundaries (measured from live layout, so they work before any manual sizing
@@ -78,16 +83,37 @@ function gridSyncGrips(id){
     g.addEventListener('mousedown',e=>gridRowResizeStart(e,id,ri));
     wrap.appendChild(g);
   });
+  // "+" add strips (Notion-style) live in the outer div — OUTSIDE the scrollable
+  // wrap, so overhanging the table edge can never make the wrap scrollable.
+  const outer=wrap.parentElement;
+  if(outer&&outer.classList.contains('bk-grid-outer')){
+    const addCol=outer.querySelector(':scope > .bk-grid-addcol');
+    const addRow=outer.querySelector(':scope > .bk-grid-addrow');
+    // Outer doesn't scroll → its coordinates are the wrap-relative VISUAL rects
+    // (no scrollLeft/scrollTop compensation, unlike the grips above).
+    const oRight=Math.min((tblR.right-wrapR.left)/z,wrap.clientWidth);
+    const oTop=visTop-wrap.scrollTop, oLeft=visLeft-wrap.scrollLeft;
+    const oBottom=(tblR.bottom-wrapR.top)/z;
+    if(addCol){ addCol.style.left=oRight+'px'; addCol.style.top=oTop+'px'; addCol.style.height=(oBottom-oTop)+'px'; }
+    if(addRow){ addRow.style.top=oBottom+'px'; addRow.style.left=oLeft+'px'; addRow.style.width=(oRight-oLeft)+'px'; }
+  }
   if(!wrap._gridRO){
     wrap._gridRO=new ResizeObserver(()=>gridSyncGrips(id));
     wrap._gridRO.observe(table);
     // Column widths can redistribute while the table's outer box stays the same size
     // (auto layout reflowing as you type), which the table observer can't see.
     table.querySelectorAll(':scope .bk-grid-chrow .bk-grid-chandle').forEach(td=>wrap._gridRO.observe(td));
-    // A genuinely wide table scrolls horizontally — grips must follow the content.
-    wrap.addEventListener('scroll',()=>gridSyncGrips(id),{passive:true});
   }
 }
+/* A genuinely wide table scrolls horizontally — grips must follow the content.
+   One delegated capture-phase listener (scroll doesn't bubble but does capture)
+   instead of per-wrap listeners, which get lost when a re-render swaps the wrap. */
+document.addEventListener('scroll',e=>{
+  const w=e.target;
+  if(!(w instanceof Element)||!w.classList.contains('bk-grid-wrap')) return;
+  const row=w.closest('.bk-row');
+  if(row) gridSyncGrips(row.dataset.id);
+},true);
 function gridColResizeStart(e,id,ci){
   e.preventDefault(); e.stopPropagation();
   const b=findBlock(id); if(!b||!b.grid) return;
@@ -105,13 +131,17 @@ function gridColResizeStart(e,id,ci){
   const widths=[...chandles].map(td=>Math.round(td.getBoundingClientRect().width/z));
   cols.forEach((c,i)=>{ if(i>0&&widths[i-1]) c.style.width=widths[i-1]+'px'; });
   table.classList.add('bk-grid-fixed');
+  // Table width = sum of column widths (Notion model): kept in lockstep with the
+  // dragged column so shrinking a column shrinks the table itself, live.
+  const tableW=()=>widths.reduce((s,w)=>s+w,0)+GRID_HANDLE_W;
+  table.style.width=tableW()+'px';
   const startX=e.clientX/z, startW=widths[ci];
   S._gridResize={id,kind:'col',idx:ci};
   document.body.classList.add('bk-grid-resizing');
   const prevCursor=document.body.style.cursor; document.body.style.cursor='col-resize';
   const move=ev=>{
-    const w=Math.max(40,Math.round(startW+(ev.clientX/z-startX)));
-    col.style.width=w+'px';
+    const w=Math.max(GRID_MIN_COLW,Math.round(startW+(ev.clientX/z-startX)));
+    widths[ci]=w; col.style.width=w+'px'; table.style.width=tableW()+'px';
   };
   const up=()=>{
     document.removeEventListener('mousemove',move); document.removeEventListener('mouseup',up);
@@ -186,14 +216,14 @@ function onGridPaste(e,td){
 }
 function gridToggleHeader(id){const b=findBlock(id);if(!b||!b.grid)return;b.grid.header=!b.grid.header;reRenderBlock(id);sched()}
 function gridAddRow(id){const b=findBlock(id);if(!b||!b.grid)return;const n=b.grid.rows[0]?b.grid.rows[0].length:1;b.grid.rows.push(new Array(n).fill(''));reRenderBlock(id);sched()}
-function gridAddCol(id){const b=findBlock(id);if(!b||!b.grid)return;b.grid.rows.forEach(r=>r.push(''));reRenderBlock(id);sched()}
+function gridAddCol(id){const b=findBlock(id);if(!b||!b.grid)return;b.grid.rows.forEach(r=>r.push(''));if(b.grid.colW&&b.grid.colW.some(w=>w))b.grid.colW[b.grid.rows[0].length-1]=GRID_DEF_COLW;reRenderBlock(id);sched()}
 function gridDelRow(id){const b=findBlock(id);if(!b||!b.grid||b.grid.rows.length<=1)return;b.grid.rows.pop();if(b.grid.rowH)b.grid.rowH.pop();reRenderBlock(id);sched()}
 function gridDelCol(id){const b=findBlock(id);if(!b||!b.grid||(b.grid.rows[0]&&b.grid.rows[0].length<=1))return;b.grid.rows.forEach(r=>r.pop());if(b.grid.colW)b.grid.colW.pop();reRenderBlock(id);sched()}
 /* ── Per-row / per-column edit: click a handle for an insert/delete menu ── */
 function gridDelRowAt(id,ri){const b=findBlock(id);if(!b||!b.grid||b.grid.rows.length<=1)return;b.grid.rows.splice(ri,1);if(b.grid.rowH)b.grid.rowH.splice(ri,1);reRenderBlock(id);sched()}
 function gridDelColAt(id,ci){const b=findBlock(id);if(!b||!b.grid||(b.grid.rows[0]&&b.grid.rows[0].length<=1))return;b.grid.rows.forEach(r=>r.splice(ci,1));if(b.grid.colW)b.grid.colW.splice(ci,1);reRenderBlock(id);sched()}
 function gridInsRowAt(id,ri,side){const b=findBlock(id);if(!b||!b.grid)return;const n=b.grid.rows[0]?b.grid.rows[0].length:1;const at=side==='after'?ri+1:ri;b.grid.rows.splice(at,0,new Array(n).fill(''));if(b.grid.rowH)b.grid.rowH.splice(at,0,null);reRenderBlock(id);sched()}
-function gridInsColAt(id,ci,side){const b=findBlock(id);if(!b||!b.grid)return;const at=side==='after'?ci+1:ci;b.grid.rows.forEach(r=>r.splice(at,0,''));if(b.grid.colW)b.grid.colW.splice(at,0,null);reRenderBlock(id);sched()}
+function gridInsColAt(id,ci,side){const b=findBlock(id);if(!b||!b.grid)return;const at=side==='after'?ci+1:ci;b.grid.rows.forEach(r=>r.splice(at,0,''));if(b.grid.colW)b.grid.colW.splice(at,0,b.grid.colW.some(w=>w)?GRID_DEF_COLW:null);reRenderBlock(id);sched()}
 function gridCloseMenu(){const m=document.getElementById('grid-handle-menu');if(m)m.style.display='none';document.removeEventListener('mousedown',_gridMenuOutside);}
 function _gridMenuOutside(ev){const m=document.getElementById('grid-handle-menu');if(m&&!m.contains(ev.target))gridCloseMenu();}
 function gridHandleMenu(e,id,kind,idx){

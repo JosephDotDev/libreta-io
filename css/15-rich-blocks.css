@@ -61,8 +61,12 @@
 .bk-row.dz-top{box-shadow:inset 0 3px 0 var(--ac)}
 .bk-row.dz-bottom{box-shadow:inset 0 -3px 0 var(--ac)}
 /* ── #7 SIMPLE TABLE BLOCK ── */
-.bk-grid-wrap{margin:6px 0;overflow-x:auto;position:relative}
+/* outer holds the "+" add strips OUTSIDE the scrollable wrap; padding reserves
+   room for them so they never overlap the next block or the page edge */
+.bk-grid-outer{margin:6px 0;position:relative;padding:0 18px 18px 0}
+.bk-grid-wrap{overflow-x:auto;position:relative}
 table.bk-grid{border-collapse:collapse;width:100%;font-family:var(--fn);font-size:14px}
+/* a manually-sized table's width is the sum of its columns (inline style from JS) */
 table.bk-grid.bk-grid-fixed{table-layout:fixed}
 table.bk-grid td{border:1px solid var(--bd2);padding:7px 10px;min-width:60px;vertical-align:top;color:var(--tx);outline:none;overflow-wrap:break-word}
 table.bk-grid.bk-grid-fixed td{min-width:0}
@@ -97,6 +101,12 @@ table.bk-grid tr.bk-grid-row-drop>td{box-shadow:inset 0 3px 0 var(--ac)}
 .bk-grid-colgrip:hover::after,.bk-grid-colgrip.rz-active::after,
 .bk-grid-rowgrip:hover::after,.bk-grid-rowgrip.rz-active::after{background:var(--ac)!important}
 body.bk-grid-resizing{user-select:none}
+/* "+" add strips at the table's right/bottom edges (Notion-style) */
+.bk-grid-addcol,.bk-grid-addrow{position:absolute;display:flex;align-items:center;justify-content:center;background:var(--sur2);border:1px solid var(--bd2);border-radius:var(--r-sm);color:var(--mu);font-size:13px;line-height:1;cursor:pointer;user-select:none;opacity:0;transition:opacity var(--t-fast),color var(--t-fast),background var(--t-fast);z-index:2}
+.bk-grid-addcol{width:15px;margin-left:3px}
+.bk-grid-addrow{height:15px;margin-top:3px}
+.bk-grid-outer:hover .bk-grid-addcol,.bk-grid-outer:hover .bk-grid-addrow{opacity:.55}
+.bk-grid-addcol:hover,.bk-grid-addrow:hover{opacity:1!important;color:var(--tx);background:var(--acs);border-color:var(--ac)}
 .bk-grid-tools{display:flex;align-items:center;gap:6px;padding:6px 0 2px;font-size:11px;color:var(--mu);flex-wrap:wrap}
 .bk-grid-btn{background:none;border:1px solid var(--bd);border-radius:var(--r-sm);color:var(--mu);cursor:pointer;padding:2px 9px;font-size:10px;font-family:var(--fm);transition:border-color var(--t-fast),color var(--t-fast),background var(--t-fast)}
 .bk-grid-btn:hover{border-color:var(--mu);color:var(--tx)}
