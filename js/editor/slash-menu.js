@@ -24,12 +24,24 @@ function openSlash(el,id){
     _slashSheetLift(m);
     _slashKbListen=()=>_slashSheetLift(m);
     if(window.visualViewport) window.visualViewport.addEventListener('resize',_slashKbListen);
+    renderSlashItems(); m.classList.add('open');
   }else{
+    // position:fixed works in UNZOOMED layout px while getBoundingClientRect and the
+    // viewport are in zoomed visual px — divide by the UI-scale zoom or the menu
+    // drifts below the caret (the drift grows the further down the page you are).
+    const z=parseFloat(document.documentElement.style.zoom||'1')||1;
     m.style.bottom='';
-    m.style.top=(rect.bottom+4)+'px';
-    m.style.left=Math.min(rect.left,window.innerWidth-268)+'px';
+    renderSlashItems(); m.classList.add('open');   // must be open to measure height
+    const vh=window.innerHeight/z, vw=window.innerWidth/z, mh=m.offsetHeight;
+    let top=rect.bottom/z+4;
+    if(top+mh>vh-8){                               // doesn't fit below the caret…
+      const above=rect.top/z-4-mh;
+      top=above>=8?above:Math.max(8,vh-8-mh);      // …flip above, else clamp on-screen
+    }
+    m.style.top=top+'px';
+    m.style.left=Math.max(8,Math.min(rect.left/z,vw-268))+'px';
   }
-  renderSlashItems(); m.classList.add('open'); openOvl();
+  openOvl();
 }
 function closeSlash(){
   const m=document.getElementById('slash-menu');
