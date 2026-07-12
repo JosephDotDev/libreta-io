@@ -60,6 +60,7 @@ function blockContextItems(blk){
     const g=blk.grid||{};
     return `<div class="bm-s"><div class="bm-lbl">Table</div>
       <div class="bm-it" onclick="gridToggleHeader('${id}');closeAll()">${g.header?'☑':'☐'} Header row</div>
+      <div class="bm-it" onclick="gridToggleHeaderCol('${id}');closeAll()">${g.headerCol?'☑':'☐'} Header column</div>
       <div class="bm-it" onclick="gridAddRow('${id}');closeAll()">＋ Add row</div>
       <div class="bm-it" onclick="gridAddCol('${id}');closeAll()">＋ Add column</div>
       <div class="bm-it" onclick="gridDelRow('${id}');closeAll()">－ Remove row</div>

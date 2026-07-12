@@ -72,6 +72,10 @@ table.bk-grid td{border:1px solid var(--bd2);padding:7px 10px;min-width:60px;ver
 table.bk-grid.bk-grid-fixed td{min-width:0}
 table.bk-grid td:focus{box-shadow:inset 0 0 0 2px var(--ac);border-color:var(--ac)}
 table.bk-grid tr.bk-grid-hdr td{background:var(--sur2);font-weight:600;color:var(--tx)}
+/* header COLUMN (first data column) — same treatment as the header row */
+table.bk-grid.has-hcol tr:not(.bk-grid-chrow) td:nth-child(2){background:var(--sur2);font-weight:600}
+/* computed formula cells: value shown with a subtle accent; formula in the tooltip */
+.bk-grid-fx{color:var(--ac);font-variant-numeric:tabular-nums}
 /* simple-table drag handles (appear on hover) */
 .bk-grid-corner{border:none!important;padding:0!important;min-width:0!important;width:16px}
 .bk-grid-chandle,.bk-grid-rhandle{border:none!important;padding:0!important;min-width:0!important;text-align:center;color:var(--mu);opacity:0;cursor:grab;font-size:10px;letter-spacing:-1px;user-select:none;transition:opacity var(--t-fast),color var(--t-fast),background var(--t-fast)}
@@ -82,6 +86,15 @@ table.bk-grid tr.bk-grid-hdr td{background:var(--sur2);font-weight:600;color:var
 .grid-hmenu{position:fixed;z-index:1300;display:none;background:var(--sur);border:1px solid var(--bd2);border-radius:var(--r-md);box-shadow:var(--elev-2);padding:5px;min-width:150px;font-family:var(--fm)}
 .ghm-it{padding:7px 10px;border-radius:var(--r-sm);font-size:12px;color:var(--tx);cursor:pointer;white-space:nowrap}
 .ghm-it:hover{background:var(--sur2)}
+.ghm-row{display:flex;align-items:center;gap:5px;padding:5px 8px}
+.ghm-sep{height:1px;background:var(--bd2);margin:4px 2px}
+.ghm-sw{width:16px;height:16px;border-radius:50%;cursor:pointer;border:1px solid var(--bd2);display:inline-flex;align-items:center;justify-content:center;font-size:9px;color:var(--mu);transition:transform var(--t-fast),border-color var(--t-fast)}
+.ghm-sw:hover{transform:scale(1.18);border-color:var(--mu)}
+.ghm-sw.on{border-color:var(--ac);box-shadow:0 0 0 1px var(--ac)}
+.ghm-aln{display:inline-flex;padding:3px 7px;border-radius:var(--r-sm);cursor:pointer;color:var(--mu)}
+.ghm-aln svg{stroke:currentColor;stroke-width:1.6;stroke-linecap:round;fill:none}
+.ghm-aln:hover{background:var(--sur2);color:var(--tx)}
+.ghm-aln.on{color:var(--ac);background:var(--acs)}
 .ghm-danger{color:var(--re)}
 .ghm-danger:hover{background:rgba(196,84,84,.12)}
 .bk-grid-chandle:hover,.bk-grid-rhandle:hover{opacity:1!important;color:var(--tx);background:var(--bd)}
