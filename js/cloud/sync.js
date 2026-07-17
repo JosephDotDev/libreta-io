@@ -799,14 +799,49 @@ const Cloud = (()=>{
   /* Sign out — exposed so the Settings panel can host the control. */
   async function signOut(){ try{ await sb.auth.signOut(); }catch(e){} location.reload(); }
 
-  /* Erase everything this account stores: the cloud snapshot, all local folio_*
-     data, and every cached media blob, then sign out. (The Supabase *auth* user
-     itself can't be removed from the browser without a server-side function, so
-     this clears the data and signs out — the login can be deleted from Supabase.) */
+  /* Recursively list EVERY object under a storage prefix. Supabase's list() is one
+     folder level at a time (folders come back as entries with no id), and paginated,
+     so walk depth-first with an offset loop. Used by deleteEverything, which must
+     cover the whole per-record layout (rec/doc/*, rec/tbl/*, blob/*, …), not just
+     the two legacy top-level files. */
+  async function _listAllObjects(prefix){
+    const out=[]; const LIM=1000;
+    for(let offset=0;;offset+=LIM){
+      const { data, error } = await sb.storage.from(SUPABASE_BUCKET).list(prefix, { limit:LIM, offset });
+      if(error || !data || !data.length) break;
+      for(const item of data){
+        const p=prefix+'/'+item.name;
+        if(item.id) out.push(p);                          // a real object
+        else out.push(...await _listAllObjects(p));       // a folder — recurse into it
+      }
+      if(data.length<LIM) break;
+    }
+    return out;
+  }
+
+  /* Erase everything this account stores: every cloud object under the user's
+     prefix (the legacy state.json/meta.json AND the per-record rec/* + blob/*
+     layout), all local folio_* data, all libreta_* sync-state keys (a stale base
+     manifest or cloud timestamp surviving a wipe corrupts the next login's
+     reconcile), and every cached media blob — then sign out. (The Supabase *auth*
+     user itself can't be removed from the browser without a server-side function,
+     so this clears the data and signs out — the login can be deleted from Supabase.) */
   async function deleteEverything(){
-    try{ if(sb && user) await sb.storage.from(SUPABASE_BUCKET).remove([STATE_PATH(), META_PATH()]); }catch(e){}
     try{
-      const ks=[]; for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(k&&(k.indexOf('folio_')===0||k===DIRTY_KEY)) ks.push(k); }
+      if(sb && user){
+        let paths=[];
+        try{ paths=await _listAllObjects(user.id); }catch(e){ console.warn('[cloud] wipe: listing failed',e); }
+        // Belt-and-braces: make sure the two well-known files are covered even if
+        // the listing failed or raced.
+        [STATE_PATH(), META_PATH()].forEach(p=>{ if(!paths.includes(p)) paths.push(p); });
+        for(let i=0;i<paths.length;i+=100){
+          const { error } = await sb.storage.from(SUPABASE_BUCKET).remove(paths.slice(i,i+100));
+          if(error) console.warn('[cloud] wipe: remove failed for a batch',error);
+        }
+      }
+    }catch(e){ console.warn('[cloud] wipe: cloud purge failed',e); }
+    try{
+      const ks=[]; for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(k&&(k.indexOf('folio_')===0||k.indexOf('libreta_')===0)) ks.push(k); }
       ks.forEach(k=> _rawRemove.call(localStorage,k));
     }catch(e){}
     try{ await IDBData.clear('docs'); await IDBData.clear('tables'); }catch(e){}   // structured data store

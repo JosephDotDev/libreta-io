@@ -30,7 +30,7 @@ function renderAllDocsTbl(){
     const bc=d.meta?.blockCount||0;
     const chips=quickChips(d,true);
     const cells=activeCols.map(c=>{
-      if(c.id==='title')return`<td><div style="display:flex;align-items:center;gap:8px"><div style="flex:1;min-width:0"><div style="font-weight:500;color:var(--tx)">${d.meta?.icon?iconHtml(d.meta.icon,'14px')+' ':''}${d.title||'<em style="opacity:.35;font-weight:300">Untitled</em>'}</div>${chips?`<div style="margin-top:5px;display:flex;gap:4px;flex-wrap:wrap">${chips}</div>`:''}</div><button class="ov-open-btn" onclick="event.stopPropagation();nav('editor','${d.id}')" title="Open">Open &#x2197;</button></div></td>`;
+      if(c.id==='title')return`<td><div style="display:flex;align-items:center;gap:8px"><div style="flex:1;min-width:0"><div style="font-weight:500;color:var(--tx)">${d.meta?.icon?iconHtml(d.meta.icon,'14px')+' ':''}${escHtml(d.title)||'<em style="opacity:.35;font-weight:300">Untitled</em>'}</div>${chips?`<div style="margin-top:5px;display:flex;gap:4px;flex-wrap:wrap">${chips}</div>`:''}</div><button class="ov-open-btn" onclick="event.stopPropagation();nav('editor','${d.id}')" title="Open">Open &#x2197;</button></div></td>`;
       if(c.id==='wordCount')return`<td>${wc>0?wc.toLocaleString():'<span style="color:var(--mu)">&#8212;</span>'}</td>`;
       if(c.id==='blockCount')return`<td>${bc||'<span style="color:var(--mu)">&#8212;</span>'}</td>`;
       if(c.id==='updatedAt')return`<td>${fmtDate(d.updatedAt)}</td>`;

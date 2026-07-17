@@ -95,6 +95,7 @@ async function onImportFile(input){
   // content before it ever reaches the DOM — otherwise an imported page could run
   // code in our origin and hijack the signed-in session.
   if(typeof sanitizeImportedDocs==='function') sanitizeImportedDocs(bundle.docs);
+  if(typeof sanitizeImportedTables==='function') sanitizeImportedTables(bundle.tables);
   const n=(bundle.docs||[]).length;
   showConfirm('Import this backup? It will REPLACE all current documents, tables, and settings.',async()=>{
     if(bundle.images){ for(const [id,dataURL] of Object.entries(bundle.images)){ try{const b=dataURLtoBlob(dataURL);await IDB.put(id,b);imgCache.set(id,URL.createObjectURL(b));}catch(e){} } }

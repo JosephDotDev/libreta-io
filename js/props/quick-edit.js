@@ -26,7 +26,7 @@ function quickChips(doc,interactive){
     if(p.type==='select'){
       const o=(p.options||[]).find(x=>x.l===p.value); const c=o?o.c:'var(--mu)';
       const click=interactive?`onclick="event.stopPropagation();openDocSelDD(event,'${doc.id}','${p.id}')"`:'';
-      return `<span class="chip${interactive?' chip-int':''}" style="background:${c}22;color:${c}" ${click} title="${escHtml(p.name)} — click to change">${p.value}</span>`;
+      return `<span class="chip${interactive?' chip-int':''}" style="background:${c}22;color:${c}" ${click} title="${escHtml(p.name)} — click to change">${escHtml(p.value)}</span>`;
     }
     if(p.type==='checkbox'){
       const on=!!p.value;

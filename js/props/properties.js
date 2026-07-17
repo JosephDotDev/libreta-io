@@ -59,12 +59,13 @@ function renderProps(){
       }else if(p.type==='checkbox'){
         v=p.value?'<span style="color:var(--gr)">&#x2713;</span>':'<span style="color:var(--mu)">&#x2610;</span>';
       }else if(p.type==='url'&&p.value){
-        try{v='<span style="color:var(--ac)">'+new URL(p.value).hostname+'</span>'}catch{v=p.value.slice(0,20)}
+        try{v='<span style="color:var(--ac)">'+escHtml(new URL(p.value).hostname)+'</span>'}catch{v=escHtml(p.value.slice(0,20))}
       }else if(p.type==='file'&&p.value&&p.value.name){
         const isImg2=p.value.type?.startsWith('image/');
+        const fnm=escHtml(p.value.name.length>16?p.value.name.slice(0,16)+'…':p.value.name);
         v=isImg2
-          ?`<img class="prop-file-thumb" src="${srcFor(p.value.id||p.value.data)}">&nbsp;<span style="color:var(--mu)">${p.value.name.length>14?p.value.name.slice(0,14)+'…':p.value.name}</span>`
-          :`<span style="color:var(--mu)">${getFileIcon(p.value.type)} ${p.value.name.length>16?p.value.name.slice(0,16)+'…':p.value.name}</span>`;
+          ?`<img class="prop-file-thumb" src="${srcFor(p.value.id||p.value.data)}">&nbsp;<span style="color:var(--mu)">${fnm}</span>`
+          :`<span style="color:var(--mu)">${getFileIcon(p.value.type)} ${fnm}</span>`;
       }
       return `<span class="prop-tag" data-pid="${p.id}"><span class="prop-tag-l prop-click" onclick="renamePropInline(event,'${p.id}')" title="Click to rename">${escHtml(p.name)}</span><span class="prop-tag-v prop-click" onclick="propValMenu(event,'${p.id}')" title="Click to edit"> ${v}</span></span>`;
   }

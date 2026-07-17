@@ -102,7 +102,7 @@ function homeCardHtml(d){
     ${cover}
     <button class="home-card-star${isFav(d)?' on':''}" onclick="event.stopPropagation();toggleFavorite('${d.id}')" title="${isFav(d)?'Remove favorite':'Add favorite'}">${isFav(d)?'★':'☆'}</button>
     <div class="home-card-body">
-      <div class="home-card-title">${icoInline}<span class="card-ttl">${d.title||'Untitled'}</span></div>
+      <div class="home-card-title">${icoInline}<span class="card-ttl">${escHtml(d.title)||'Untitled'}</span></div>
       <div class="home-card-date">${fmtDate(d.updatedAt)}</div>
       ${chips?`<div class="home-card-chips">${chips}</div>`:''}
     </div>
@@ -293,7 +293,7 @@ function _docTreeRow(d,depth,kidCount,collapsed){
     ${chev}
     <span class="doc-row-ico">${ico}</span>
     <div class="doc-row-main">
-      <span class="doc-row-title">${d.title||'<em style="opacity:.4;font-weight:300">Untitled</em>'}</span>
+      <span class="doc-row-title">${escHtml(d.title)||'<em style="opacity:.4;font-weight:300">Untitled</em>'}</span>
       ${chips?`<span class="doc-row-chips">${chips}</span>`:''}
     </div>
     ${kidCount?`<span class="doc-tree-count" title="${kidCount} sub-page${kidCount>1?'s':''}">${kidCount}</span>`:''}
@@ -344,7 +344,7 @@ function docRowHtml(d){
   return `<div class="doc-row" onclick="nav('editor','${d.id}')">
     <span class="doc-row-ico">${ico}</span>
     <div class="doc-row-main">
-      <span class="doc-row-title">${d.title||'<em style="opacity:.4;font-weight:300">Untitled</em>'}</span>
+      <span class="doc-row-title">${escHtml(d.title)||'<em style="opacity:.4;font-weight:300">Untitled</em>'}</span>
       ${chips?`<span class="doc-row-chips">${chips}</span>`:''}
     </div>
     <span class="doc-row-meta">${wc>0?wc.toLocaleString()+' words':''}</span>
@@ -404,7 +404,7 @@ function renderDocList(){
     return`<div class="dc" onclick="nav('editor','${d.id}')" onmouseleave="this.style.transform=''">
       ${cover}
       <button class="dc-star${isFav(d)?' on':''}" onclick="event.stopPropagation();toggleFavorite('${d.id}')" title="${isFav(d)?'Remove favorite':'Add favorite'}">${isFav(d)?'★':'☆'}</button>
-      <div class="dc-t">${ico}<span class="card-ttl">${d.title||'Untitled'}</span></div>
+      <div class="dc-t">${ico}<span class="card-ttl">${escHtml(d.title)||'Untitled'}</span></div>
       <div class="dc-e">${exc||'<em style="opacity:.4">No content</em>'}</div>
       ${chips?`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px">${chips}</div>`:''}
       <div class="dc-meta-row">

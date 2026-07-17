@@ -35,7 +35,7 @@ function renderOvCalendar(){
   for(let i=fd-1;i>=0;i--)html+=`<div class="cal-cell om"><div class="cal-num">${pdim-i}</div></div>`;
   for(let d=1;d<=dim;d++){
     const ds=`${y}-${pad(m+1)}-${pad(d)}`;const isT=ds===tod;
-    const evH=(evts[ds]||[]).slice(0,2).map(ev=>`<span class="cal-ev ${ev.cls}" onclick="event.stopPropagation();openOvPanel('${ev.id}')" title="${ev.title}">${ev.title}</span>`).join('');
+    const evH=(evts[ds]||[]).slice(0,2).map(ev=>`<span class="cal-ev ${ev.cls}" onclick="event.stopPropagation();openOvPanel('${ev.id}')" title="${escHtml(ev.title)}">${escHtml(ev.title)}</span>`).join('');
     const more=(evts[ds]?.length>2)?`<span class="cal-ev" style="color:var(--mu)">+${evts[ds].length-2}</span>`:'';
     html+=`<div class="cal-cell${isT?' tod':''}" onclick="newDocOnDate('${ds}')"><div class="cal-num">${d}</div>${evH}${more}</div>`;
   }
@@ -101,7 +101,7 @@ function ovDocRowHtml(doc){
       onmouseleave="this.style.transform=''">
     <div class="ov-doc-info" style="flex:1;min-width:0">
       <div style="display:flex;align-items:center;gap:8px">
-        <div class="ov-doc-title" style="flex:1;min-width:0">${doc.meta?.icon?iconHtml(doc.meta.icon,'14px')+' ':''}<span>${doc.title||'<em style="opacity:.4;font-weight:300">Untitled</em>'}</span></div>
+        <div class="ov-doc-title" style="flex:1;min-width:0">${doc.meta?.icon?iconHtml(doc.meta.icon,'14px')+' ':''}<span>${escHtml(doc.title)||'<em style="opacity:.4;font-weight:300">Untitled</em>'}</span></div>
         <button class="ov-open-btn" onclick="event.stopPropagation();nav('editor','${doc.id}')" title="Open full page">Open &#x2197;</button>
       </div>
       ${chips?`<div class="ov-doc-chips">${chips}</div>`:''}

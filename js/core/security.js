@@ -83,14 +83,47 @@ function sanitizeHtml(html){
   return tpl.innerHTML;
 }
 
-/* Sanitize the rich-text content of every block in an imported document set,
-   in place. Block `content` is the only field rendered as raw HTML (titles,
-   table cells, properties all go through escHtml), so this is the boundary. */
+/* Colours stored on user data (select/status option colours, row colour rules)
+   are interpolated into style="…" attributes at render time. In-app they're only
+   ever palette hexes; anything else in an imported file is an attribute-breakout
+   attempt (or corruption) and collapses to a neutral grey. */
+function safeCssColor(c){
+  return (typeof c === 'string' && /^#[0-9a-fA-F]{3,8}$/.test(c)) ? c : '#888888';
+}
+
+/* Sanitize an imported document set, in place. Two fields render as raw HTML:
+   block `content` and grid-table cells (which legitimately hold inline tags —
+   mentions, formatting). Colour-rule colours land in style attributes, so they're
+   clamped to plain hex. Everything else (titles, captions, property values) is
+   plain text escaped at render time via escHtml — no rewriting needed here. */
 function sanitizeImportedDocs(docs){
-  for(const d of (docs || [])){
-    for(const b of (d.blocks || [])){
+  const scanBlocks=(blocks)=>{
+    for(const b of (blocks || [])){
+      if(!b) continue;
       if(typeof b.content === 'string') b.content = sanitizeHtml(b.content);
+      if(b.grid && Array.isArray(b.grid.rows)){
+        b.grid.rows.forEach(row=>{ (row || []).forEach((cell,i)=>{ if(typeof cell === 'string') row[i] = sanitizeHtml(cell); }); });
+      }
+      if(Array.isArray(b.colorRules)) b.colorRules.forEach(r=>{ if(r) r.color = safeCssColor(r.color); });
+      // Recurse into layout containers so nested blocks get the same treatment.
+      if(Array.isArray(b.cols)) b.cols.forEach(scanBlocks);
+      if(Array.isArray(b.children)) scanBlocks(b.children);
     }
-  }
+  };
+  for(const d of (docs || [])) scanBlocks(d.blocks);
   return docs;
+}
+
+/* Sanitize imported database tables, in place. Cell values and column names are
+   escaped at render, but option colours (and the full-page view's colour rules)
+   are interpolated into style attributes — clamp them to plain hex. */
+function sanitizeImportedTables(tables){
+  for(const t of (tables || [])){
+    if(!t) continue;
+    for(const col of (t.columns || [])){
+      (col && col.options || []).forEach(o=>{ if(o) o.c = safeCssColor(o.c); });
+    }
+    if(Array.isArray(t._colorRules)) t._colorRules.forEach(r=>{ if(r) r.color = safeCssColor(r.color); });
+  }
+  return tables;
 }

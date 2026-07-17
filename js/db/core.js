@@ -130,7 +130,7 @@ function idbMoveRowConfirm(srcTbl,rowId,destTbl,opts){
   const row=srcTbl&&srcTbl.rows.find(r=>r.id===rowId);
   if(!row||!destTbl||srcTbl.id===destTbl.id) return;
   const title=idbRowTitle(srcTbl,row)||'Untitled';
-  showConfirm(`Move “${title}” to “${escHtml(destTbl.name||'Untitled')}”? Properties are matched by name; unmatched ones are dropped.`,()=>{
+  showConfirm(`Move “${title}” to “${destTbl.name||'Untitled'}”? Properties are matched by name; unmatched ones are dropped.`,()=>{
     if(idbMoveRow(srcTbl,rowId,destTbl,opts)){
       idbRerenderSiblings(srcTbl.id,null); idbRerenderSiblings(destTbl.id,null);
       if(typeof toast==='function') toast(`Moved to “${destTbl.name||'Untitled'}”`);

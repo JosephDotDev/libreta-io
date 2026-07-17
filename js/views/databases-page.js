@@ -14,7 +14,7 @@ function renderTblList(){
     <div class="tbl-sb-it${t.id===S.tblId?' active':''}" onclick="openTbl('${t.id}')">
       <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
         <rect x="1" y="1" width="14" height="14" rx="1"/><line x1="1" y1="5.5" x2="15" y2="5.5"/><line x1="6" y1="5.5" x2="6" y2="15"/>
-      </svg>${t.name}
+      </svg>${escHtml(t.name||'')}
     </div>`).join('');
   document.getElementById('tbl-list').innerHTML=allItem+customItems;
   /* Auto-open All Documents on first visit */
@@ -54,7 +54,7 @@ function renderTbl(tbl){
   }
   if(S.tblFilter){const q=S.tblFilter.toLowerCase();rows=rows.filter(r=>Object.values(r.cells).some(v=>String(v||'').toLowerCase().includes(q)))}
 
-  const thH=tbl.columns.map(c=>{const sc=S.tblSort?.col===c.id;return`<th class="${sc?S.tblSort.dir==='asc'?'sa':'sd':''}" onclick="sortTbl('${c.id}')">${c.name}</th>`}).join('')+`<th onclick="addCol('${tbl.id}')">+</th>`;
+  const thH=tbl.columns.map(c=>{const sc=S.tblSort?.col===c.id;return`<th class="${sc?S.tblSort.dir==='asc'?'sa':'sd':''}" onclick="sortTbl('${c.id}')">${escHtml(c.name||'')}</th>`}).join('')+`<th onclick="addCol('${tbl.id}')">+</th>`;
   const rowH=rows.map(row=>{
     const cells=tbl.columns.map(col=>mkTblCell(tbl,row,col)).join('');
     return`<tr>${cells}<td><button class="row-del" onclick="delRow('${tbl.id}','${row.id}')" title="Delete row">✕</button></td></tr>`;
@@ -62,8 +62,8 @@ function renderTbl(tbl){
 
   document.getElementById('tbl-main').innerHTML=`
     <div class="tbl-bar">
-      <input class="tbl-nm" value="${tbl.name}" placeholder="Table name" onblur="renameTbl('${tbl.id}',this.value)">
-      <input class="tbl-fi" placeholder="Filter…" value="${S.tblFilter}" oninput="S.tblFilter=this.value;renderTbl(DB.getTbl('${tbl.id}'))">
+      <input class="tbl-nm" value="${escHtml(tbl.name||'')}" placeholder="Table name" onblur="renameTbl('${tbl.id}',this.value)">
+      <input class="tbl-fi" placeholder="Filter…" value="${escHtml(S.tblFilter||'')}" oninput="S.tblFilter=this.value;renderTbl(DB.getTbl('${tbl.id}'))">
       <button class="btn btn-o btn-sm" onclick="delTblConfirm('${tbl.id}')">Delete table</button>
     </div>
     <div class="tbl-sc">
