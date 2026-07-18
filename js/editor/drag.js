@@ -114,7 +114,6 @@ function bkGripDown(e,id){
   document.addEventListener('mouseup',mu);
 }
 function onGripClick(e,id){ if(_bkJustDragged){ _bkJustDragged=false; return; } openBkMenu(e,id); }
-function startDrag(e,id){S.dragId=id}
 function onDragStart(e,id){e.stopPropagation();S.dragId=id;e.dataTransfer.effectAllowed='move';const row=document.querySelector(`.bk-row[data-id="${id}"]`);setTimeout(()=>row&&row.classList.add('dragging'),0)}
 /* Global safety net: if a drag ends without a successful drop, clear any leftover
    "dragging"/drop-zone styling and reset drag state so nothing stays greyed out. */

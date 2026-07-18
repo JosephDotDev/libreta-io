@@ -56,7 +56,7 @@ function trashDoc(rootId){
   // close it — otherwise its pending autosave resurrects it and the breadcrumbs go stale.
   if(S.docId && ids.includes(S.docId)){
     clearTimeout(S.saveTimer); S.docId=null;
-    if((S.view==='editor'||S.view==='overview') && typeof nav==='function') nav('home');
+    if(S.view==='editor' && typeof nav==='function') nav('home');
   }
   if(typeof renderSidebarLists==='function') renderSidebarLists();   // refresh Recents/tree immediately
   if(typeof refreshActiveLists==='function') refreshActiveLists();   // keep the Documents page in sync

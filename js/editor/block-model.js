@@ -32,7 +32,7 @@ function flattenBlocks(blocks){
   return out;
 }
 function reassignIds(b){ b.id=mkId('b'); if(b.type==='columns'&&b.cols) b.cols.forEach(col=>col.forEach(reassignIds)); if(b.type==='toggle'&&b.children) b.children.forEach(reassignIds); }
-function currentCtId(){return S.peekOpen?'peek-blocks':(S.view==='home'?'home-blocks-ct':(S.view==='overview'?'ov-panel-blocks':'blocks-ct'))}
+function currentCtId(){return S.peekOpen?'peek-blocks':(S.view==='home'?'home-blocks-ct':'blocks-ct')}
 function rerender(){renderBlocks(currentCtId())}
 /* Remove empty columns; unwrap a columns block that's down to ≤1 column. */
 function cleanupColumns(cb){

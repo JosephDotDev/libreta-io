@@ -110,7 +110,6 @@ function setCfgColor(k,v){
   c.theme='custom'; c[k]=v;
   localStorage.setItem(CFG_KEY,JSON.stringify(c)); applyCfg();
 }
-function setCfgFont(f){const c=getCfg();c.font=f;localStorage.setItem(CFG_KEY,JSON.stringify(c));applyCfg()}
 function setCfgDef(k,v){const c=getCfg();c[k]=v;localStorage.setItem(CFG_KEY,JSON.stringify(c));applyCfg()}
 function setVisualFilter(v){const c=getCfg();if(!v||v==='none')delete c.filter;else c.filter=v;localStorage.setItem(CFG_KEY,JSON.stringify(c));applyCfg()}
 /* Apply a custom colour from a typed hex value (accepts #rgb or #rrggbb, with or

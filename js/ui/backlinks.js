@@ -38,7 +38,7 @@ function renderBacklinks(targetId){
   el.style.display='';
   const items=links.map(l=>{
     const ico=l.id&&l.icon?iconHtml(l.icon,'16px'):(l.via==='db'?'🗂':'📄');
-    const onclick=l.id?`nav('editor','${l.id}')`:`nav('tables','${l.tblId}')`;
+    const onclick=l.id?`nav('editor','${l.id}')`:`openDbPage('${l.tblId}')`;
     return `<button class="bl-item" onclick="${onclick}"><span class="bl-ico">${ico}</span><span class="bl-title">${escHtml(l.title)}</span><span class="bl-arrow">&#8599;</span></button>`;
   }).join('');
   el.innerHTML=`<div class="bl-sec">

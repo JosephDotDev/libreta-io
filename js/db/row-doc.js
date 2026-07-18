@@ -106,8 +106,6 @@ function closeDocPeek(){
     const pt=document.getElementById('page-title'); if(pt) pt.textContent=hd.title||'Untitled';
     renderBlocks('blocks-ct'); renderProps();
   }
-  else if(host.view==='tables'){ renderPageDb(); }
-  else if(host.view==='overview'){ try{renderOverview();}catch(_){} }
   else if(tableId){ idbRerenderSiblings(tableId,null); }
 }
 function peekOpenFull(){ const id=S.docId; closeDocPeek(); if(id) nav('editor',id); }

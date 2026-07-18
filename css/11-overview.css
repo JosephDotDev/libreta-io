@@ -1,40 +1,6 @@
-/* ── OVERVIEW PAGE ── */
-.ov-shell{display:flex;flex-direction:column;height:100%;overflow:hidden}
-.ov-cal{flex-shrink:0;border-bottom:1px solid var(--bd);overflow:hidden}
-.ov-cal-bar{display:flex;align-items:center;gap:8px;padding:10px 24px;border-bottom:1px solid var(--bd)}
-.ov-cal-title{font-family:var(--fs);font-size:20px;font-weight:var(--dw);flex:1}
-.ov-cal-scroll{overflow:auto;max-height:230px}
-.ov-cal-scroll .cal-grid{margin:0 24px 12px}
-.ov-bottom{display:flex;flex:1;overflow:hidden;min-height:0}
-.ov-tbl-sect{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
-.ov-tbl-bar{display:flex;align-items:center;gap:8px;padding:12px 20px;border-bottom:1px solid var(--bd);flex-shrink:0;flex-wrap:wrap}
-.ov-tbl-title{font-family:var(--fs);font-size:20px;font-weight:var(--dw)}
-.ov-rows-sc{flex:1;overflow-y:auto}
-.ov-group-hdr{display:flex;align-items:center;gap:6px;padding:9px 20px;cursor:pointer;font-size:13px;color:var(--mu);border-bottom:1px solid var(--bd);background:var(--sur2);user-select:none}
-.ov-group-hdr:hover{color:var(--tx)}
-.ov-chevron{font-size:10px;transition:transform var(--t-fast);display:inline-block}
-.ov-group-hdr.collapsed .ov-chevron{transform:rotate(-90deg)}
-.ov-grp-cnt{opacity:.5;font-size:11px;margin-left:2px}
-.ov-doc-row{display:flex;align-items:center;padding:10px 20px;border-bottom:1px solid var(--bd);cursor:pointer;transition:background var(--t-fast);gap:12px}
-.ov-doc-row:hover{background:var(--sur)}
-/* Overview's own selection signature is purple (--pu); the calendar it embeds
-   keeps its gold today-markers and the docs table its own styling. */
-.ov-doc-row.active{background:color-mix(in srgb,var(--pu) 14%,transparent);box-shadow:inset 2px 0 0 var(--pu)}
-.ov-doc-info{flex:1;min-width:0}
-.ov-doc-title{font-size:14px;color:var(--tx);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ov-doc-chips{display:flex;gap:3px;flex-wrap:wrap;margin-top:3px}
-.ov-doc-meta{font-size:11px;color:var(--mu);white-space:nowrap;text-align:right;flex-shrink:0}
-/* Side panel */
-.ov-panel{width:0;flex-shrink:0;border-left:1px solid var(--bd);display:flex;flex-direction:column;overflow:hidden;transition:width var(--t-slow) ease}
-.ov-panel.open{width:clamp(340px,38vw,500px)}
-.ov-panel-hdr{display:flex;align-items:flex-start;gap:8px;padding:14px 16px 8px;border-bottom:1px solid var(--bd);flex-shrink:0}
-.ov-panel-title{flex:1;font-family:var(--fs);font-size:26px;font-weight:var(--dw);background:none;border:none;outline:none;color:var(--tx);line-height:1.2;min-width:0}
-.ov-panel-title::placeholder{color:var(--mu)}
-.ov-panel-close{background:none;border:none;color:var(--mu);cursor:pointer;font-size:16px;padding:4px 8px;border-radius:var(--r-xs);flex-shrink:0;margin-top:4px;transition:color var(--t-fast),background var(--t-fast)}
-.ov-panel-close:hover{color:var(--tx);background:var(--bd)}
-.ov-panel-props{padding:6px 16px;border-bottom:1px solid var(--bd);min-height:36px;flex-shrink:0;display:flex;flex-wrap:wrap;align-items:center;gap:4px}
-.ov-panel-body{flex:1;overflow-y:auto;padding-bottom:60px}
-.ov-panel-body .blocks-ct{max-width:none;padding:6px 16px 0}
+/* ── ALL-DOCS TABLE EXTRAS ──
+   (This file once styled the retired Overview page; only the column chooser
+   and UI-scale buttons survive. Kept under its number to preserve cascade order.) */
 /* Column chooser */
 .col-chooser{min-width:200px;padding:4px 0!important}
 .col-ch-row{display:flex;align-items:center;gap:10px;padding:8px 14px;cursor:pointer;font-size:13px;color:var(--tx);transition:background var(--t-fast)}
@@ -47,4 +13,3 @@ input.col-ch-cb{accent-color:var(--ac);width:14px;height:14px;cursor:pointer;fle
 .zoom-btn{padding:5px 10px;border:1px solid var(--bd);border-radius:var(--r-sm);cursor:pointer;font-size:11px;color:var(--mu);background:none;font-family:var(--fm);transition:border-color var(--t-fast),color var(--t-fast),background var(--t-fast)}
 .zoom-btn:hover{border-color:var(--mu);color:var(--tx)}
 .zoom-btn.on{background:var(--acs);border-color:var(--ac);color:var(--ac)}
-

@@ -158,7 +158,6 @@ function idbFocusTarget(t){
   t.focus();
   if(t.classList&&t.classList.contains('idb-ed')){ const r=document.createRange(); r.selectNodeContents(t); const s=getSelection(); s.removeAllRanges(); s.addRange(r); }
 }
-function _idbFocusCell(el){ idbFocusTarget(el); } // back-compat alias
 /* Move horizontally across the full cell list. */
 function idbCellHop(el,dir){
   const table=el.closest('.idb-tbl'); if(!table) return;
@@ -381,13 +380,6 @@ function idbSelToggle(val){
 }
 function idbSelClearMulti(){ if(!_selCtx)return; if(_selCtx.onClear)_selCtx.onClear(); _selCtx.cur=[]; renderSelDD(); idbSelLive(); }
 function idbSelCol(){const {tbl,colId}=_selCtx;return tbl.columns.find(c=>c.id===colId);}
-function idbSelAddOpt(name){
-  name=(name||'').trim(); if(!name||!_selCtx)return;
-  const {tbl}=_selCtx; const col=idbSelCol(); col.options=col.options||[];
-  if(!col.options.some(o=>o.l===name)) col.options.push({l:name,c:PALETTE_COLORS[col.options.length%PALETTE_COLORS.length]});
-  DB.saveTbl(tbl); _selCtx._dirty=true; _selCtx._editing=null; renderSelDD(); idbSelLive();
-  setTimeout(()=>document.querySelector('.idb-dd-newinput')?.focus(),10);
-}
 function idbSelDelOpt(i){ if(!_selCtx)return; const {tbl}=_selCtx; idbSelCol().options.splice(i,1); _selCtx._editing=null; DB.saveTbl(tbl); _selCtx._dirty=true; renderSelDD(); idbSelLive(); }
 function idbSelToggleEdit(i){ if(!_selCtx)return; _selCtx._editing=(_selCtx._editing===i)?null:i; renderSelDD(); }
 function idbSelSetColor(i,c){ if(!_selCtx)return; const {tbl}=_selCtx; idbSelCol().options[i].c=c; DB.saveTbl(tbl); _selCtx._dirty=true; renderSelDD(); idbSelLive(); } // applies instantly, keeps the editor open

@@ -50,7 +50,6 @@ function renderFavBtn(doc){ const b=document.getElementById('tp-fav-btn'); if(b)
 function homeToggleCollapse(key){ const c=getHomeCfg(); c.collapsed[key]=!c.collapsed[key]; saveHomeCfg(c); renderHome(); }
 function homeHideSection(key){ const c=getHomeCfg(); c.hidden[key]=true; saveHomeCfg(c); renderHome(); }
 function homeShowSection(key){ const c=getHomeCfg(); c.hidden[key]=false; saveHomeCfg(c); renderHome(); }
-function homeMoveSection(key,dir){ const c=getHomeCfg(); const i=c.order.indexOf(key),j=i+dir; if(i<0||j<0||j>=c.order.length)return; const t=c.order[i];c.order[i]=c.order[j];c.order[j]=t; saveHomeCfg(c); renderHome(); }
 /* Drag home sections like blocks — vertical reorder + side-by-side stacking. */
 let _homeDrag=null;
 function homeDragStart(e,key){ _homeDrag=key; try{e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain','s');}catch(_){}; e.stopPropagation(); document.body.classList.add('home-dragging'); }

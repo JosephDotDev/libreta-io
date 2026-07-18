@@ -232,7 +232,8 @@ function calCellDrop(e,ds){
     const doc=DB.getDoc(calDrag.id);
     if(doc){const p=(doc.props||[]).find(x=>x.id===calDrag.propId);if(p){p.value=ds;DB.saveDoc(doc)}}
   } else if(calDrag.kind==='row'){
-    setTblCell(calDrag.tblId,calDrag.rowId,calDrag.colId,ds);
+    const t=DB.getTbl(calDrag.tblId); const r=t&&t.rows.find(x=>x.id===calDrag.rowId);
+    if(r){ r.cells[calDrag.colId]=ds; DB.saveTbl(t); }
   }
   calDrag=null; renderCal();
 }

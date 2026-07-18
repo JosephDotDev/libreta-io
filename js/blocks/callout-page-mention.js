@@ -300,7 +300,7 @@ function insertMention(el,url){
 function tblMentionHtml(url){
   const key=normUrl(url); const cached=mentionCache.get(key);
   if(cached) return mentionHtml(cached);
-  if(!_mentionFetching.has(key)){ _mentionFetching.add(key); fetchLinkMeta(key).then(m=>{mentionCache.set(key,m);_mentionFetching.delete(key);if(S.view==='tables')renderTbl(DB.getTbl(S.tblId))}); }
+  if(!_mentionFetching.has(key)){ _mentionFetching.add(key); fetchLinkMeta(key).then(m=>{mentionCache.set(key,m);_mentionFetching.delete(key);if(S.pageDbBlk&&typeof renderPageDb==='function')renderPageDb();}); }
   return mentionHtml(quickMeta(key));
 }
 /* Small popover to paste a URL (used by the /link slash command and table link cells) */

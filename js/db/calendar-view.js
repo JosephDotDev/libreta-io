@@ -123,7 +123,6 @@ function idbCalDayView(blk,tbl){
     <div class="idb-cald-body">${evs||'<div class="idb-cald-empty">Nothing on this day yet.</div>'}<button class="idb-calw-add" onclick="idbCalAddOnDate('${blk.id}','${ds}')"><span class="np-pill">+ New entry</span></button></div>
   </div></div>`;
 }
-function idbCalToggleDetails(blockId){const blk=findBlock(blockId);if(blk){blk.calDetails=!blk.calDetails;idbPersistView(blk);reRenderBlock(blockId);}}
 /* Drag a calendar event to another day to reschedule it. Only the grip starts a
    drag; any other drag inside the calendar is cancelled so the block/page stays put. */
 let _calDrag=null;

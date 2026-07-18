@@ -105,7 +105,7 @@ async function insertImageBlocksFromFiles(files,atRowId){
   if(flushSave()===false){ made.forEach(b=>freeBlob(b.src)); pt&&pt.fail('Storage full — images not saved'); }
   else pt&&pt.done(imgs.length>1?'Images added':'Image added');
 }
-function _imgDropCt(target){ return (target&&target.closest&&target.closest('#blocks-ct,#peek-blocks,#home-blocks-ct,#ov-panel-blocks'))||null; }
+function _imgDropCt(target){ return (target&&target.closest&&target.closest('#blocks-ct,#peek-blocks,#home-blocks-ct'))||null; }
 function _dtHasFiles(e){ const dt=e.dataTransfer; return !!(dt&&dt.types&&[].indexOf.call(dt.types,'Files')>=0); }
 /* Where an image dropped "in the editor" should land, even if the cursor is over the
    title/props/empty area rather than directly on a block row. */

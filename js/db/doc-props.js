@@ -52,7 +52,7 @@ function idbToggleDocProp(colId){
   const i=arr.indexOf(colId);
   if(i>=0) arr.splice(i,1); else arr.push(colId);
   doc.meta.hiddenProps=arr; DB.saveDoc(doc);
-  renderProps(); renderDocPropsPanel();
+  renderProps();
 }
 function idbDocRow(){const tbl=DB.getTbl(S.dbRow?.tableId);return{tbl,row:tbl&&tbl.rows.find(r=>r.id===S.dbRow.rowId)};}
 function idbDocPropClick(e,colId){
@@ -157,45 +157,6 @@ function idbDocAddCol(e){
   }});
 }
 
-/* ── Properties show/hide panel (item 7) ──
-   A per-page panel listing every shared DB property with an eye toggle. The
-   choice is stored on the page's doc (meta.hiddenProps), so it scopes to this
-   page only and leaves the database's columns untouched. */
-const _eyeOpen='<svg viewBox="0 0 16 16" width="14" height="14"><path d="M1 8s2.5-4.5 7-4.5S15 8 15 8s-2.5 4.5-7 4.5S1 8 1 8z" fill="none" stroke="currentColor" stroke-width="1.3"/><circle cx="8" cy="8" r="2" fill="currentColor"/></svg>';
-const _eyeOff='<svg viewBox="0 0 16 16" width="14" height="14"><path d="M1 8s2.5-4.5 7-4.5S15 8 15 8s-2.5 4.5-7 4.5S1 8 1 8z" fill="none" stroke="currentColor" stroke-width="1.3"/><line x1="2" y1="14" x2="14" y2="2" stroke="currentColor" stroke-width="1.3"/></svg>';
-function openDocPropsPanel(e){
-  e&&e.stopPropagation&&e.stopPropagation();
-  if(document.getElementById('docprops-panel')){ closeDocPropsPanel(); return; }
-  const p=document.createElement('div'); p.id='docprops-panel'; p.className='docprops-panel';
-  document.body.appendChild(p);
-  const r=(e&&e.currentTarget&&e.currentTarget.getBoundingClientRect)?e.currentTarget.getBoundingClientRect():{bottom:120,left:120};
-  p.style.top=(r.bottom+6)+'px';
-  p.style.left=Math.min(r.left, window.innerWidth-250)+'px';
-  renderDocPropsPanel();
-  setTimeout(()=>document.addEventListener('click',_docPropsOutside),0);
-}
-function _docPropsOutside(ev){
-  const p=document.getElementById('docprops-panel');
-  if(p && !p.contains(ev.target)) closeDocPropsPanel();
-}
-function closeDocPropsPanel(){
-  document.getElementById('docprops-panel')?.remove();
-  document.removeEventListener('click',_docPropsOutside);
-}
-function renderDocPropsPanel(){
-  const p=document.getElementById('docprops-panel'); if(!p) return;
-  const tbl=DB.getTbl(S.dbRow?.tableId); if(!tbl){ closeDocPropsPanel(); return; }
-  const titleId=idbTitleColId(tbl), hidden=idbHiddenDocProps(tbl);
-  const cols=tbl.columns.filter(c=>c.id!==titleId&&c.type!=='cover');
-  p.innerHTML=`<div class="dpp-hdr">Page properties</div>`+
-    (cols.length?cols.map(c=>{
-      const on=!hidden.has(c.id);
-      return `<button class="dpp-it${on?'':' off'}" onclick="idbToggleDocProp('${c.id}')">
-        <span class="dpp-name">${escHtml(c.name)}</span>
-        <span class="dpp-eye">${on?_eyeOpen:_eyeOff}</span></button>`;
-    }).join(''):`<div class="dpp-empty">No shared properties yet.</div>`)+
-    `<div class="dpp-foot">Hidden properties affect this page only.</div>`;
-}
 
 /* ===================================================
    TABLE <-> DOCUMENT LINK

@@ -37,7 +37,6 @@ function renderBreadcrumbs(view,id){
     } else crumbs=[root,{label:'Documents',view:'documents'},...chain];
   }
   else if(view==='databases'){const t=(S.tblId&&S.tblId!=='__all_docs__')?DB.getTbl(S.tblId):null;crumbs=[root,{label:'Databases',view:'databases'}];if(S.tblId==='__all_docs__')crumbs.push({label:'All Documents',view:'databases'});else if(t)crumbs.push({label:t.name,view:'databases',id:t.id});}
-  else if(view==='overview') crumbs=[root,{label:'Overview',view:'overview'}];
   else if(view==='calendar') crumbs=[root,{label:'Calendar',view:'calendar'}];
   else crumbs=[root];
   el.innerHTML=crumbs.map((c,i)=>{

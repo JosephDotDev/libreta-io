@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════
    UNDO / REDO  (per open document)
 ═══════════════════════════════════════════════ */
-function histTitleEl(){return document.getElementById(S.peekOpen?'peek-title':(S.view==='overview'?'ov-panel-title':'ed-title'))}
+function histTitleEl(){return document.getElementById(S.peekOpen?'peek-title':'ed-title')}
 function histBlocksCt(){return currentCtId()}
 function histSnap(){return JSON.stringify({d:S.docId,b:S.blocks,p:S.props,t:histTitleEl()?.value||''})}
 function initHistory(){S.hist=[];S.histRedo=[];S.histPresent=histSnap();}
@@ -40,7 +40,7 @@ document.addEventListener('keydown',e=>{
   if(!(e.metaKey||e.ctrlKey)) return;
   const k=e.key.toLowerCase();
   if(k!=='z'&&k!=='y') return;
-  if((S.view!=='editor'&&S.view!=='overview'&&S.view!=='home')||!S.docId) return;
+  if((S.view!=='editor'&&S.view!=='home')||!S.docId) return;
   e.preventDefault();
   if(k==='y'||(k==='z'&&e.shiftKey)) doRedo(); else doUndo();
 });

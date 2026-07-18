@@ -114,7 +114,6 @@ function _emitContentChanged(){ if(DB._suppress) return; try{ document.dispatchE
    the table equivalents. Reads hit the cache (no re-parsing); writes update the
    cache and persist ONE record. `await DB.load()` hydrates at boot. */
 const DB = {
-  DK:'folio_docs', TK:'folio_tables',   // kept for any legacy references
   _docs:null, _tbls:null, _ready:false, _suppress:false,
 
   async load(){

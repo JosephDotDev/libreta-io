@@ -149,17 +149,4 @@ function mkMediaBlock(type){
   if(type==='youtube') return {id:mkId('b'),type:'youtube',content:'',url:'',mode:'embed'};
   return mkBlock(type,'');
 }
-/* Insert a new media block right after the given block */
-function insertBelow(afterId,type){
-  closeAll();
-  const loc=locate(afterId);
-  const blk=mkMediaBlock(type);
-  if(loc)loc.arr.splice(loc.idx+1,0,blk);else S.blocks.push(blk);
-  const afterRow=document.querySelector(`.bk-row[data-id="${afterId}"]`);
-  const ct=document.getElementById(currentCtId());
-  const newRow=mkBkEl(blk);
-  if(afterRow)afterRow.after(newRow);else if(ct)ct.appendChild(newRow);
-  updNums(); sched();
-  if(type==='image') openBlkImgInput(blk.id); // jump straight to the file picker
-}
 

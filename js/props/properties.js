@@ -42,42 +42,11 @@ function renderProps(){
     return `<div class="props-grid">${inline.join('')}${addBtn}</div>`
       + (text.length?`<div class="props-text-col">${text.join('')}</div>`:'');
   })();
-  /* legacy display switch retained below for reference (unused) */
-  function _legacyPropChip(p){
-      let v='&#8212;';
-      if(p.type==='select'&&p.value){
-        const o=(p.options||[]).find(x=>x.l===p.value);const c=o?o.c:'var(--mu)';
-        v=`<span style="display:inline-flex;align-items:center;gap:3px"><span style="width:7px;height:7px;border-radius:50%;background:${c};display:inline-block;flex-shrink:0"></span><span style="color:${c}">${p.value}</span></span>`;
-      }else if(p.type==='multiselect'){
-        const ch=idbMsChips(p,p.value); v=ch||'&#8212;';
-      }else if(p.type==='date'&&p.value){
-        v=new Date(p.value+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
-      }else if(p.type==='text'&&p.value){
-        const sv=String(p.value);v=sv.length>24?sv.slice(0,24)+'\u2026':sv;
-      }else if(p.type==='number'&&p.value!==null&&p.value!==''){
-        v=Number(p.value).toLocaleString();
-      }else if(p.type==='checkbox'){
-        v=p.value?'<span style="color:var(--gr)">&#x2713;</span>':'<span style="color:var(--mu)">&#x2610;</span>';
-      }else if(p.type==='url'&&p.value){
-        try{v='<span style="color:var(--ac)">'+escHtml(new URL(p.value).hostname)+'</span>'}catch{v=escHtml(p.value.slice(0,20))}
-      }else if(p.type==='file'&&p.value&&p.value.name){
-        const isImg2=p.value.type?.startsWith('image/');
-        const fnm=escHtml(p.value.name.length>16?p.value.name.slice(0,16)+'…':p.value.name);
-        v=isImg2
-          ?`<img class="prop-file-thumb" src="${srcFor(p.value.id||p.value.data)}">&nbsp;<span style="color:var(--mu)">${fnm}</span>`
-          :`<span style="color:var(--mu)">${getFileIcon(p.value.type)} ${fnm}</span>`;
-      }
-      return `<span class="prop-tag" data-pid="${p.id}"><span class="prop-tag-l prop-click" onclick="renamePropInline(event,'${p.id}')" title="Click to rename">${escHtml(p.name)}</span><span class="prop-tag-v prop-click" onclick="propValMenu(event,'${p.id}')" title="Click to edit"> ${v}</span></span>`;
-  }
   /* When a peek is open it owns the property bar (its own doc). */
   if(S.peekOpen){const pk=document.getElementById('peek-props');if(pk)pk.innerHTML=_html;return;}
   /* Primary container (main editor) */
   const row=document.getElementById('props-row');
   if(row) row.innerHTML=_html;
-  /* Mirror into overview side panel when it is open */
-  const panelRow=document.getElementById('ov-panel-props');
-  if(panelRow&&document.getElementById('ov-panel')?.classList.contains('open'))
-    panelRow.innerHTML=_html;
 }
 
 function openPropTypePicker(e){
@@ -108,8 +77,6 @@ function addProp(type){
     if(last) openPropEditor({stopPropagation:()=>{},currentTarget:last},newProp.id);
   },60);
 }
-function openPropEdit(e,propId){ openPropEditor(e,propId); }
-function openSelPicker(propId,rect){}
 function setSelVal(propId,val){
   if(val===undefined||val===null||!String(val).trim()) return;
   const prop=S.props.find(x=>x.id===propId); if(!prop) return;
@@ -118,7 +85,6 @@ function setSelVal(propId,val){
   if(S.editPropId===propId&&document.getElementById('prop-editor').classList.contains('open'))
     renderPropEditor(prop);
 }
-function addSelOpt(propId){}
 function removeProp(id){S.props=S.props.filter(p=>p.id!==id);renderProps();sched()}
 
 /* ── Per-property interactions ──
@@ -185,7 +151,6 @@ function renderDp(title){
   const now=new Date(); const tod=dateStr(now);
   let curVal=null;
   if(S.dpTarget?.type==='prop'){const p=S.props.find(x=>x.id===S.dpTarget.propId);curVal=p?.value}
-  else if(S.dpTarget?.type==='tbl'){const t=DB.getTbl(S.dpTarget.tblId);curVal=t?.rows.find(r=>r.id===S.dpTarget.rowId)?.cells[S.dpTarget.colId]}
   const fd=new Date(S.dpY,S.dpM,1).getDay(),dim=new Date(S.dpY,S.dpM+1,0).getDate(),pdim=new Date(S.dpY,S.dpM,0).getDate();
   let cells=''; for(let i=fd-1;i>=0;i--)cells+=`<div class="dp-d om">${pdim-i}</div>`;
   for(let d=1;d<=dim;d++){const ds=`${S.dpY}-${pad(S.dpM+1)}-${pad(d)}`;cells+=`<div class="dp-d${ds===tod?' tod':''}${ds===curVal?' sel':''}" onclick="pickDate('${ds}')">${d}</div>`}
@@ -200,9 +165,6 @@ function pickDate(ds){
   if(S.dpTarget?.type==='prop'){
     const p=S.props.find(x=>x.id===S.dpTarget.propId);
     if(p){p.value=ds;renderProps();sched()}
-  }else if(S.dpTarget?.type==='tbl'){
-    setTblCell(S.dpTarget.tblId,S.dpTarget.rowId,S.dpTarget.colId,ds||'');
-    renderTbl(DB.getTbl(S.dpTarget.tblId));
   }else if(S.dpTarget?.type==='idb'){
     const adv=S.dpTarget._advance;
     idbSetCell(S.dpTarget.blockId,S.dpTarget.rowId,S.dpTarget.colId,ds||'');

@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════
    PROPERTY FILTERING (shared across list views)
 ═══════════════════════════════════════════════ */
-const FILT={documents:[],overview:[],alldocs:[]};
+const FILT={documents:[],alldocs:[]};
 function collectFilterProps(){
   const map={};
   DB.getDocs().forEach(d=>(d.props||[]).forEach(p=>{
@@ -72,7 +72,6 @@ function removeFilterVal(scope,name,type,val){S.filterScope=scope;toggleFilterVa
 function clearFilters(){FILT[S.filterScope]=[];renderFilterPop();applyFilterScope(S.filterScope)}
 function applyFilterScope(scope){
   if(scope==='documents')renderDocList();
-  else if(scope==='overview')renderOvRows();
   else if(scope==='alldocs')renderAllDocsTbl();
 }
 function filterCount(scope){return (FILT[scope]||[]).reduce((n,c)=>n+c.values.length,0)}

@@ -14,8 +14,7 @@ function toggleDocCheck(docId,propId){
 }
 function refreshActiveLists(){
   if(S.view==='documents') renderDocList();
-  else if(S.view==='overview') renderOvRows();
-  else if(S.view==='tables'&&S.tblId==='__all_docs__') renderAllDocsTbl();
+  else if(S.view==='databases'&&S.tblId==='__all_docs__') renderAllDocsTbl();
   else if(S.view==='calendar') renderCal();
 }
 /* Build property chips. interactive=true makes select/checkbox chips clickable. */

@@ -105,13 +105,6 @@ function setDocIcon(value){
   if(isBlobRef(prev)&&prev!==value) freeBlob(prev);
   renderEditorIcon(doc); closeAll();
 }
-function removeDocIcon(){
-  if(!S.docId) return;
-  const doc=getActiveDoc(); if(!doc) return;
-  freeBlob(doc.meta?.icon);
-  doc.meta=doc.meta||{}; doc.meta.icon='';
-  saveActiveDoc(doc); renderEditorIcon(doc); closeAll();
-}
 function triggerIconUpload(){
   document.getElementById('icon-file-input').value='';
   document.getElementById('icon-file-input').click();

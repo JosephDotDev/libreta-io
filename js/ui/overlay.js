@@ -42,10 +42,9 @@ document.addEventListener('wheel',e=>{
   if(e.target.closest(TRANSIENT_SEL)) return;
   closeAll();
   // Nudge the active writing scroller so this same gesture moves the page.
-  const sc=(S.view==='overview')?document.querySelector('.ov-panel-body'):document.getElementById('blocks-sc');
+  const sc=document.getElementById('blocks-sc');
   if(sc) sc.scrollTop+=e.deltaY;
 },{passive:true});
-function cmdK(){alert('Search coming soon!')}
 
 /* ═══════════════════════════════════════════════
    HOME + DOCS LIST

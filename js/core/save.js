@@ -15,7 +15,7 @@ function flushSave(){
     saveHomeDoc(hd); return true;
   }
   const doc=DB.getDoc(S.docId)||{id:S.docId,createdAt:new Date().toISOString()};
-  const titleEl=document.getElementById(S.peekOpen?'peek-title':(S.view==='overview'?'ov-panel-title':'ed-title'));
+  const titleEl=document.getElementById(S.peekOpen?'peek-title':'ed-title');
   doc.title=titleEl?.value??doc.title??'';
   doc.blocks=S.blocks; doc.props=S.props; doc.fmt=doc.fmt||{};
   const leaves=flattenBlocks(S.blocks);
@@ -32,8 +32,6 @@ function flushSave(){
   const ok=DB.saveDoc(doc);
   if(ok!==false) snapshotVersion(doc); // periodic version snapshot (throttled internally)
   document.getElementById('page-title').textContent=doc.title||'Untitled';
-  // Refresh overview table title live
-  if(S.view==='overview') renderOvRows();
   // Sidebar (favorites/recents/tree) only reflects titles + ordering, never the body
   // text being typed — rebuild it on a lazy debounce so it doesn't rebuild the tree DOM
   // on every typing pause and compete with the next keystroke.
