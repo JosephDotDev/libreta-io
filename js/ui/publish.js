@@ -106,10 +106,9 @@ async function publishPage(docId){
   const dateStr=new Date(doc.updatedAt||Date.now()).toLocaleDateString(undefined,{year:'numeric',month:'long',day:'numeric'});
   const html=_pubDocument(title, iconStr, coverHtml, body, dateStr);
   const blob=new Blob([html],{type:'text/html'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url; a.download=((doc.title||'page').replace(/[^a-z0-9]+/gi,'-').replace(/^-+|-+$/g,'').toLowerCase()||'page')+'.html';
-  document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(()=>URL.revokeObjectURL(url),2000);
-  if(typeof toast==='function') toast('Saved as a web page',{type:'success'});
+  const name=((doc.title||'page').replace(/[^a-z0-9]+/gi,'-').replace(/^-+|-+$/g,'').toLowerCase()||'page')+'.html';
+  let saved=false;
+  try{ saved=await saveFileToDisk(blob,name); }
+  catch(e){ console.warn('[publish] save failed',e); if(typeof toast==='function') toast('Could not save the page',{type:'error'}); return; }
+  if(saved && typeof toast==='function') toast('Saved as a web page',{type:'success'});
 }

@@ -11,3 +11,8 @@ Outdated Versions/
 
 # Generated deploy folder (run ./build.sh to recreate)
 dist/
+
+# Desktop shell (Tauri) — Rust build output + npm deps for the Tauri CLI
+node_modules/
+src-tauri/target/
+src-tauri/gen/

@@ -1,0 +1,14 @@
+{
+  "name": "libreta",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Libreta — a local-first personal workspace. The web app itself has no build step; this package only pulls in the Tauri CLI that wraps it into a desktop app.",
+  "scripts": {
+    "desktop:dev": "tauri dev",
+    "desktop:build": "tauri build",
+    "tauri": "tauri"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.11.4"
+  }
+}

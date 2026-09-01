@@ -2,7 +2,7 @@
 
 > Living reference for mission, features, architecture, and roadmap. Update this as the product evolves.
 
-**Last updated:** July 12, 2026 · **Status:** Closed test shipped (Jun 20); offline support (service worker + self-hosted assets) landed Jul 12.
+**Last updated:** September 1, 2026 · **Status:** Phase 5 — Libreta is now a free desktop app (Tauri). Cloud sync, accounts, hosting and monetization are retired; the web deployment is being sunset.
 
 ---
 
@@ -25,17 +25,17 @@
 
 **Mission:** Give solo creators a Notion-grade writing and organizing workspace that they personally own — no subscription required to think.
 
-**Vision:** A local-first workspace where your data lives on your device, cloud sync is a layer you opt into (not a prerequisite), and the free tier is genuinely complete. No team overhead, no lock-in, no proprietary format trapping your notes.
+**Vision:** A local-first workspace where your data lives on your device, full stop. One-and-done software: free for everyone, nothing to subscribe to, no server that has to stay up for it to keep working. No team overhead, no lock-in, no proprietary format trapping your notes.
 
 **Core principles — every decision runs through these:**
 
 | Principle | What it means in practice |
 |---|---|
-| **Local-first** | The app works fully offline, with no account. All data lives in the browser by default. |
-| **Cloud sync as a layer** | Supabase sync is optional and additive — it never replaces local storage, it mirrors it. |
-| **No build step** | Plain HTML/CSS/JS. Deployable from any static host in minutes. No Node, no bundler. |
+| **Local-first** | The app works fully offline, with no account. All data lives on the device. |
+| **No server, ever** | Nothing Libreta does may depend on infrastructure the author has to run, secure or pay for. Sync, if it comes, uses the user's own cloud drive or a direct device-to-device link. |
+| **No build step** | Plain HTML/CSS/JS. The desktop shell wraps the very same files; only the Tauri CLI is needed to package it. |
 | **Personally owned** | Users control their data. Export is always available. No lock-in by design. |
-| **Zero marginal infra cost for free users** | Free users cost ~$0. Heavy compute stays in the browser; only paying users touch server infrastructure. |
+| **Zero cost to run** | GitHub Releases host the installers, GitHub Actions build them, GitHub Pages hosts the download page. The project can outlive its maintainer. |
 
 ---
 
@@ -57,31 +57,33 @@
 
 **Tag line:** *"Your workspace. Your data. No subscription required to think."*
 
-**Lead with local-first as an identity, not a feature.** The free tier must feel complete — Sync and Lifetime are for people who already love Libreta, not a tax for using it.
+**Lead with local-first as an identity, not a feature.** There is exactly one tier and it is complete. "Free" is not a teaser: it is the product.
 
 ### vs. Notion
-- Data lives in your browser first; sync is optional.
+- Data lives on your computer; there is no account at all.
 - No workspace/team overhead.
-- Free tier is genuinely unrestricted (not a teaser).
+- Free and unrestricted (not a teaser).
 
 ### vs. Obsidian
 - Richer Notion-style databases (Table, Board, Calendar, Timeline) out of the box.
 - Block editor with inline databases, covers, carousels, and YouTube embeds.
-- Cloud sync doesn't require a paid plugin.
+- Free, with no paid tiers of any kind.
 
 ---
 
 ## 4. Business Model
 
-| Tier | Price | What you get |
-|---|---|---|
-| **Free** | $0 forever | Full local workspace — every feature, unlimited documents, no account required |
-| **Sync** | Monthly / Annual (TBD) | Cloud sync across devices, extended version history retention |
-| **Lifetime** | One-time (TBD) | Everything in Sync, forever, for supporters who want to fund the project |
+There isn't one, on purpose. Libreta is **free for everyone, forever**, and is built so that it costs nothing to keep alive:
 
-**Guardrail:** Free users cost ~$0 in infrastructure by design. Growth should be almost free; only paying users touch Supabase storage/compute. Never add per-user server compute to features that can live in the browser.
+| Concern | How it's handled |
+|---|---|
+| Hosting the app | Not needed — it's a desktop app. Installers live on GitHub Releases |
+| Building releases | GitHub Actions (free for public repos) |
+| Download page | `landing.html` on GitHub Pages |
+| User data | On the user's machine only; no storage bill, no breach surface |
+| Payments, billing, taxes | None |
 
-**Payment processor:** Paddle or Lemon Squeezy (handles global VAT automatically — pricing to be finalized in Week 2, Jun 27–28).
+**Guardrail:** never add a feature that needs a server the author runs. If it can't run on the device or on infrastructure the *user* already owns (their cloud drive, their local network), it doesn't ship.
 
 ---
 
@@ -89,7 +91,7 @@
 
 ### The data model
 
-Everything is a **document** or a **database table**. Both are stored locally in the browser (`localStorage` + `IndexedDB` for binary blobs). When a user signs in and enables sync, the entire workspace is mirrored as a single JSON snapshot to Supabase Storage (`<userId>/state.json`), scoped per user by RLS policy.
+Everything is a **document** or a **database table**. Both are stored on the device in IndexedDB (one record each; media blobs in a separate store), with small settings in localStorage. There is no remote copy — Export produces the single portable JSON file that represents the whole workspace.
 
 - **Documents** are standalone pages with a block array, metadata (title, icon, cover, parent), and optional properties.
 - **Database tables** are collections of rows, where each row can also open as a full document page (row ↔ page link).
@@ -104,11 +106,11 @@ The block editor is the core of Libreta. A document is an ordered array of block
 - **Markdown shortcuts** — `**text**` for bold, `- ` for bullet list, `# ` for H1, etc.
 - **Drag handles** — reorder blocks by dragging.
 
-### Sync model
+### Where data lives
 
-Sync is **last-write-wins, whole-snapshot**. On load, Libreta pulls the cloud snapshot and merges it with local state. On every save (debounced), it pushes the full snapshot. This is intentionally simple — it's designed for a solo user on 1–2 devices, not real-time collaboration.
+Everything is on the device, inside the app's webview storage: documents and tables as one IndexedDB record each (`folio_data`), media blobs content-addressed in a second IndexedDB store (`folio_media`), and small singletons (theme, sidebar state, trash, version history) in localStorage. **Export** writes all of it to one portable JSON file; **Import** restores it — that is how a workspace moves between machines today.
 
-A "dirty flag" prevents a stale local state from accidentally overwriting a newer cloud snapshot.
+Planned next: a folder-based workspace on disk behind the existing persistence-adapter seam (`setPersistenceAdapter()` in `js/core/storage.js`), so the data is visible, backupable, and can sit in any cloud-drive folder for device-to-device sync with no server involved. See §10.
 
 ### Navigation
 
@@ -160,22 +162,16 @@ All navigation goes through `nav(view, id)` in `js/core/router.js`. There are no
 - Rolling 40 snapshots per document
 - Browse, preview, and restore any snapshot
 
-#### Cloud sync & auth
-- Supabase email + password sign-up/login
-- Google social sign-in (Apple hidden pending setup)
-- Password recovery flow
-- Auto-sync on load + debounced push on every save
-- Sync status indicator chip
-- RLS policy: users read/write only their own data
-
-#### Offline
-- **Full offline boot** — service worker precaches the app shell atomically; from the second visit on, Libreta loads with no connection (fonts, math rendering, and cloud code included — sync simply resumes when back online)
-- **Atomic updates** — new deploys download in the background; a toast offers "Reload"; users never run mixed old/new assets
+#### Desktop app (Phase 5)
+- **Native window** on macOS, Windows and Linux via Tauri v2; the whole app is bundled into the binary, so it boots with no connection at all
+- **Native Save dialogs** for Export, Publish and attachment downloads; links open in the system browser
+- **No accounts, no sync service** — the workspace lives on the device
 
 #### Data management
 - **Export / Import** — portable JSON backup (accepts legacy `folio` format)
+- **Publish** — save any page as a self-contained HTML file
 - **Trash** — soft-delete, restore, 30-day auto-purge
-- **Danger Zone** — wipe all local + cloud data (double-confirmed)
+- **Danger Zone** — wipe all data on this device (double-confirmed)
 
 ---
 
@@ -184,19 +180,18 @@ All navigation goes through `nav(view, id)` in `js/core/router.js`. There are no
 | Layer | Technology |
 |---|---|
 | **Frontend** | Plain HTML/CSS/JS — no framework, no build step |
-| **Offline** | Service worker (`sw.js`) precaches the whole shell as one atomic version; app boots fully offline. Fonts, supabase-js (pinned 2.110.2), and KaTeX are self-hosted — no third-party CDN at runtime |
-| **Hosting** | Vercel (static deploy via `./build.sh` → `dist/`; build also generates `sw-manifest.js`, the SW's content-hashed precache list) |
-| **Local storage** | `localStorage` (documents, settings, DB tables) + `IndexedDB` (binary blobs — images, files) |
-| **Cloud sync** | Supabase Storage — one `state.json` snapshot per user |
-| **Auth** | Supabase Auth — email/password + Google OAuth |
-| **DNS** | Porkbun → libreta.io |
-| **Analytics** | Vercel Analytics |
+| **Desktop shell** | Tauri v2 (`src-tauri/`): system webview (WKWebView / WebView2 / WebKitGTK), Rust host, ~5–10 MB installers. Plugins: `dialog`, `fs`, `opener` |
+| **Bundle** | `scripts/build-dist.js` copies the shipped files into `dist/`; Tauri embeds them. Fonts and KaTeX are vendored — no CDN at runtime |
+| **Local storage** | `IndexedDB` (documents + tables per record; media blobs) + `localStorage` (small settings singletons) |
+| **Releases** | GitHub Actions (`.github/workflows/release.yml`) → GitHub Releases, triggered by a `v*` tag |
+| **Download page** | `landing.html` → GitHub Pages (`.github/workflows/pages.yml`) |
+| **Analytics / telemetry** | None |
 
 ### Key architectural decisions
 
 **In-memory cache (`DB` object):** All reads are synchronous against an in-memory cache hydrated at boot. Writes update the cache and hand off to a swappable persistence adapter. This makes the UI fast and keeps storage concerns isolated.
 
-**Whole-snapshot sync:** Rather than per-document syncing, the entire workspace serializes to a single JSON. Simple, robust for solo use, cheap on Supabase. Trade-off: not suitable for large workspaces with many large images (images are stored as IndexedDB blobs, referenced by UUID — only the reference travels in the JSON, not the blob itself, unless explicitly included in a full export).
+**One bridge for platform differences:** `js/core/platform.js` is the only file that knows whether the page is in a browser tab or in the Tauri shell. Saving a file and opening a link are the two operations that differ; everything else in the app is platform-agnostic, which keeps the web-served version (for development, and for a possible mobile PWA later) identical to the desktop build.
 
 **Classic scripts, shared global scope:** JS files are loaded in order via `<script>` tags. They share one global scope, which lets inline `onclick` handlers in generated HTML call across files. Load order is meaningful — `core/init.js` always loads last.
 
@@ -208,10 +203,11 @@ All navigation goes through `nav(view, id)` in `js/core/router.js`. There are no
 
 ```
 index.html          App shell — all views, popovers, modals live here
-sw.js               Service worker — offline shell cache, atomic updates, kill switch
+landing.html        Download page (published to GitHub Pages)
+src-tauri/          Desktop shell: tauri.conf.json, capabilities/, src/lib.rs, icons/
 fonts/              Self-hosted woff2 fonts (generated by scripts/vendor-fonts.js)
 vendor/katex/       Vendored KaTeX 0.16.11 (js + css + woff2 fonts)
-scripts/            Maintenance scripts (vendor-fonts.js regenerates fonts/ + 00-fonts.css)
+scripts/            build-dist.js (assembles dist/ for Tauri), vendor-fonts.js (regenerates fonts/)
 css/                Numbered stylesheets (00-fonts, 01-tokens through 40-mobile-fixes)
 js/
   core/             Plumbing
@@ -224,6 +220,7 @@ js/
     config.js         Themes, fonts, settings panel
     utils.js          Cursor/date helpers
     security.js       XSS guards — safeUrl + sanitizeHtml
+    platform.js       Browser vs. desktop bridge (save file, open link) — loads FIRST
     init.js           Boot sequence — loads LAST
   ui/               Shared widgets
     sidebar.js        Sidebar behavior
@@ -268,16 +265,11 @@ js/
   media/            Binary data
     compress.js       Canvas image downscaling
     blob-gc.js        Blob GC + export/import
-  cloud/            Sync + auth
-    sync.js           Pull-on-load, debounced push, auth state, sync chip
-    config.js         Supabase URL + anon key
-  vendor/           Vendored supabase-js (pinned, self-hosted)
-  core/sw-register.js  SW registration + "update ready → Reload" toast
 ```
 
 **Extending the editor:** To add a new block type — (1) add entry to `BT` in `core/state.js`, (2) add render branch in `editor/blocks-render.js`, (3) create a file in `js/blocks/`. If the block stores image references, register them in `collectRefs()` in `blob-gc.js` or GC will silently delete the blobs.
 
-**Deployment:** `./build.sh` assembles `dist/`. After any CSS/JS change, bump the `?v=N` cache-buster in `index.html` before deploying (one find/replace). See `DEPLOY.md` for the full Vercel + Supabase setup.
+**Releasing:** bump the version in `package.json`, `src-tauri/tauri.conf.json` and `src-tauri/Cargo.toml`, push a `v*` tag, and GitHub Actions attaches installers to a draft release. See README → Releasing.
 
 ---
 
@@ -287,71 +279,30 @@ js/
 |---|---|---|---|
 | **Phase 1** | Folio prototype | Complete | Core block editor, IndexedDB image storage, calendar view, home page, sidebar, document properties, all block types, export/import |
 | **Phase 2** | Libreta.io launch | Complete | Rebrand Folio → Libreta.io, Supabase cloud sync + auth, Google sign-in, loading screen, Vercel deploy + libreta.io domain, Vercel Analytics |
-| **Phase 3** | Bug fixes & polish | Complete (pre-launch) | Sidebar stale-after-delete fix, slash menu keyboard nav fix, nested-page GC fix, Documents Tree view, mobile drawer (<860px), linked pages as cards, DB views as slash commands, Danger Zone + dirty-flag sync fix, onboarding flow |
+| **Phase 3** | Bug fixes & polish | Complete | Sidebar stale-after-delete fix, slash menu keyboard nav fix, nested-page GC fix, Documents Tree view, mobile drawer (<860px), linked pages as cards, DB views as slash commands, Danger Zone + dirty-flag sync fix, onboarding flow |
+| **Phase 4** | Local-only mode | Complete | "Start writing — no account", per-record IndexedDB storage, publish/export, mobile Add menu |
+| **Phase 5** | Desktop | Shipped (this branch) | Removed Supabase sync/auth, Vercel hosting, analytics and the service worker; Tauri v2 shell with a three-permission capability set; GitHub Actions release pipeline; landing page → download page |
 
 ---
 
-## 10. Launch Roadmap
+## 10. Roadmap
 
-**Today is June 22, 2026.** The closed test shipped June 20 (on schedule). We are now in Week 2.
+**Decision (Sep 2026):** Libreta is a one-and-done desktop app. No servers, no accounts, no billing — it must keep working with zero involvement from its author.
 
-### Gate A — Closed Test ✓ Shipped Jun 20
-
-| Area | Item | Status |
+| Phase | What | Status |
 |---|---|---|
-| Stability | Sync stress test (two devices, large images, offline→online) | Done |
-| Stability | RLS isolation verified with two real accounts | Done |
-| Stability | Export/import round-trip verified | Done |
-| Stability | Cross-browser pass (Chrome, Safari, Firefox, mobile Safari) | Done |
-| Security | Supabase auth rate limits + bot/CAPTCHA protection | Done |
-| Security | Leaked-password (HaveIBeenPwned) check | Done |
-| Security | Redirect URL allow-list locked to libreta.io + previews | Done |
-| Onboarding | First-run welcome doc + empty states teaching slash menu | Done |
-| Onboarding | 2–3 starter templates seeded for new accounts | Done |
-| Onboarding | Clear "local vs synced" indicator | Done |
-| Test logistics | 10–20 testers recruited (PKM / indie maker circles) | Done |
-| Test logistics | Feedback channel (form or Discord + in-app link) | Done |
-| Test logistics | Known-issues note sent to testers | Done |
+| **1 — Desktop shell** | Tauri v2 wrapper; cloud, hosting and service worker removed; native save dialogs + external links; CSP and navigation guard | ✅ Done |
+| **3 — Distribution** | GitHub Actions builds macOS (arm64 + x64), Windows and Linux installers on a `v*` tag; `landing.html` becomes the download page on GitHub Pages | ✅ Done (first tag still to be pushed) |
+| **Web sunset** | Deploy one last web build with sign-up hidden, a banner pointing at the desktop download and Export, and the service-worker kill switch; after a grace period delete the Supabase project and the Vercel deployment | ⏳ Next — see below |
+| **2 — Folder workspace** | Filesystem persistence adapter behind `setPersistenceAdapter()`: one JSON file per document/table, media by content hash, one settings file, in a user-chosen folder. One-click migration from IndexedDB. Gives desktop↔desktop sync for free through any cloud-drive folder | Planned |
+| **4 — Bring your own cloud + mobile** | Storage adapter that talks straight to the user's Dropbox (later Google Drive) with client-side OAuth, reusing the per-record model; a mobile PWA served from GitHub Pages so phones can join | Planned |
+| **Later — LAN sync** | Desktop hosts a local service; phone pairs by scanning one QR code (address + one-time key) and reconciles directly | Idea |
 
-### Gate B — Public Launch · Target: End of July 2026
+### Web sunset checklist
 
-#### Week 2 · Jun 22–28 — Feedback triage + monetization spike
-| Days | Task |
-|---|---|
-| Mon–Tue Jun 22–23 | Triage feedback — cluster into bugs vs. friction vs. requests, rank by frequency and severity |
-| Wed–Thu Jun 24–25 | Fix top bugs — burn down critical and high-frequency issues from test cohort |
-| Fri Jun 26 | Smooth first-run friction points flagged by testers; ship updated build |
-| Sat–Sun Jun 27–28 | **Monetization spike** — decide launch tiers, prototype Paddle/Lemon Squeezy checkout → **Pricing locked** |
-
-#### Week 3 · Jun 29 – Jul 12 — Payments + marketing site
-| Week | Task |
-|---|---|
-| Wk of Jun 29 | Wire monetization: integrate payment provider, gate Sync + extended version history behind paid tiers, build Lifetime purchase flow, add snapshot gzip compression |
-| Wk of Jul 6 | **Marketing site:** landing page (local-first story, screenshots, pricing), template gallery as SEO discovery surface, per-tier storage caps enforced → **Site live** |
-
-#### Week 4 · Jul 13–31 — Launch prep + public launch
-| Week | Task |
-|---|---|
-| Wk of Jul 13 | Product Hunt assets + copy, seed 5–10 ambassadors from test cohort, draft "build in public" story, apply final feedback fixes |
-| Wk of Jul 20 | Release-candidate hardening — full regression pass, analytics goals + error monitoring confirmed, billing edge cases tested → **RC freeze** |
-| Wk of Jul 27 | **Go live** — Product Hunt launch day, ambassadors activate, story post published, monitor + support in real time → **PUBLIC LAUNCH** |
-
-### Open items for Gate B
-
-| Area | Item | Priority |
-|---|---|---|
-| Monetization | Decide launch tiers (Free + Lifetime first; Sync subscription next) | HIGH |
-| Monetization | Integrate Paddle / Lemon Squeezy (global VAT handling) | HIGH |
-| Monetization | Gate sync/version-retention behind paid tier in-app | HIGH |
-| Monetization | Snapshot gzip compression before upload (cuts storage cost) | HIGH |
-| Marketing | Landing page — local-first story, screenshots, pricing table | HIGH |
-| Marketing | Template gallery as SEO discovery surface | HIGH |
-| Growth | Product Hunt launch prepped (assets, copy, day-of plan) | MEDIUM |
-| Growth | Seed 5–10 ambassadors from test cohort | MEDIUM |
-| Growth | "Build in public" / bootstrapped story post drafted | MEDIUM |
-| Hardening | Act on test feedback — top bugs + friction fixed | HIGH |
-| Hardening | Per-tier sync storage caps enforced | HIGH |
-| Hardening | Analytics goals + error monitoring confirmed | HIGH |
+1. On the last web build: hide sign-up, keep sign-in for existing testers, add a banner — "Libreta is now a desktop app. Export your data (Settings → Data & Backup) and download it here." — and ship with the service-worker kill switch so browsers stop caching the old shell.
+2. Tell the closed-test cohort directly; their data already mirrors into their browsers, so Export → Import into the desktop app is the migration.
+3. After the grace period: delete the Supabase project (auth + storage), remove the Vercel project, point `libreta.io` at the GitHub Pages download page (or let it lapse).
 
 ---
 
@@ -359,9 +310,10 @@ js/
 
 1. **Keep heavy lifting in the browser.** No per-user server compute. If it can run client-side, it must.
 2. **Free tier stays complete.** Sync and Lifetime are upsells to people who already love Libreta — not a gate on core functionality.
-3. **Whole-snapshot sync integrity.** Only `CONTENT_RE` keys may trigger a push. The stale-push guard must not be weakened. (See `js/cloud/sync.js`.)
+3. **No server, ever.** Nothing may depend on infrastructure the author runs. Device-to-device sync goes through the user's own cloud drive or a direct connection.
 4. **XSS safety.** All user-controlled URLs go through `safeUrl()`; all user HTML through `sanitizeHtml()`. Do not bypass these. (`js/core/security.js`)
 5. **Blob GC contract.** Any new block type that stores image/file references must register those refs in `collectRefs()` in `js/media/blob-gc.js`, or GC will silently delete the blobs.
-6. **Cache-bust on every deploy.** Bump `?v=N` in `index.html` after any CSS/JS change. The service worker makes updates atomic for browsers it controls (whole-shell swap, never mixed versions), but `?v=N` still protects first visits and any browser without the SW.
-7. **Service-worker discipline.** `sw-manifest.js` is generated by `build.sh` — never hand-edit or commit it. `sw.js` + `sw-manifest.js` must stay `no-cache` in `vercel.json`. If a bad SW ships, deploy with `KILL=1 ./build.sh` to make every client unregister and clear caches. If font file *contents* ever change in place, bump the `FONTS` cache name in `sw.js`.
-8. **No third-party CDNs at runtime.** Fonts, supabase-js, and KaTeX are self-hosted (`fonts/`, `js/vendor/`, `vendor/katex/`) and CSP allows scripts/styles/fonts from `'self'` only. Don't reintroduce CDN loads — they break offline and reopen supply-chain exposure.
+6. **Platform differences live in `js/core/platform.js` only.** Anything that saves a file or opens a link must go through `saveFileToDisk()` / `openExternal()`. Never add `<a download>`, `window.open` or `target="_blank"`-only behaviour elsewhere.
+7. **Least-privilege shell.** `src-tauri/capabilities/default.json` grants the page a Save dialog, writing the file it picked, and opening links — nothing else. Any new capability needs a written justification in SECURITY.md.
+8. **No third-party CDNs at runtime.** Fonts and KaTeX are vendored (`fonts/`, `vendor/katex/`) and CSP allows scripts/styles/fonts from `'self'` only. Don't reintroduce CDN loads — the app must work with no connection at all.
+9. **Versions move together.** `package.json`, `src-tauri/tauri.conf.json` and `src-tauri/Cargo.toml` carry the same version; a release is a `v*` tag matching them.

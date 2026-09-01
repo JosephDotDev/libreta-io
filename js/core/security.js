@@ -6,9 +6,9 @@
      1. Link targets the user pastes / types (mentions, URL properties).
      2. Backup files imported via Settings → Data & Backup → Import.
    A crafted `javascript:` link or a malicious backup could otherwise run script
-   in our origin — and our origin holds the Supabase session token (full account
-   takeover + access to everything in cloud Storage). These helpers neutralize
-   both: `safeUrl()` collapses dangerous schemes; `sanitizeHtml()` strips script,
+   in our origin — with full access to every page and image in the workspace, and,
+   inside the desktop shell, to whatever the shell exposes to the page. These
+   helpers neutralize both: `safeUrl()` collapses dangerous schemes; `sanitizeHtml()` strips script,
    event handlers and dangerous elements from untrusted rich-text content.
 ═══════════════════════════════════════════════════════════════════════════ */
 

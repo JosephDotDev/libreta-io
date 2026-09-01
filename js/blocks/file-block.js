@@ -23,8 +23,21 @@ async function onBlkFileChange(input){
 }
 function downloadBlkFile(id){
   const blk=findBlock(id); if(!blk) return;
-  const href=srcFor(blk.fileId)||blk.fileData; if(!href) return;
-  const a=document.createElement('a'); a.href=href; a.download=blk.fileName; a.click();
+  saveStoredFile(blk.fileId, blk.fileData, blk.fileName, blk.fileType);
+}
+/* Shared by file blocks + file properties: resolve the stored bytes (IndexedDB blob
+   ref, or a legacy inline data URL) to a Blob and hand it to the platform bridge,
+   which downloads it in a browser or opens a native Save dialog on desktop. */
+async function saveStoredFile(ref, legacyDataUrl, name, type){
+  let blob=null;
+  try{
+    if(isBlobRef(ref)) blob=await IDB.get(ref);
+    else if(typeof legacyDataUrl==='string'&&legacyDataUrl.startsWith('data:')) blob=dataURLtoBlob(legacyDataUrl);
+  }catch(e){ blob=null; }
+  if(!blob){ if(typeof toast==='function') toast('That file is no longer available'); return; }
+  if(type&&!blob.type) blob=new Blob([blob],{type});
+  try{ await saveFileToDisk(blob, name||'file'); }
+  catch(e){ console.warn('[file] save failed',e); if(typeof toast==='function') toast('Could not save the file'); }
 }
 
 /* ═══════════════════════════════════════════════
@@ -53,8 +66,7 @@ async function onPropFileChange(input){
 }
 function downloadPropFile(propId){
   const prop=S.props.find(p=>p.id===propId); if(!prop||!prop.value) return;
-  const href=srcFor(prop.value.id)||prop.value.data; if(!href) return;
-  const a=document.createElement('a'); a.href=href; a.download=prop.value.name; a.click();
+  saveStoredFile(prop.value.id, prop.value.data, prop.value.name, prop.value.type);
 }
 function clearPropFile(propId){
   const prop=S.props.find(p=>p.id===propId); if(!prop) return;

@@ -62,15 +62,9 @@ const ONB_MOCK_SLASH=`<svg viewBox="0 0 140 84" class="onb-mock" role="img" aria
   <rect x="37" y="62.5" width="38" height="3" rx="1.5" fill="var(--mu)" opacity=".5"/>
 </svg>`;
 
-/* Friendly first name from the Supabase profile, with graceful fallbacks. */
-function onbFirstName(){
-  let u=null; try{ u=(typeof Cloud!=='undefined')?Cloud.user:null; }catch(e){}
-  const m=(u&&u.user_metadata)||{};
-  const n=m.full_name||m.name||m.display_name||m.username||'';
-  if(n) return String(n).trim().split(/\s+/)[0];
-  if(u&&u.email) return u.email.split('@')[0].replace(/[._-]+/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
-  return 'there';
-}
+/* Greeting name. There are no accounts, so this is a friendly constant; kept as a
+   function so the copy has one place to change. */
+function onbFirstName(){ return 'there'; }
 /* Only greet a brand-new, empty workspace; otherwise quietly mark as done. */
 function shouldOnboard(){
   try{ if(localStorage.getItem(ONB_FLAG)) return false; }catch(e){ return false; }

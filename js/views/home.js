@@ -237,12 +237,12 @@ function _homeChecklistSteps(){
   let docs=[]; try{ docs=DB.getDocs().filter(d=>d.id!==HOME_ID && (typeof sbIsForeignDbEntry!=='function'||!sbIsForeignDbEntry(d))); }catch(e){}
   let usedSlash=false; try{ usedSlash=localStorage.getItem('libreta_used_slash')==='1'; }catch(e){}
   let hasDb=false; try{ hasDb=((typeof DB!=='undefined'&&DB.getTbls)?DB.getTbls():[]).length>0; }catch(e){}
-  let synced=false; try{ synced=!!(typeof Cloud!=='undefined'&&Cloud.user); }catch(e){}
+  let backedUp=false; try{ backedUp=localStorage.getItem('libreta_backup_done')==='1'; }catch(e){}
   return [
     {done:docs.length>0, color:'var(--c-docs)', lbl:'Create your first page', act:"newDoc()"},
     {done:usedSlash,     color:'var(--gr)',     lbl:'Try the slash menu',     act:"homeChecklistTrySlash()"},
     {done:hasDb,         color:'var(--go)',     lbl:'Build a database',       act:"nav('databases')"},
-    {done:synced,        color:'var(--pu)',     lbl:'Turn on sync (optional)'},
+    {done:backedUp,      color:'var(--pu)',     lbl:'Export a backup',        act:"exportData()"},
   ];
 }
 function homeChecklistTrySlash(){

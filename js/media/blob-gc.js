@@ -56,9 +56,11 @@ async function exportData(){
   for(const id of collectRefs()){ const blob=await IDB.get(id); if(blob){ const du=await blobToDataURL(blob); if(du) images[id]=du; } }
   const bundle={app:'libreta',version:1,exportedAt:new Date().toISOString(),docs,tables,cfg,images};
   const blob=new Blob([JSON.stringify(bundle)],{type:'application/json'});
-  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
-  a.download='libreta-backup-'+new Date().toISOString().slice(0,10)+'.json'; a.click();
-  setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+  let saved=false;
+  try{ saved=await saveFileToDisk(blob,'libreta-backup-'+new Date().toISOString().slice(0,10)+'.json'); }
+  catch(e){ console.warn('[export] save failed',e); toast('Could not save the backup'); return; }
+  if(!saved) return;   // cancelled the save dialog
+  try{ localStorage.setItem('libreta_backup_done','1'); if(typeof renderHomeChecklist==='function') renderHomeChecklist(); }catch(e){}
   toast('Exported '+docs.length+' document'+(docs.length!==1?'s':''));
 }
 /* Storage durability status + manual request (shown in Options → Data & Backup) */

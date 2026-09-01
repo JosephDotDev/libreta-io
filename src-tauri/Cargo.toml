@@ -1,0 +1,29 @@
+[package]
+name = "libreta"
+version = "1.0.0"
+description = "Libreta — a local-first personal workspace"
+authors = ["Joseph Medina"]
+edition = "2021"
+publish = false
+
+# The library target lets the same code back the desktop binary today and a
+# mobile build later (tauri::mobile_entry_point in lib.rs).
+[lib]
+name = "libreta_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-dialog = "2"   # native Save dialog for Export / Publish / attachment downloads
+tauri-plugin-fs = "2"       # writes the file the user picked in that dialog
+tauri-plugin-opener = "2"   # opens external links in the system browser
+
+[profile.release]
+panic = "abort"
+codegen-units = 1
+lto = true
+opt-level = "s"
+strip = true

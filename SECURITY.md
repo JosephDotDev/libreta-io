@@ -1,19 +1,20 @@
 # Security
 
-Libreta is a **static front-end** (HTML/CSS/JS, no server we run) plus **Supabase**
-(Auth + Storage) for cloud sync. There is no application server and no database we
-query from code, so the threat model is shaped accordingly. This document records
-what's been hardened in the code and the controls that must be set **server-side
-in the Supabase dashboard** (those can't live in shipped browser code).
+Libreta is a **desktop application**: plain HTML/CSS/JS running inside a Tauri
+webview, with no server, no accounts and no network service of our own. Everything
+the user writes stays on their machine. That shapes the threat model: there is no
+account to take over and no shared backend to attack — what matters is that content
+which reaches the page from outside (pasted links, imported backups, fetched link
+previews) cannot run code, and that the page cannot do more on the machine than the
+few things it needs.
 
 ---
 
-## What lives in the client (done in code)
+## Cross-site scripting (XSS) — the main risk for an editor
 
-### 1. Cross-site scripting (XSS) — the main risk for an editor
 Block rich-text content is the one field rendered as raw HTML; everything else
 (titles, table cells, properties, link previews) goes through `escHtml`. Two
-untrusted boundaries feed that sink, and both are now guarded in
+untrusted boundaries feed that sink, and both are guarded in
 [`js/core/security.js`](js/core/security.js):
 
 - **`safeUrl(url)`** — allow-lists link schemes (`http`, `https`, `mailto`, `tel`).
@@ -25,74 +26,61 @@ untrusted boundaries feed that sink, and both are now guarded in
   unwraps unknown tags, and strips `on*` handlers, inline `style`, and unsafe URL
   attributes. Run on **every imported backup** (`sanitizeImportedDocs` in
   `js/media/blob-gc.js`) — the realistic path for attacker-controlled HTML to
-  reach a victim's session.
+  reach a workspace.
 
-### 2. Content-Security-Policy + security headers
-Set as real HTTP headers in [`vercel.json`](vercel.json) (stronger than `<meta>`,
-and lets us send `frame-ancestors`):
+Inside the desktop shell a successful XSS would also reach whatever the shell
+exposes to the page, which is why that surface is kept tiny (next section).
 
-- `default-src 'self'`; `connect-src` limited to Supabase, the YouTube oEmbed and
-  link-preview proxy endpoints, and Vercel analytics; `frame-src` limited to
-  YouTube; `object-src 'none'`; `base-uri 'self'`; `frame-ancestors 'none'`
-  (clickjacking); `upgrade-insecure-requests`.
-- `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `Permissions-Policy`
-  (locks down geolocation/mic/camera/etc.), `Strict-Transport-Security`,
-  `Cross-Origin-Opener-Policy`.
+## What the page is allowed to do on the machine
+
+Tauri's capability system ([`src-tauri/capabilities/default.json`](src-tauri/capabilities/default.json))
+grants the main window exactly three things beyond the core window API:
+
+| Permission | Why |
+|---|---|
+| `dialog:allow-save` | Native Save dialog for Export, Publish and attachment downloads |
+| `fs:allow-write-file` | Write the bytes to the path the user just picked in that dialog. The dialog adds only that path to the file-system scope — the page has **no** read access and cannot write anywhere else |
+| `opener:default` | Open `http(s):` / `mailto:` / `tel:` links in the system browser |
+
+No shell, no arbitrary file reads, no process spawning. All of it is used from one
+file, `js/core/platform.js`.
+
+## The app window stays the app
+
+- **Navigation guard** (`src-tauri/src/lib.rs`): the webview may only navigate to the
+  app's own origin (`tauri://localhost` / `https://tauri.localhost`) and the YouTube
+  embed hosts allowed by `frame-src`. Any other navigation is refused, so a link in a
+  page, a dropped URL or a redirect can never replace the workspace with a web page.
+- **Click interception** (`js/core/platform.js`): every external anchor is routed to
+  the system browser before it can navigate; unhandled file/URL drops are swallowed.
+
+## Content-Security-Policy
+
+Set in [`src-tauri/tauri.conf.json`](src-tauri/tauri.conf.json) (`app.security.csp`);
+Tauri injects it into the page. `default-src 'self'`; `connect-src` limited to Tauri's
+IPC plus the YouTube oEmbed and link-preview proxy endpoints; `frame-src` limited to
+YouTube; `object-src 'none'`; `base-uri 'self'`.
 
 > **Known limitation:** `script-src`/`style-src` include `'unsafe-inline'` because
-> the UI uses inline `onclick=`/`style=` attributes throughout. CSP nonces do **not**
-> cover inline event-handler attributes, so removing `'unsafe-inline'` requires
-> refactoring those into `addEventListener` wiring first. That's the highest-value
-> follow-up to make the CSP a real second line of defense against XSS.
+> the UI uses inline `onclick=`/`style=` attributes throughout. Tauri's automatic
+> nonce/hash injection is therefore disabled for those two directives
+> (`dangerousDisableAssetCspModification`) — a nonce would make browsers ignore
+> `'unsafe-inline'` and break every inline handler. Refactoring the inline handlers
+> into `addEventListener` wiring is the highest-value follow-up to make the CSP a
+> real second line of defense against XSS.
 
-### 3. Auth brute-force throttle (defense in depth)
-`js/cloud/sync.js` locks the sign-in form for an escalating cooldown after repeated
-failures. This only slows guessing **through our UI** — see the server-side note
-below for the authoritative control.
+## What is *not* in scope any more
 
----
+- **Authentication, session tokens, rate limiting, password policy** — there are no
+  accounts.
+- **Server-side access control** — there is no server.
+- **Third-party runtime dependencies** — fonts, KaTeX and the app code are all
+  bundled into the binary; nothing is loaded from a CDN. The only network traffic
+  is optional and user-initiated: YouTube embeds/oEmbed, link previews (through
+  public CORS proxies) and image-from-URL fetches.
+- **SQL injection** — there is no SQL and no query surface.
 
-## What must be set in Supabase (server-side — do this in the dashboard)
+## Reporting
 
-These are the real controls. They cannot be enforced from browser code because an
-attacker can call the Supabase API directly with the public anon key.
-
-1. **Auth rate limits** — Dashboard → *Authentication → Rate Limits*. Cap
-   sign-in / sign-up / OTP / recovery requests per hour. Keep the defaults at a
-   minimum; lower the token-refresh and email limits if abuse appears.
-2. **Bot protection (CAPTCHA)** — *Authentication → Settings → Bot and Abuse
-   Protection*. Enable hCaptcha/Turnstile so credential-stuffing scripts can't hit
-   the auth endpoints headlessly. (Pair with `captchaToken` in the client calls.)
-3. **Row-Level Security on Storage** — confirm the policy on `storage.objects`
-   restricts a signed-in user to **their own `auth.uid()` folder** for select /
-   insert / update / delete. This is what makes the **public anon key safe** — the
-   key only ever does what RLS allows. Verify with two accounts that neither can
-   read the other's `state.json`.
-4. **Redirect URL allow-list** — *Authentication → URL Configuration*. Only
-   `https://libreta.io/**` (and your Vercel preview domains). Prevents OAuth /
-   magic-link / recovery tokens from being redirected to an attacker site.
-5. **Leaked-password protection** — *Authentication → Settings* → enable the
-   HaveIBeenPwned check so users can't pick known-breached passwords.
-
----
-
-## Keys & secrets
-
-- **`SUPABASE_ANON_KEY`** (`js/cloud/config.js`) is **public by design** — it ships
-  in browser code and is gated by RLS (point 3 above). This is correct; it is *not*
-  a leak.
-- **`service_role` key** must NEVER be placed in client code or this repo. There is
-  no use for it in a static front-end.
-- **`.env*` files** (e.g. `dist/.env.local`, which Vercel CLI generates with a
-  short-lived `VERCEL_OIDC_TOKEN`) must never be deployed or committed. `build.sh`
-  copies only the explicit file list, and `.gitignore` excludes `dist/` — but if
-  you ever deploy a folder by hand, exclude `.env*`. Rotate any OIDC/dev token that
-  has been shared.
-
-## Not applicable
-
-- **SQL injection** — there is no SQL in the codebase and no server-side query we
-  build from user input. Data access goes through the Supabase Storage SDK
-  (object get/put under an RLS-scoped path). There is no injectable query surface.
-  If a Postgres/PostgREST data model is added later, use the SDK's parameterized
-  query builder (never string-concatenated SQL / `rpc` with interpolated SQL).
+Open an issue on the GitHub repository. Since nothing runs on a server, a fix ships
+as a new release for users to download; there is nothing to rotate or revoke.

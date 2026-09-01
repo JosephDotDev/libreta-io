@@ -1,0 +1,12 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Libreta's main window. The page is granted exactly three things beyond the core API: a native Save dialog, writing the file the user picked in that dialog, and opening web links in the system browser. No read access to the file system, no shell, no arbitrary paths.",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "dialog:allow-save",
+    "fs:allow-write-file",
+    "opener:default"
+  ]
+}

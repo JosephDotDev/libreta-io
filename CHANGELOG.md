@@ -259,3 +259,40 @@ Supabase cloud sync. Reconstructed from session history; oldest first.
 - **build.sh generates `sw-manifest.js`** — precache list + content-hash version;
   dev tree has no manifest so the SW never installs during development. Dist can
   be previewed with the SW active via `node .claude/serve.js dist 8754`.
+
+---
+
+## Phase 5 — Desktop app, offline for good
+
+Libreta becomes a one-and-done desktop application: free for everyone, with no
+server to run, no accounts to protect and nothing to bill. The web app, cloud sync
+and hosting are retired.
+
+### Removed
+- Supabase authentication and cloud sync (`js/cloud/`, vendored supabase-js, the
+  auth gate, sync chip, per-record reconcile engine and its test pages).
+- Vercel hosting: `vercel.json`, the analytics snippet, `robots.txt`, `DEPLOY.md`,
+  the logged-out redirect to the marketing page.
+- The service worker and its build-time precache manifest (a desktop bundle is
+  already atomic and offline), plus the `?v=N` asset cache-busters.
+- The Settings account card's sign-in call to action; the "Turn on sync" step in
+  the home checklist is now "Export a backup".
+
+### Added
+- **Tauri v2 desktop shell** (`src-tauri/`): native window, bundled assets, CSP,
+  a navigation guard, and a three-permission capability set (save dialog, write the
+  chosen file, open links externally). Icons generated from `favicon.svg`.
+- **`js/core/platform.js`** — the single browser-vs-desktop bridge.
+  `saveFileToDisk()` backs Export, Publish and attachment downloads (native Save
+  dialog in the app, `<a download>` in a browser); `openExternal()` backs every
+  outbound link; a capture-phase click handler keeps external links from navigating
+  the app window.
+- `scripts/build-dist.js` (cross-platform replacement for `build.sh`) and a root
+  `package.json` whose only dependency is the Tauri CLI.
+- GitHub Actions release workflow: a `v*` tag builds macOS (Apple Silicon + Intel),
+  Windows and Linux installers and attaches them to a draft GitHub Release.
+- `landing.html` repurposed as the download page.
+
+### Fixed
+- "Delete all my data" only cleared localStorage on a local-only workspace; it now
+  also clears the IndexedDB document/table store and the media blob store.

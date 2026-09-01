@@ -55,7 +55,7 @@ function mkBookmarkHtml(blk){
   const thumb=m.image?`<div class="bk-bm-thumb"><img src="${escHtml(m.image)}" alt="" onerror="this.closest('.bk-bm-thumb').style.display='none'"></div>`:'';
   const desc=m.desc?`<div class="bk-bm-desc">${escHtml(m.desc)}</div>`:'';
   const safe=safeUrl(u);
-  return `<a class="bk-bookmark${m.image?' has-thumb':''}" href="${escHtml(safe)}" target="_blank" rel="noopener" data-url="${escHtml(u)}" onclick="event.preventDefault();if(this.getAttribute('href')!=='#')window.open(this.href,'_blank')">
+  return `<a class="bk-bookmark${m.image?' has-thumb':''}" href="${escHtml(safe)}" target="_blank" rel="noopener" data-url="${escHtml(u)}" onclick="event.preventDefault();if(this.getAttribute('href')!=='#')openExternal(this.href)">
     <div class="bk-bm-info">
       <div class="bk-bm-title">${escHtml(m.title||u)}</div>
       ${desc}
@@ -103,7 +103,7 @@ function mentionHtml(m,mid){
   const fav=m.favicon?`<img class="mention-fav" src="${escHtml(m.favicon)}" alt="">`:'';
   const site=m.site?`<span class="mention-site">${escHtml(m.site)}</span>`:'';
   const safe=safeUrl(m.url);
-  return `<a class="mention" data-mid="${mid||''}" data-url="${escHtml(safe)}" contenteditable="false" href="${escHtml(safe)}" target="_blank" rel="noopener" onclick="event.preventDefault();if(this.getAttribute('href')!=='#')window.open(this.href,'_blank')">${fav}${site}<span class="mention-title">${escHtml(m.title||m.url)}</span></a>`;
+  return `<a class="mention" data-mid="${mid||''}" data-url="${escHtml(safe)}" contenteditable="false" href="${escHtml(safe)}" target="_blank" rel="noopener" onclick="event.preventDefault();if(this.getAttribute('href')!=='#')openExternal(this.href)">${fav}${site}<span class="mention-title">${escHtml(m.title||m.url)}</span></a>`;
 }
 function quickMeta(url){
   const u=normUrl(url),h=hostOf(u);

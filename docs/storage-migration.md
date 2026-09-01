@@ -1,5 +1,12 @@
 # Storage migration: from one blob to per-record, lazy, syncable
 
+> **Historical note (Phase 5).** Cloud sync was removed when Libreta became a desktop
+> app, so everything below about Supabase, `js/cloud/sync.js`, reconcile modes and
+> media sync describes code that no longer exists. Phase 1 (per-record IndexedDB
+> storage) and Phase 3 (cold-document compression) are still how the app stores data,
+> and the persistence-adapter seam they introduced is where a folder-based workspace
+> will plug in next.
+
 Status: **Phase 1 + Phase 3 shipped; Phase 2 + Phase 4 deferred** (see §6 for the why)
 Author: design notes for the per-page storage restructure
 Related: media efficiency (WebP + content-dedup, shipped in `js/core/storage.js`)

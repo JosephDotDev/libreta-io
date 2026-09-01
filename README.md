@@ -1,19 +1,32 @@
 # Libreta
 
-A local-first, personal workspace. No build step, no dependencies — open `index.html` from any static server and it runs. Documents, databases, and settings live in the browser (`localStorage` + `IndexedDB`); optional cloud sync via Supabase keeps everything in sync across devices.
+A local-first personal workspace that runs as a desktop app. No account, no server, no subscription: documents, databases, images and settings live on your computer (IndexedDB + localStorage inside the app's webview). The app itself is plain HTML/CSS/JS with no build step, wrapped in a native window by [Tauri](https://v2.tauri.app).
 
-Live at **[libreta.io](https://libreta.io)** · deployed on Vercel.
+Downloads for macOS, Windows and Linux are published on the **GitHub Releases** page of this repository.
 
 ---
 
 ## Running locally
 
+**Just the web app** (fastest for UI work — any static server works):
+
 ```bash
-# any static server works; the project's launch config defaults to :8753
 npx serve .
 # or
 python3 -m http.server 8753
 ```
+
+Everything works in a browser tab except the two things a desktop shell does natively: saving files and opening links go through the browser's own download/new-tab behaviour instead (see `js/core/platform.js`).
+
+**The desktop app** needs Node, Rust and Tauri's platform prerequisites (see the Tauri docs for your OS: Xcode CLT on macOS, WebView2 + MSVC build tools on Windows, `libwebkit2gtk-4.1-dev` and friends on Linux).
+
+```bash
+npm install            # pulls in the Tauri CLI (the only dependency)
+npm run desktop:dev    # assembles dist/ and opens the app in a native window
+npm run desktop:build  # produces installers under src-tauri/target/release/bundle/
+```
+
+`scripts/build-dist.js` copies exactly the shipped files into `dist/`; Tauri embeds that folder into the binary. Edit the source files, not `dist/`.
 
 > `index_3.html` is a frozen pre-split snapshot of the original single-file build. Keep it as a reference only — all active development happens in `index.html` + `css/` + `js/`.
 
@@ -24,9 +37,9 @@ python3 -m http.server 8753
 Libreta is a **personal content-planning workspace** — a place to write, organize, and track ideas without the overhead of a team tool. Its design principles:
 
 - **Local-first.** Everything works offline, instantly, with no account required. Data lives in your browser.
-- **Cloud sync as a layer.** Sign in with Supabase and your workspace follows you across devices (last-write-wins, not real-time; fine for solo use).
-- **No build step.** Plain HTML/CSS/JS loaded in order. Readable, hackable, deployable in minutes.
-- **Notion-like UX, personally owned.** Block editor, inline databases, calendar, page hierarchy — your data, your server, your rules.
+- **Yours, on your machine.** No account and nothing to sign in to. Move between machines with Export / Import (a folder-based workspace that can sit in any synced folder is the next step).
+- **No build step.** Plain HTML/CSS/JS loaded in order. Readable, hackable, and the desktop shell is a thin wrapper around the very same files.
+- **Notion-like UX, personally owned.** Block editor, inline databases, calendar, page hierarchy — your data, your device, your rules.
 
 ---
 
@@ -64,13 +77,11 @@ Libreta is a **personal content-planning workspace** — a place to write, organ
 - Back / forward navigation + breadcrumb trail
 - Mobile: off-canvas drawer below 860 px; topbar hamburger
 
-### Cloud sync & auth
-- Supabase email + password auth; Google social sign-in; password recovery
-- Auto-sync on load + debounced push on every save (no manual trigger)
-- Snapshot = every `folio_*` localStorage key + every IndexedDB blob; docs, databases, settings, and images all travel
-- RLS policy: each signed-in user reads/writes only their own `<userId>/state.json` in the `libreta` Storage bucket
-- **Settings → Data & Backup → Export / Import** — portable JSON backup (accepts legacy `folio` format too)
-- **Settings → Danger Zone → Delete all my data** — wipes local + cloud and signs out (double-confirmed)
+### Data & backup
+- No accounts and no cloud: the workspace lives entirely on this device
+- **Settings → Data & Backup → Export / Import** — portable JSON backup of everything (documents, tables, settings, images and files); accepts legacy `folio` backups too. This is the way to move a workspace between machines today
+- **Publish** — save any page as a self-contained HTML file
+- **Settings → Danger Zone → Delete all my data** — wipes the device's workspace (double-confirmed)
 
 ---
 
@@ -98,6 +109,7 @@ Key files: `01-tokens.css` (design tokens — colors, fonts; start here for them
 | `versions.js` | per-document version snapshots (rolling 40 per doc, ≥3 min apart) |
 | `config.js` | themes, fonts, settings panel |
 | `utils.js` | cursor/date helpers |
+| `platform.js` | browser vs. desktop bridge — loads first (see below) |
 | `init.js` | boot sequence — loads last |
 
 ### `js/ui/` — shared widgets
@@ -135,8 +147,11 @@ Standalone per-document properties (`properties.js`), property editor popover (`
 
 > **Important:** if you add any new place that stores an image reference, add it to `collectRefs()` in `blob-gc.js` — otherwise GC will silently delete those blobs.
 
-### `js/cloud/` — sync + auth
-`config.js` (Supabase project URL + anon key), `sync.js` (pull-on-load, debounced push-on-save, auth state, sync indicator chip).
+### `js/core/platform.js` — browser vs. desktop bridge
+Loads first. `saveFileToDisk(blob, name)` and `openExternal(url)` are the only two places that know whether the page is in a browser tab or inside the Tauri shell (`window.__TAURI__`). In the shell, saving opens a native Save dialog and writes the bytes through the `dialog` + `fs` plugins; links go to the system browser through `opener`; a capture-phase click handler makes sure no external link can navigate the app window. Every download / new-tab call site in the app goes through these two functions.
+
+### `src-tauri/` — the desktop shell
+`tauri.conf.json` (window, CSP, bundle metadata; `frontendDist` points at `dist/`), `capabilities/default.json` (the three permissions the page gets: `dialog:allow-save`, `fs:allow-write-file`, `opener:default`), `src/lib.rs` (plugin registration + a navigation guard that refuses to let the main window leave the app), `icons/` (generated from `favicon.svg` with `npx tauri icon`).
 
 ---
 
@@ -160,23 +175,15 @@ To add a different backend: implement those four methods against your API and ca
 
 ---
 
-## Deployment
+## Releasing
 
-See **`DEPLOY.md`** for the full Vercel + Supabase setup. The short version:
+Releases are built by GitHub Actions (`.github/workflows/release.yml`) — there is no server anywhere in the pipeline.
 
-```bash
-./build.sh          # assembles dist/ (index.html, manifest, favicon, css/, js/)
-cd dist
-npx vercel --prod   # ship it
-```
+1. Bump the version in **three** places so they agree: `package.json`, `src-tauri/tauri.conf.json`, `src-tauri/Cargo.toml` (then run `cargo generate-lockfile` in `src-tauri/` so `Cargo.lock` follows).
+2. Add a CHANGELOG entry, commit, and push a tag: `git tag v1.0.1 && git push origin v1.0.1`.
+3. The workflow builds macOS (Apple Silicon + Intel), Windows and Linux installers and attaches them to a **draft** GitHub Release. Review the notes, then publish.
 
-After any CSS/JS change, bump the `?v=N` cache-buster in `index.html` (one find/replace) so browsers fetch fresh assets.
-
----
-
-## Asset cache-busting
-
-`index.html`'s local `css/` + `js/` URLs carry `?v=N`. Bump `N` after any asset change. Production users get current code on a fresh load regardless.
+The installers are unsigned (signing needs paid Apple / Windows certificates). macOS users right-click → Open the first time; Windows users click "More info → Run anyway" on the SmartScreen prompt. `landing.html` is the download page and says so.
 
 ---
 
@@ -187,5 +194,7 @@ After any CSS/JS change, bump the `?v=N` cache-buster in `index.html` (one find/
 | Phase 1 — Folio | Core block editor, image storage rewrite (IndexedDB), calendar, home, inline databases, all block types |
 | Phase 2 — Libreta | Rebranded Folio → Libreta.io; Supabase cloud sync + auth; deployed to Vercel + libreta.io |
 | Phase 3 — Polish | Bug fixes (stale sidebar after delete, slash menu keyboard nav, version history, nested page GC), mobile drawer, document tree view, linked-page cards, database views as direct slash commands |
+| Phase 4 — Local-only mode | "Start writing — no account" path, account section, publish/export, per-record storage in IndexedDB |
+| Phase 5 — Desktop | Cloud sync, auth, hosting and the service worker removed; the app ships as a Tauri desktop application built by GitHub Actions. Zero servers, zero cost to run |
 
 Full details in **`CHANGELOG.md`**.

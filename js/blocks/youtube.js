@@ -35,9 +35,9 @@ function mkYoutubeHtml(blk){
   const chan=blk.meta?.author||'';
   const watch=`https://www.youtube.com/watch?v=${id}`;
   return `<div class="bk-yt-card">
-    <div class="bk-yt-thumb" onclick="window.open('${watch}','_blank')"><img src="${thumb}" alt=""><div class="bk-yt-play"><span>▶</span></div></div>
+    <div class="bk-yt-thumb" onclick="openExternal('${watch}')"><img src="${thumb}" alt=""><div class="bk-yt-play"><span>▶</span></div></div>
     <div class="bk-yt-info">
-      <div class="bk-yt-title" onclick="window.open('${watch}','_blank')" style="cursor:pointer">${escHtml(title)}</div>
+      <div class="bk-yt-title" onclick="openExternal('${watch}')" style="cursor:pointer">${escHtml(title)}</div>
       ${chan?`<div class="bk-yt-chan">${escHtml(chan)}</div>`:''}
       <textarea class="bk-yt-desc" placeholder="Add a description…" oninput="ytSetDesc('${blk.id}',this.value)">${escHtml(blk.desc||'')}</textarea>
       <div class="bk-yt-host">youtube.com</div>
@@ -219,7 +219,7 @@ document.addEventListener('scroll',()=>{document.getElementById('sel-toolbar')?.
    and is itself a cause of YouTube "Error 153". */
 function ytPlay(el,id){
   // From file:// the browser sends no referrer and YouTube can't embed → open on YouTube instead.
-  if(location.protocol==='file:'){ window.open('https://www.youtube.com/watch?v='+id,'_blank'); return; }
+  if(location.protocol==='file:'){ openExternal('https://www.youtube.com/watch?v='+id); return; }
   // Vanilla youtube.com embed (most compatible — no origin/nocookie params that can trigger 153).
   el.classList.remove('bk-yt-facade'); el.style.backgroundImage='';
   el.innerHTML=`<iframe src="https://www.youtube.com/embed/${id}?rel=0&autoplay=1&playsinline=1" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture;web-share" allowfullscreen></iframe>`;

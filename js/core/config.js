@@ -196,56 +196,39 @@ function cfgInitCollapsible(){
     sec.classList.toggle('collapsed', !!s[sl.dataset.seckey]);
   });
 }
-/* Account home — a profile + plan card at the top of Settings. Adapts to the two
-   states: signed in (avatar, name, email, synced) or local-only (no account, with
-   a sign-in CTA). Always shown — it's the identity header for the panel. */
+/* Workspace card at the top of Settings — the identity header for the panel.
+   Libreta has no accounts: everything lives on this device, so the card just
+   says so and points at the backup tools. */
 function renderAccountStatus(){
   const el=document.getElementById('cfg-account'), sec=document.getElementById('cfg-account-sec');
   if(!el||!sec) return;
   sec.style.display='';
-  let user=null; try{ if(typeof Cloud!=='undefined') user=Cloud.user; }catch(e){}
-  const plan=`<div class="acct-plan">
-      <div><div class="acct-plan-eyebrow">Current plan</div><div class="acct-plan-name">Free — forever</div><div class="acct-plan-sub">Every feature · unlimited · yours</div></div>
-    </div>`;
-  if(user){
-    const email=user.email||'';
-    const m=(user.user_metadata)||{};
-    const name=(m.full_name||m.name||m.display_name||(email?email.split('@')[0]:'')||'You').toString();
-    const initial=(name.trim()[0]||email[0]||'U').toUpperCase();
-    el.innerHTML=`<div class="acct-home">
-      <div class="acct-id">
-        <span class="acct-av">${escHtml(initial)}</span>
-        <div class="acct-meta"><div class="acct-name">${escHtml(name)}</div><div class="acct-email" title="${escAttr(email)}">${escHtml(email)}</div></div>
-      </div>
-      <div class="acct-sync acct-sync-on"><span class="acct-dot"></span>Synced across your devices</div>
-      ${plan}
-      <button class="cfg-opt acct-signout" onclick="cloudSignOut()">Log out</button>
-    </div>`;
-  }else{
-    el.innerHTML=`<div class="acct-home">
+  el.innerHTML=`<div class="acct-home">
       <div class="acct-id">
         <span class="acct-av acct-av-local"><svg viewBox="0 0 16 16"><rect x="1.5" y="2.5" width="13" height="9" rx="1.2"/><path d="M5 13.5h6"/></svg></span>
         <div class="acct-meta"><div class="acct-name">Local workspace</div><div class="acct-email">No account — everything lives on this device</div></div>
       </div>
-      ${plan}
-      <a class="acct-cta" href="index.html?signin=1">Sign in to sync &rarr;</a>
+      <div class="acct-plan">
+        <div><div class="acct-plan-eyebrow">Current plan</div><div class="acct-plan-name">Free — forever</div><div class="acct-plan-sub">Every feature · unlimited · yours</div></div>
+      </div>
     </div>`;
-  }
 }
-function cloudSignOut(){ if(typeof Cloud!=='undefined' && Cloud.signOut) Cloud.signOut(); }
-/* Danger Zone — wipe all data locally + in the cloud, then sign out. Double-confirm
-   because it can't be undone. (Cloud-only when signed in; falls back to a local
-   wipe when running offline/local-only.) */
+/* Danger Zone — wipe every trace of the workspace on this device: the small
+   localStorage singletons, the docs/tables store and the media blob store, then
+   reload into a fresh workspace. Double-confirm because it can't be undone. */
 function confirmDeleteAllData(){
-  showConfirm('Delete ALL your data — every page, database, image and setting, on this device and in the cloud? This cannot be undone.',
+  showConfirm('Delete ALL your data — every page, database, image and setting on this device? This cannot be undone.',
     ()=>{ showConfirm('Are you absolutely sure? There is no way to recover this.',
-      ()=>{
-        if(typeof Cloud!=='undefined' && Cloud.deleteEverything){ Cloud.deleteEverything(); return; }
-        // Local-only fallback
-        try{ const ks=[]; for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i); if(k&&k.indexOf('folio_')===0)ks.push(k);} ks.forEach(k=>localStorage.removeItem(k)); }catch(e){}
-        location.reload();
-      },'Delete everything','Final confirmation'); },
+      ()=>{ wipeLocalWorkspace().finally(()=>location.reload()); },
+      'Delete everything','Final confirmation'); },
     'Continue','Delete all data');
+}
+async function wipeLocalWorkspace(){
+  try{ clearTimeout(S.saveTimer); }catch(e){}
+  DB._suppress=true;   // nothing that runs during the wipe should try to re-persist
+  try{ const ks=[]; for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(k&&(k.indexOf('folio_')===0||k.indexOf('libreta_')===0)) ks.push(k); } ks.forEach(k=>localStorage.removeItem(k)); }catch(e){}
+  try{ await IDBData.clear('docs'); await IDBData.clear('tables'); }catch(e){}   // structured data store
+  try{ const keys=await IDB.keys(); for(const id of keys) await IDB.del(id); }catch(e){}   // media blobs
 }
 function closeCfg(){document.getElementById('cfg-panel').classList.remove('open');document.getElementById('cfg-ovl').classList.remove('open')}
 /* WCAG relative-luminance contrast ratio between two #rgb/#rrggbb colours, used to
