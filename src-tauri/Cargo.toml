@@ -2,7 +2,8 @@
 name = "libreta"
 version = "1.0.0"
 description = "Libreta — a local-first personal workspace"
-authors = ["Joseph Medina"]
+authors = ["Libreta contributors"]
+license = "MIT"
 edition = "2021"
 publish = false
 

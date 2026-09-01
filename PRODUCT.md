@@ -2,7 +2,7 @@
 
 > Living reference for mission, features, architecture, and roadmap. Update this as the product evolves.
 
-**Last updated:** September 1, 2026 · **Status:** Phase 5 — Libreta is now a free desktop app (Tauri). Cloud sync, accounts, hosting and monetization are retired; the web deployment is being sunset.
+**Last updated:** September 1, 2026 · **Status:** Phase 5 — Libreta is now a free desktop app (Tauri). Cloud sync, accounts and hosting are retired; the web deployment is being sunset.
 
 ---
 
@@ -300,8 +300,8 @@ js/
 
 ### Web sunset checklist
 
-1. On the last web build: hide sign-up, keep sign-in for existing testers, add a banner — "Libreta is now a desktop app. Export your data (Settings → Data & Backup) and download it here." — and ship with the service-worker kill switch so browsers stop caching the old shell.
-2. Tell the closed-test cohort directly; their data already mirrors into their browsers, so Export → Import into the desktop app is the migration.
+1. On the last web build: hide sign-up, keep sign-in for existing users, add a banner — "Libreta is now a desktop app. Export your data (Settings → Data & Backup) and download it here." — and ship with the service-worker kill switch so browsers stop caching the old shell.
+2. Tell existing web users directly; their data already mirrors into their browsers, so Export → Import into the desktop app is the migration.
 3. After the grace period: delete the Supabase project (auth + storage), remove the Vercel project, point `libreta.io` at the GitHub Pages download page (or let it lapse).
 
 ---
@@ -309,7 +309,7 @@ js/
 ## Key guardrails (don't cross these)
 
 1. **Keep heavy lifting in the browser.** No per-user server compute. If it can run client-side, it must.
-2. **Free tier stays complete.** Sync and Lifetime are upsells to people who already love Libreta — not a gate on core functionality.
+2. **Free means complete.** There is one tier. Never gate a feature, a limit or a setting behind anything.
 3. **No server, ever.** Nothing may depend on infrastructure the author runs. Device-to-device sync goes through the user's own cloud drive or a direct connection.
 4. **XSS safety.** All user-controlled URLs go through `safeUrl()`; all user HTML through `sanitizeHtml()`. Do not bypass these. (`js/core/security.js`)
 5. **Blob GC contract.** Any new block type that stores image/file references must register those refs in `collectRefs()` in `js/media/blob-gc.js`, or GC will silently delete the blobs.

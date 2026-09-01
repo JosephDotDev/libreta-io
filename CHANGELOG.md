@@ -67,7 +67,7 @@ Supabase cloud sync. Reconstructed from session history; oldest first.
   **Google social sign-in** (Apple hidden for now); login-form layout polish.
 - Loading-screen inspirational quote / fun fact.
 - Vercel Analytics.
-- Deployed to Vercel (`libreta` project) + domain `libreta.io` (Porkbun DNS).
+- Deployed to Vercel + the `libreta.io` domain.
 
 ### Fixed
 - Don't show "Title" as a shared DB property (it's built in).

@@ -4,6 +4,8 @@ A local-first personal workspace that runs as a desktop app. No account, no serv
 
 Downloads for macOS, Windows and Linux are published on the **GitHub Releases** page of this repository.
 
+Libreta is open source under the [MIT License](LICENSE); bundled fonts and KaTeX carry their own licenses, listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Contributions and forks are welcome.
+
 ---
 
 ## Running locally
