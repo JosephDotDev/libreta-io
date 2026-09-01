@@ -1,0 +1,38 @@
+# Publish landing.html (the download page) to GitHub Pages as the site's index.
+# Requires Pages to be enabled once in the repo settings with source = "GitHub Actions".
+name: Publish download page
+
+on:
+  push:
+    branches: [main]
+    paths: ['landing.html', 'css/00-fonts.css', 'fonts/**', 'favicon.svg', 'libreta-banner.png', '.github/workflows/pages.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Assemble the static site
+        run: |
+          mkdir -p _site/css
+          cp landing.html _site/index.html
+          cp favicon.svg libreta-banner.png _site/
+          cp css/00-fonts.css _site/css/
+          cp -R fonts _site/fonts
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+      - id: deployment
+        uses: actions/deploy-pages@v4
