@@ -76,6 +76,8 @@
     .hero-sub{font-size:clamp(17px,2.1vw,20px); color:#b9b1c0; max-width:60ch; margin:0 auto 36px; font-weight:300}
     .hero-cta{display:flex; gap:14px; justify-content:center; flex-wrap:wrap}
     .hero-note{margin-top:18px; font-size:13px; color:var(--mu); font-family:var(--fm)}
+    .hero-note a{color:var(--tx); text-decoration:underline; text-decoration-color:var(--bd2); text-underline-offset:3px}
+    .hero-note a:hover{text-decoration-color:var(--tx)}
 
     /* ── APP MOCKUP (hero) ───────────────────────────── */
     .mock-stage{margin:56px auto 0; max-width:1000px; position:relative}
@@ -306,7 +308,7 @@
         <a class="txt" href="#features">Features</a>
         <a class="txt" href="#customize">Make it yours</a>
         <a class="txt" href="https://github.com/JosephDotDev/libreta-io">Source</a>
-        <a class="btn btn-primary" href="https://github.com/JosephDotDev/libreta-io/releases/latest">Download</a>
+        <a class="btn btn-primary js-dl" href="https://github.com/JosephDotDev/libreta-io/releases/latest">Download</a>
       </nav>
     </div>
   </header>
@@ -330,10 +332,10 @@
         <h1 class="hero-h">A workspace that bends to <span class="ink">how you think.<svg class="uline" viewBox="0 0 260 18" preserveAspectRatio="none" aria-hidden="true"><path d="M3,11 C 60,4 170,4 252,9 C 254,9 255,11 252,12 C 170,8 60,9 6,15 C 3,15 1,13 3,11 Z" fill="#4D88E8"/></svg></span></h1>
         <p class="hero-sub">Libreta is a personal notebook, planner, and database. Endlessly customizable, built for one person instead of a whole team, and refreshingly free of "AI agents". Your pages, your structure, your rules.</p>
         <div class="hero-cta">
-          <a class="btn btn-primary btn-lg" href="https://github.com/JosephDotDev/libreta-io/releases/latest">Download for free <svg class="ic-svg"><use href="#i-arrow"/></svg></a>
+          <a class="btn btn-primary btn-lg js-dl js-dl-label" href="https://github.com/JosephDotDev/libreta-io/releases/latest">Download for free <svg class="ic-svg"><use href="#i-arrow"/></svg></a>
           <a class="btn btn-ghost btn-lg" href="#features">See what's inside</a>
         </div>
-        <div class="hero-note">No credit card · Works offline · Syncs across your devices</div>
+        <div class="hero-note js-dl-note">No account · Works offline · Free for macOS, Windows &amp; Linux</div>
 
         <!-- HERO APP MOCKUP -->
         <div class="mock-stage">
@@ -539,9 +541,10 @@
           <h2>Start your <em>libreta</em> today</h2>
           <p>Download, open, write. Free forever, yours to shape — for macOS, Windows and Linux.</p>
           <div class="hero-cta">
-            <a class="btn btn-primary btn-lg" href="https://github.com/JosephDotDev/libreta-io/releases/latest">Download — it's free <svg class="ic-svg"><use href="#i-arrow"/></svg></a>
+            <a class="btn btn-primary btn-lg js-dl js-dl-label" href="https://github.com/JosephDotDev/libreta-io/releases/latest">Download — it's free <svg class="ic-svg"><use href="#i-arrow"/></svg></a>
             <a class="btn btn-ghost btn-lg" href="https://github.com/JosephDotDev/libreta-io">View the source</a>
           </div>
+          <div class="hero-note js-dl-note">No account · Works offline · Free for macOS, Windows &amp; Linux</div>
           <p style="font-size:13px;color:var(--mu);margin-top:18px;line-height:1.6">Libreta is free and unsigned, so your OS will ask once: on macOS right-click the app and choose <b>Open</b>; on Windows choose <b>More info → Run anyway</b>.</p>
         </div>
       </div>
@@ -555,7 +558,7 @@
         <nav class="foot-links">
           <a href="#features">Features</a>
           <a href="#customize">Make it yours</a>
-          <a href="https://github.com/JosephDotDev/libreta-io/releases/latest">Download</a>
+          <a class="js-dl" href="https://github.com/JosephDotDev/libreta-io/releases/latest">Download</a>
           <a href="https://github.com/JosephDotDev/libreta-io">Source</a>
         </nav>
       </div>
@@ -569,6 +572,106 @@
     var onScroll=function(){ nav.classList.toggle('scrolled', window.scrollY>8); };
     window.addEventListener('scroll', onScroll, {passive:true}); onScroll();
     document.getElementById('yr').textContent='© '+new Date().getFullYear();
+
+    /* ── Direct downloads ──────────────────────────────────────────────────────
+       Every Download button starts out pointing at the GitHub Releases page (which
+       always works). If we can read the latest release from GitHub's public API and
+       recognise the visitor's OS, the buttons become a direct link to the right
+       installer and the note underneath names the file, its version and size, with
+       the other platforms one click away. Anything unexpected (no release yet, API
+       rate-limited, unknown OS, a phone) leaves the safe default in place. */
+    (function(){
+      var REPO='JosephDotDev/libreta-io';
+      var RELEASES='https://github.com/'+REPO+'/releases/latest';
+      var btns=document.querySelectorAll('.js-dl');
+      var notes=document.querySelectorAll('.js-dl-note');
+      if(!btns.length||!window.fetch) return;
+
+      function detectOS(){
+        var ua=navigator.userAgent||'';
+        if(/iPhone|iPad|iPod|Android/i.test(ua)) return 'mobile';
+        if(/Macintosh|Mac OS X/i.test(ua)) return 'mac';
+        if(/Windows/i.test(ua)) return 'win';
+        if(/Linux|X11|CrOS/i.test(ua)) return 'linux';
+        return null;
+      }
+      /* Apple Silicon vs Intel. Chromium exposes it; Safari does not, so fall back to
+         the GPU name, then to Apple Silicon (the Intel build is offered right beside). */
+      function macArch(){
+        return new Promise(function(done){
+          try{
+            if(navigator.userAgentData&&navigator.userAgentData.getHighEntropyValues){
+              return navigator.userAgentData.getHighEntropyValues(['architecture']).then(function(v){
+                done(v.architecture==='x86'?'x64':'arm64');
+              }).catch(function(){ done(glGuess()); });
+            }
+          }catch(e){}
+          done(glGuess());
+        });
+        function glGuess(){
+          try{
+            var gl=document.createElement('canvas').getContext('webgl');
+            var ext=gl&&gl.getExtension('WEBGL_debug_renderer_info');
+            var r=ext?String(gl.getParameter(ext.UNMASKED_RENDERER_WEBGL)):'';
+            if(/Intel|AMD|Radeon/i.test(r)) return 'x64';
+          }catch(e){}
+          return 'arm64';
+        }
+      }
+      function pick(assets,re){ for(var i=0;i<assets.length;i++){ if(re.test(assets[i].name)) return assets[i]; } return null; }
+      function mb(n){ return n?(Math.round(n/1048576*10)/10)+' MB':''; }
+      function esc(t){ return String(t).replace(/[&<>"]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+      function link(a,label){ return a?'<a href="'+esc(a.browser_download_url)+'">'+esc(label)+'</a>':''; }
+      function setButtons(url,label){
+        for(var i=0;i<btns.length;i++){
+          btns[i].href=url;
+          if(label&&btns[i].classList.contains('js-dl-label')){
+            for(var n=btns[i].firstChild;n;n=n.nextSibling){ if(n.nodeType===3&&n.nodeValue.trim()){ n.nodeValue=label+' '; break; } }
+          }
+        }
+      }
+      function setNotes(html){ for(var i=0;i<notes.length;i++) notes[i].innerHTML=html; }
+
+      fetch('https://api.github.com/repos/'+REPO+'/releases/latest',{headers:{'Accept':'application/vnd.github+json'}})
+        .then(function(r){ return r.ok?r.json():null; })
+        .then(function(rel){
+          if(!rel||!rel.assets||!rel.assets.length) return;
+          var A=rel.assets, ver=rel.tag_name||'';
+          var f={
+            macArm: pick(A,/aarch64.*\.dmg$/i), macX64: pick(A,/x64.*\.dmg$/i),
+            win: pick(A,/-setup\.exe$/i)||pick(A,/\.msi$/i),
+            appimage: pick(A,/\.AppImage$/i), deb: pick(A,/\.deb$/i), rpm: pick(A,/\.rpm$/i)
+          };
+          var all=' · <a href="'+RELEASES+'">All downloads</a>';
+          var os=detectOS();
+          if(os==='mac'&&(f.macArm||f.macX64)){
+            return macArch().then(function(arch){
+              var main=(arch==='x64'?f.macX64:f.macArm)||f.macArm||f.macX64;
+              var other=main===f.macArm?f.macX64:f.macArm;
+              var isArm=main===f.macArm;
+              setButtons(main.browser_download_url,'Download for macOS');
+              setNotes('macOS ('+(isArm?'Apple Silicon':'Intel')+') · '+esc(ver)+' · '+mb(main.size)
+                +(other?' · '+link(other,isArm?'Intel Mac?':'Apple Silicon Mac?'):'')+all);
+            });
+          }
+          if(os==='win'&&f.win){
+            setButtons(f.win.browser_download_url,'Download for Windows');
+            setNotes('Windows 10/11 · '+esc(ver)+' · '+mb(f.win.size)+all);
+            return;
+          }
+          if(os==='linux'&&(f.appimage||f.deb||f.rpm)){
+            var main=f.appimage||f.deb||f.rpm;
+            setButtons(main.browser_download_url,'Download for Linux');
+            var alts=[]; if(f.deb&&f.deb!==main) alts.push(link(f.deb,'.deb')); if(f.rpm&&f.rpm!==main) alts.push(link(f.rpm,'.rpm'));
+            setNotes('Linux ('+(main===f.appimage?'AppImage':main===f.deb?'.deb':'.rpm')+') · '+esc(ver)+' · '+mb(main.size)
+              +(alts.length?' · also '+alts.join(' / '):'')+all);
+            return;
+          }
+          // Phone, tablet or unknown OS: keep the Releases page, just say what exists.
+          setNotes(esc(ver)+' for macOS, Windows &amp; Linux — a desktop app'+all);
+        })
+        .catch(function(){ /* keep the default links */ });
+    })();
   </script>
 </body>
 </html>
