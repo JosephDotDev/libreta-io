@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Download Libreta — free for macOS, Windows and Linux</title>
+  <meta name="description" content="Download Libreta, a free local-first personal workspace, for macOS, Windows and Linux. No account, no server, no subscription.">
+  <meta name="theme-color" content="#0D0C0F">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/00-fonts.css">
+  <style>
+    :root{
+      /* Cool near-black shell. Blue leads; rose / lime / gold / teal are equal
+         "pops". No single dominant hue, no gradients — flat ink + colour blocks. */
+      --bg:#0D0C0F; --sur:#17161B; --sur2:#1E1C22; --bd:#221F2A; --bd2:#2E2A38;
+      --tx:#E2DCD4; --mu:#857F8C;
+      --bl:#4D88E8; --ac:#E05572; --gr:#5DC27A; --go:#D4A83C; --tl:#46B5A6; --pu:#9A7DD6; --re:#C45454;
+      --fs:'Cormorant',Georgia,serif;
+      --fn:'DM Sans',system-ui,sans-serif;
+      --fm:'DM Mono',monospace;
+      --maxw:1120px;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth}
+    body{font-family:var(--fn); background:var(--bg); color:var(--tx); line-height:1.6; -webkit-font-smoothing:antialiased; overflow-x:hidden}
+    a{color:inherit;text-decoration:none}
+    ::selection{background:rgba(77,136,232,.22);color:#fff}
+    .wrap{max-width:var(--maxw); margin:0 auto; padding:0 24px; position:relative; z-index:1}
+    svg{display:block}
+    /* Line-icon defaults — every icon is a stroke drawing that inherits its colour
+       from the parent, so any element can be tinted with a section colour. */
+    .ic-svg{width:1em; height:1em; stroke:currentColor; fill:none; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round}
+
+    /* ── NAV ─────────────────────────────────────────── */
+    header.nav{position:sticky; top:0; z-index:50; backdrop-filter:blur(10px);
+      background:rgba(13,12,15,.72); border-bottom:1px solid transparent; transition:border-color .2s,background .2s}
+    header.nav.scrolled{border-color:var(--bd); background:rgba(13,12,15,.9)}
+    .nav-in{display:flex; align-items:center; justify-content:space-between; height:64px}
+    .brand{font-family:var(--fs); font-size:27px; font-weight:600; letter-spacing:.01em}
+    .brand i{font-style:normal; color:var(--bl)}
+    .nav-links{display:flex; align-items:center; gap:8px}
+    .nav-links a.txt{color:var(--mu); font-size:14px; padding:9px 14px; border-radius:7px; transition:color .15s}
+    .nav-links a.txt:hover{color:var(--tx)}
+
+    .btn{display:inline-flex; align-items:center; justify-content:center; gap:8px;
+      font-family:var(--fn); font-weight:500; font-size:14px; border:1px solid transparent;
+      padding:10px 18px; border-radius:9px; cursor:pointer; transition:transform .12s,background .15s,border-color .15s,box-shadow .15s; white-space:nowrap}
+    .btn:active{transform:translateY(1px)}
+    .btn .ic-svg{width:16px;height:16px;stroke-width:2.1}
+    .btn-primary{background:var(--bl); color:#06122a; box-shadow:0 6px 22px -10px rgba(77,136,232,.75)}
+    .btn-primary:hover{background:#5f97ea; box-shadow:0 10px 30px -10px rgba(77,136,232,.85)}
+    .btn-ghost{background:transparent; color:var(--tx); border-color:var(--bd2)}
+    .btn-ghost:hover{border-color:var(--mu); background:var(--sur)}
+    .btn-lg{padding:14px 26px; font-size:15.5px; border-radius:11px}
+
+    /* ── DOWNLOAD PAGE ───────────────────────────────── */
+    main{padding:64px 0 24px}
+    .kicker{display:inline-flex; align-items:center; gap:9px; font-family:var(--fm); font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:var(--mu); margin-bottom:14px}
+    .kicker::before{content:''; width:22px; height:2px; border-radius:2px; background:var(--bl)}
+    h1{font-family:var(--fs); font-weight:500; font-size:clamp(38px,5.6vw,64px); line-height:1.05; letter-spacing:-.01em; margin-bottom:14px}
+    h1 em{font-style:italic; color:var(--bl)}
+    h2{font-family:var(--fs); font-weight:500; font-size:clamp(26px,3.4vw,36px); line-height:1.1; margin-bottom:22px}
+    .lead{color:#b1a9bb; font-size:17px; font-weight:300; max-width:62ch}
+    .meta{font-family:var(--fm); font-size:13px; color:var(--mu); margin-top:14px}
+    .meta a{color:var(--tx); text-decoration:underline; text-decoration-color:var(--bd2); text-underline-offset:3px}
+    .reco{margin:34px 0 0; display:flex; align-items:center; gap:18px; flex-wrap:wrap; background:var(--sur); border:1px solid var(--bd2); border-radius:16px; padding:22px 24px}
+    .reco .reco-txt{flex:1; min-width:220px}
+    .reco .reco-txt b{display:block; font-size:16px; margin-bottom:3px}
+    .reco .reco-txt span{color:var(--mu); font-size:13.5px; font-family:var(--fm)}
+    .reco[hidden]{display:none}
+    section{padding:52px 0 0}
+    .plat{display:grid; grid-template-columns:repeat(3,1fr); gap:16px}
+    .pcard{background:var(--sur); border:1px solid var(--bd); border-radius:14px; padding:22px 22px 14px; position:relative}
+    .pcard.is-you{border-color:var(--bl); box-shadow:0 0 0 1px rgba(77,136,232,.35), 0 18px 40px -30px rgba(77,136,232,.6)}
+    .pcard .you{position:absolute; top:-11px; right:16px; font-family:var(--fm); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:#06122a; background:var(--bl); padding:4px 9px; border-radius:100px; display:none}
+    .pcard.is-you .you{display:inline-block}
+    .pcard h3{display:flex; align-items:center; gap:10px; font-size:18px; font-weight:600; margin-bottom:4px}
+    .pcard h3 .ic-svg{width:20px;height:20px;color:var(--bl)}
+    .pcard .req{color:var(--mu); font-size:13px; margin-bottom:14px; font-weight:300}
+    .file{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 0; border-top:1px solid var(--bd)}
+    .file .fn{min-width:0}
+    .file .fn b{display:block; font-size:14px; font-weight:500}
+    .file .fn span{font-family:var(--fm); font-size:11.5px; color:var(--mu)}
+    .file .btn{padding:8px 14px; font-size:13px; border-radius:8px; flex-shrink:0}
+    .file .btn.pending{opacity:.55; pointer-events:none}
+    .steps{display:grid; grid-template-columns:repeat(3,1fr); gap:16px}
+    .step{background:var(--sur); border:1px solid var(--bd); border-radius:14px; padding:22px}
+    .step h3{font-size:16.5px; font-weight:600; margin-bottom:12px}
+    .step ol{padding-left:20px; display:flex; flex-direction:column; gap:9px; color:#cbc3d2; font-size:14.5px}
+    .step ol li::marker{color:var(--bl); font-family:var(--fm)}
+    .step code{font-family:var(--fm); font-size:12.5px; background:var(--sur2); border:1px solid var(--bd); border-radius:6px; padding:1px 6px; color:var(--tx)}
+    .step p{color:var(--mu); font-size:13.5px; margin-top:12px; font-weight:300}
+    .why{margin-top:26px; background:rgba(212,168,60,.08); border:1px solid rgba(212,168,60,.3); border-radius:14px; padding:18px 22px; color:#cbc3d2; font-size:14.5px}
+    .why b{color:var(--go)}
+    .more{display:flex; gap:14px; flex-wrap:wrap; margin-top:8px}
+    @media(max-width:860px){ .plat,.steps{grid-template-columns:1fr} }
+    @media(max-width:560px){ .nav-links a.txt{display:none} main{padding-top:44px} }
+    @media(prefers-reduced-motion:reduce){*{transition:none!important}}
+
+    footer{border-top:1px solid var(--bd); padding:40px 0 56px; margin-top:72px}
+    .foot-in{display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:18px}
+    .foot-in .brand{font-size:22px}
+    .foot-links{display:flex; gap:22px; font-size:13.5px; color:var(--mu)}
+    .foot-links a:hover{color:var(--tx)}
+    .foot-note{color:var(--mu); font-size:12.5px; font-family:var(--fm); margin-top:20px}
+  </style>
+</head>
+<body>
+  <header class="nav" id="nav">
+    <div class="wrap nav-in">
+      <a class="brand" href="./">Libre<i>ta</i></a>
+      <nav class="nav-links">
+        <a class="txt" href="./">Overview</a>
+        <a class="txt" href="#install">Installing</a>
+        <a class="txt" href="https://github.com/JosephDotDev/libreta-io">Source</a>
+        <a class="btn btn-primary" href="#all">All files</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <div class="wrap">
+      <div class="kicker">Download</div>
+      <h1>Get <em>Libreta</em></h1>
+      <p class="lead">A free, open-source personal workspace that lives entirely on your computer. Pick the file for your system below — the whole install is one download.</p>
+      <div class="meta" id="dl-meta">Checking the latest version…</div>
+
+      <div class="reco" id="dl-reco" hidden>
+        <div class="reco-txt"><b id="reco-title">Recommended for this computer</b><span id="reco-sub"></span></div>
+        <a class="btn btn-primary btn-lg" id="reco-btn" href="#all">Download</a>
+      </div>
+
+      <section id="all">
+        <h2>All platforms</h2>
+        <div class="plat">
+          <div class="pcard" data-os="mac"><span class="you">Your system</span>
+            <h3><svg class="ic-svg" viewBox="0 0 24 24"><path d="M16.4 12.7c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.2-2.8.8-3.6.8-.7 0-1.9-.8-3.1-.8-1.6 0-3.1.9-3.9 2.4-1.7 2.9-.4 7.2 1.2 9.6.8 1.2 1.8 2.5 3 2.4 1.2 0 1.7-.8 3.1-.8 1.5 0 1.9.8 3.2.8 1.3 0 2.1-1.2 2.9-2.4.9-1.3 1.3-2.6 1.3-2.7-.1 0-2.7-1-2.7-4zM14.2 5.4c.6-.8 1.1-1.9 1-3-.9 0-2.1.6-2.7 1.4-.6.7-1.1 1.8-1 2.9 1 .1 2.1-.5 2.7-1.3z"/></svg>macOS</h3>
+            <div class="req">macOS 11 Big Sur or later</div>
+        <div class="file"><div class="fn"><b>Apple Silicon</b><span data-size="macArm">M1, M2, M3, M4 Macs · .dmg</span></div><a class="btn btn-primary pending" data-asset="macArm" href="https://github.com/JosephDotDev/libreta-io/releases/latest">Download</a></div>
+        <div class="file"><div class="fn"><b>Intel</b><span data-size="macX64">Macs from 2020 and earlier · .dmg</span></div><a class="btn btn-primary pending" data-asset="macX64" href="https://github.com/JosephDotDev/libreta-io/releases/latest">Download</a></div>
+          </div>
+          <div class="pcard" data-os="win"><span class="you">Your system</span>
+            <h3><svg class="ic-svg" viewBox="0 0 24 24"><path d="M3 5.5l7.5-1v7H3zM11.5 4.3L21 3v8.5h-9.5zM3 12.5h7.5v7L3 18.5zM11.5 12.5H21V21l-9.5-1.3z"/></svg>Windows</h3>
+            <div class="req">Windows 10 or 11, 64-bit</div>
+        <div class="file"><div class="fn"><b>Installer</b><span data-size="winExe">Recommended · .exe</span></div><a class="btn btn-primary pending" data-asset="winExe" href="https://github.com/JosephDotDev/libreta-io/releases/latest">Download</a></div>
+        <div class="file"><div class="fn"><b>MSI package</b><span data-size="winMsi">For managed installs · .msi</span></div><a class="btn btn-primary pending" data-asset="winMsi" href="https://github.com/JosephDotDev/libreta-io/releases/latest">Download</a></div>
+          </div>
+          <div class="pcard" data-os="linux"><span class="you">Your system</span>
+            <h3><svg class="ic-svg" viewBox="0 0 24 24"><path d="M12 3c-2.2 0-3.5 1.8-3.5 4.2 0 1.3-.4 2.2-1.1 3.4C6.5 12.2 5 14 5 16.2c0 .9.3 1.6.8 2.1-.6.4-1.3 1-1.3 1.7 0 .9 1.4 1 2.6 1 .9 0 1.9-.5 2.4-1 .7.3 1.5.5 2.5.5s1.8-.2 2.5-.5c.5.5 1.5 1 2.4 1 1.2 0 2.6-.1 2.6-1 0-.7-.7-1.3-1.3-1.7.5-.5.8-1.2.8-2.1 0-2.2-1.5-4-2.4-5.6-.7-1.2-1.1-2.1-1.1-3.4C15.5 4.8 14.2 3 12 3z"/><path d="M10 8.5h.01M14 8.5h.01M10.5 11.5c.6.6 2.4.6 3 0"/></svg>Linux</h3>
+            <div class="req">64-bit, WebKitGTK 4.1</div>
+        <div class="file"><div class="fn"><b>AppImage</b><span data-size="appimage">Runs on any distribution</span></div><a class="btn btn-primary pending" data-asset="appimage" href="https://github.com/JosephDotDev/libreta-io/releases/latest">Download</a></div>
+        <div class="file"><div class="fn"><b>Debian / Ubuntu</b><span data-size="deb">.deb package</span></div><a class="btn btn-primary pending" data-asset="deb" href="https://github.com/JosephDotDev/libreta-io/releases/latest">Download</a></div>
+        <div class="file"><div class="fn"><b>Fedora / openSUSE</b><span data-size="rpm">.rpm package</span></div><a class="btn btn-primary pending" data-asset="rpm" href="https://github.com/JosephDotDev/libreta-io/releases/latest">Download</a></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="install">
+        <h2>Installing</h2>
+        <div class="steps">
+          <div class="step">
+            <h3>macOS</h3>
+            <ol>
+              <li>Open the <code>.dmg</code> and drag Libreta into <b>Applications</b>.</li>
+              <li>Open Libreta once. macOS will say it can't verify the developer — click <b>Done</b>.</li>
+              <li>Go to <b>System Settings → Privacy &amp; Security</b>, scroll down and click <b>Open Anyway</b>, then confirm.</li>
+            </ol>
+            <p>Only needed the first time. On macOS 14 and earlier, right-clicking the app and choosing <b>Open</b> works too.</p>
+          </div>
+          <div class="step">
+            <h3>Windows</h3>
+            <ol>
+              <li>Run the setup <code>.exe</code>.</li>
+              <li>If SmartScreen appears, click <b>More info</b>, then <b>Run anyway</b>.</li>
+              <li>Follow the installer. Libreta appears in the Start menu.</li>
+            </ol>
+            <p>Libreta uses the WebView2 runtime that ships with Windows 11 and updated Windows 10; the installer fetches it if it's missing.</p>
+          </div>
+          <div class="step">
+            <h3>Linux</h3>
+            <ol>
+              <li><b>AppImage:</b> make it executable (<code>chmod +x Libreta*.AppImage</code>) and run it.</li>
+              <li><b>Debian / Ubuntu:</b> <code>sudo apt install ./Libreta*.deb</code></li>
+              <li><b>Fedora:</b> <code>sudo dnf install ./Libreta*.rpm</code></li>
+            </ol>
+            <p>The .deb and .rpm pull in WebKitGTK 4.1 automatically; for the AppImage, install <code>libwebkit2gtk-4.1</code> from your distribution if it doesn't start.</p>
+          </div>
+        </div>
+        <div class="why"><b>Why the warnings?</b> Libreta is free and isn't signed with a paid Apple or Microsoft developer certificate, so both systems ask before running it the first time. Every installer here is built in public by GitHub Actions from the open source in the repository — you can read exactly what went into it.</div>
+      </section>
+
+      <section>
+        <h2>More</h2>
+        <div class="more">
+          <a class="btn btn-ghost" id="notes-link" href="https://github.com/JosephDotDev/libreta-io/releases">Release notes &amp; older versions</a>
+          <a class="btn btn-ghost" href="https://github.com/JosephDotDev/libreta-io/issues">Report a problem</a>
+          <a class="btn btn-ghost" href="https://github.com/JosephDotDev/libreta-io">Source code</a>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <div class="foot-in">
+        <a class="brand" href="./">Libre<i>ta</i></a>
+        <nav class="foot-links">
+          <a href="./">Overview</a>
+          <a href="#all">Downloads</a>
+          <a href="https://github.com/JosephDotDev/libreta-io">Source</a>
+        </nav>
+      </div>
+      <div class="foot-note">Libreta · A personal workspace, built around you. <span id="yr"></span></div>
+    </div>
+  </footer>
+
+  <script>
+    var nav=document.getElementById('nav');
+    var onScroll=function(){ nav.classList.toggle('scrolled', window.scrollY>8); };
+    window.addEventListener('scroll', onScroll, {passive:true}); onScroll();
+    document.getElementById('yr').textContent='© '+new Date().getFullYear();
+
+    /* Fill every file row from the latest GitHub release, mark the visitor's own
+       platform, and offer one recommended download at the top. If GitHub can't be
+       reached (or there is no release yet) the rows keep pointing at the Releases page. */
+    (function(){
+      var REPO='JosephDotDev/libreta-io';
+      var RELEASES='https://github.com/'+REPO+'/releases';
+      var MATCH={ macArm:/aarch64.*\.dmg$/i, macX64:/x64.*\.dmg$/i, winExe:/-setup\.exe$/i, winMsi:/\.msi$/i, appimage:/\.AppImage$/i, deb:/\.deb$/i, rpm:/\.rpm$/i };
+      var meta=document.getElementById('dl-meta');
+      function esc(t){ return String(t).replace(/[&<>"]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+      function mb(n){ return n?(Math.round(n/1048576*10)/10)+' MB':''; }
+      function detectOS(){
+        var ua=navigator.userAgent||'';
+        if(/iPhone|iPad|iPod|Android/i.test(ua)) return 'mobile';
+        if(/Macintosh|Mac OS X/i.test(ua)) return 'mac';
+        if(/Windows/i.test(ua)) return 'win';
+        if(/Linux|X11|CrOS/i.test(ua)) return 'linux';
+        return null;
+      }
+      function macArch(){
+        return new Promise(function(done){
+          try{
+            if(navigator.userAgentData&&navigator.userAgentData.getHighEntropyValues){
+              return navigator.userAgentData.getHighEntropyValues(['architecture']).then(function(v){ done(v.architecture==='x86'?'x64':'arm64'); }).catch(function(){ done(glGuess()); });
+            }
+          }catch(e){}
+          done(glGuess());
+        });
+        function glGuess(){
+          try{ var gl=document.createElement('canvas').getContext('webgl'); var ext=gl&&gl.getExtension('WEBGL_debug_renderer_info'); var r=ext?String(gl.getParameter(ext.UNMASKED_RENDERER_WEBGL)):''; if(/Intel|AMD|Radeon/i.test(r)) return 'x64'; }catch(e){}
+          return 'arm64';
+        }
+      }
+      var os=detectOS();
+      if(os==='mac'||os==='win'||os==='linux'){ var card=document.querySelector('.pcard[data-os="'+os+'"]'); if(card) card.classList.add('is-you'); }
+
+      fetch('https://api.github.com/repos/'+REPO+'/releases/latest',{headers:{'Accept':'application/vnd.github+json'}})
+        .then(function(r){ return r.ok?r.json():null; })
+        .then(function(rel){
+          if(!rel||!rel.assets||!rel.assets.length){ offline(); return; }
+          var found={};
+          Object.keys(MATCH).forEach(function(k){ for(var i=0;i<rel.assets.length;i++){ if(MATCH[k].test(rel.assets[i].name)){ found[k]=rel.assets[i]; break; } } });
+          var date=rel.published_at?new Date(rel.published_at).toLocaleDateString(undefined,{year:'numeric',month:'long',day:'numeric'}):'';
+          meta.innerHTML='Latest version <b>'+esc(rel.tag_name||'')+'</b>'+(date?' · released '+esc(date):'')+' · <a href="'+esc(rel.html_url||RELEASES)+'">release notes</a>';
+          if(rel.html_url) document.getElementById('notes-link').href=RELEASES;
+          document.querySelectorAll('[data-asset]').forEach(function(a){
+            var f=found[a.getAttribute('data-asset')];
+            if(f){ a.href=f.browser_download_url; a.classList.remove('pending'); var sz=document.querySelector('[data-size="'+a.getAttribute('data-asset')+'"]'); if(sz&&f.size) sz.textContent=sz.textContent+' · '+mb(f.size); }
+            else { a.classList.remove('pending'); a.textContent='On GitHub'; a.classList.remove('btn-primary'); a.classList.add('btn-ghost'); }
+          });
+          // One recommended download for the visitor's own system.
+          function reco(file,title,sub){
+            if(!file) return;
+            document.getElementById('reco-title').textContent=title;
+            document.getElementById('reco-sub').textContent=sub+' · '+esc(rel.tag_name||'')+' · '+mb(file.size);
+            var b=document.getElementById('reco-btn'); b.href=file.browser_download_url; b.textContent='Download '+esc(file.name);
+            document.getElementById('dl-reco').hidden=false;
+          }
+          if(os==='mac'&&(found.macArm||found.macX64)){
+            macArch().then(function(arch){ var f=(arch==='x64'?found.macX64:found.macArm)||found.macArm||found.macX64; reco(f,'Recommended for this Mac', f===found.macArm?'Apple Silicon':'Intel'); });
+          } else if(os==='win'&&found.winExe){ reco(found.winExe,'Recommended for this PC','Windows installer'); }
+          else if(os==='linux'&&found.appimage){ reco(found.appimage,'Recommended for this system','AppImage — runs on any distribution'); }
+        })
+        .catch(offline);
+      /* No release yet, or GitHub unreachable: say so, and turn every row into a plain
+         link to the Releases page so nothing on the page is a dead end. */
+      function offline(){
+        meta.innerHTML='Couldn\'t load the version list — every file is on the <a href="'+RELEASES+'">GitHub Releases page</a>.';
+        document.querySelectorAll('[data-asset]').forEach(function(a){ a.classList.remove('pending'); a.href=RELEASES; a.textContent='On GitHub'; });
+      }
+    })();
+  </script>
+</body>
+</html>

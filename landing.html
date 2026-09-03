@@ -308,7 +308,7 @@
         <a class="txt" href="#features">Features</a>
         <a class="txt" href="#customize">Make it yours</a>
         <a class="txt" href="https://github.com/JosephDotDev/libreta-io">Source</a>
-        <a class="btn btn-primary js-dl" href="https://github.com/JosephDotDev/libreta-io/releases/latest">Download</a>
+        <a class="btn btn-primary js-dl" href="download.html">Download</a>
       </nav>
     </div>
   </header>
@@ -332,7 +332,7 @@
         <h1 class="hero-h">A workspace that bends to <span class="ink">how you think.<svg class="uline" viewBox="0 0 260 18" preserveAspectRatio="none" aria-hidden="true"><path d="M3,11 C 60,4 170,4 252,9 C 254,9 255,11 252,12 C 170,8 60,9 6,15 C 3,15 1,13 3,11 Z" fill="#4D88E8"/></svg></span></h1>
         <p class="hero-sub">Libreta is a personal notebook, planner, and database. Endlessly customizable, built for one person instead of a whole team, and refreshingly free of "AI agents". Your pages, your structure, your rules.</p>
         <div class="hero-cta">
-          <a class="btn btn-primary btn-lg js-dl js-dl-label" href="https://github.com/JosephDotDev/libreta-io/releases/latest">Download for free <svg class="ic-svg"><use href="#i-arrow"/></svg></a>
+          <a class="btn btn-primary btn-lg js-dl js-dl-label" href="download.html">Download for free <svg class="ic-svg"><use href="#i-arrow"/></svg></a>
           <a class="btn btn-ghost btn-lg" href="#features">See what's inside</a>
         </div>
         <div class="hero-note js-dl-note">No account · Works offline · Free for macOS, Windows &amp; Linux</div>
@@ -541,11 +541,11 @@
           <h2>Start your <em>libreta</em> today</h2>
           <p>Download, open, write. Free forever, yours to shape — for macOS, Windows and Linux.</p>
           <div class="hero-cta">
-            <a class="btn btn-primary btn-lg js-dl js-dl-label" href="https://github.com/JosephDotDev/libreta-io/releases/latest">Download — it's free <svg class="ic-svg"><use href="#i-arrow"/></svg></a>
+            <a class="btn btn-primary btn-lg js-dl js-dl-label" href="download.html">Download — it's free <svg class="ic-svg"><use href="#i-arrow"/></svg></a>
             <a class="btn btn-ghost btn-lg" href="https://github.com/JosephDotDev/libreta-io">View the source</a>
           </div>
           <div class="hero-note js-dl-note">No account · Works offline · Free for macOS, Windows &amp; Linux</div>
-          <p style="font-size:13px;color:var(--mu);margin-top:18px;line-height:1.6">Libreta is free and unsigned, so your OS will ask once: on macOS right-click the app and choose <b>Open</b>; on Windows choose <b>More info → Run anyway</b>.</p>
+          <p style="font-size:13px;color:var(--mu);margin-top:18px;line-height:1.6">Libreta is free and unsigned, so your OS will ask once: on macOS open it, then allow it under <b>System Settings → Privacy &amp; Security → Open Anyway</b>; on Windows choose <b>More info → Run anyway</b>. <a href="download.html#install">Step-by-step →</a></p>
         </div>
       </div>
     </section>
@@ -558,7 +558,7 @@
         <nav class="foot-links">
           <a href="#features">Features</a>
           <a href="#customize">Make it yours</a>
-          <a class="js-dl" href="https://github.com/JosephDotDev/libreta-io/releases/latest">Download</a>
+          <a class="js-dl" href="download.html">Download</a>
           <a href="https://github.com/JosephDotDev/libreta-io">Source</a>
         </nav>
       </div>
@@ -574,15 +574,15 @@
     document.getElementById('yr').textContent='© '+new Date().getFullYear();
 
     /* ── Direct downloads ──────────────────────────────────────────────────────
-       Every Download button starts out pointing at the GitHub Releases page (which
-       always works). If we can read the latest release from GitHub's public API and
+       Every Download button starts out pointing at download.html (which lists every
+       file and always works). If we can read the latest release from GitHub's public API and
        recognise the visitor's OS, the buttons become a direct link to the right
        installer and the note underneath names the file, its version and size, with
        the other platforms one click away. Anything unexpected (no release yet, API
        rate-limited, unknown OS, a phone) leaves the safe default in place. */
     (function(){
       var REPO='JosephDotDev/libreta-io';
-      var RELEASES='https://github.com/'+REPO+'/releases/latest';
+      var ALL='download.html';   // the downloads page: every platform, install steps
       var btns=document.querySelectorAll('.js-dl');
       var notes=document.querySelectorAll('.js-dl-note');
       if(!btns.length||!window.fetch) return;
@@ -642,7 +642,7 @@
             win: pick(A,/-setup\.exe$/i)||pick(A,/\.msi$/i),
             appimage: pick(A,/\.AppImage$/i), deb: pick(A,/\.deb$/i), rpm: pick(A,/\.rpm$/i)
           };
-          var all=' · <a href="'+RELEASES+'">All downloads</a>';
+          var all=' · <a href="'+ALL+'">All downloads</a>';
           var os=detectOS();
           if(os==='mac'&&(f.macArm||f.macX64)){
             return macArch().then(function(arch){
