@@ -185,7 +185,7 @@ Releases are built by GitHub Actions (`.github/workflows/release.yml`) — there
 2. Add a CHANGELOG entry, commit, and push a tag: `git tag v1.0.1 && git push origin v1.0.1`.
 3. The workflow builds macOS (Apple Silicon + Intel), Windows and Linux installers and attaches them to a **draft** GitHub Release. Review the notes, then publish.
 
-The installers are unsigned (signing needs paid Apple / Windows certificates). macOS users allow the app once under System Settings → Privacy & Security → Open Anyway; Windows users click "More info → Run anyway" on the SmartScreen prompt. `landing.html` (the site's front page) detects the visitor's OS and links straight to the right installer; `download.html` lists every file with install steps. Both read the latest release from GitHub's public API and fall back to the Releases page.
+The installers are not signed with a paid Apple / Windows developer certificate. The macOS bundle is **ad-hoc signed** (`bundle.macOS.signingIdentity` is `-` in `tauri.conf.json`): without that, Apple Silicon Macs refuse to open the app at all with a "damaged" dialog; with it, macOS shows the normal unidentified-developer prompt instead. macOS users allow the app once under System Settings → Privacy & Security → Open Anyway; Windows users click "More info → Run anyway" on the SmartScreen prompt. `landing.html` (the site's front page) detects the visitor's OS and links straight to the right installer; `download.html` lists every file with install steps. Both read the latest release from GitHub's public API and fall back to the Releases page.
 
 ---
 

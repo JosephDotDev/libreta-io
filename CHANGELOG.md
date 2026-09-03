@@ -296,3 +296,10 @@ and hosting are retired.
 ### Fixed
 - "Delete all my data" only cleared localStorage on a local-only workspace; it now
   also clears the IndexedDB document/table store and the media blob store.
+
+### 1.0.1 — macOS launch fix
+- The macOS bundle is now ad-hoc signed by the release build (`bundle.macOS.signingIdentity: "-"`).
+  1.0.0 shipped with no signature at all, which Apple Silicon Macs report as "damaged" and
+  refuse to open. Ad-hoc signing turns that into the standard unidentified-developer prompt.
+- Download page, landing note and release notes document the `xattr -cr` fallback for the
+  quarantine flag.

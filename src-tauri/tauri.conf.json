@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Libreta",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "identifier": "io.libreta.desktop",
   "build": {
     "frontendDist": "../dist",
@@ -32,6 +32,9 @@
   "bundle": {
     "active": true,
     "targets": "all",
+    "macOS": {
+      "signingIdentity": "-"
+    },
     "category": "Productivity",
     "publisher": "Libreta",
     "copyright": "© Libreta contributors",

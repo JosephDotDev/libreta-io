@@ -166,6 +166,7 @@
               <li>Go to <b>System Settings → Privacy &amp; Security</b>, scroll down and click <b>Open Anyway</b>, then confirm.</li>
             </ol>
             <p>Only needed the first time. On macOS 14 and earlier, right-clicking the app and choosing <b>Open</b> works too.</p>
+            <p>If macOS instead says the app <b>is damaged</b>, that's the download quarantine flag, not a broken file. Open Terminal, paste <code>xattr -cr /Applications/Libreta.app</code>, press Return, then open Libreta normally.</p>
           </div>
           <div class="step">
             <h3>Windows</h3>
