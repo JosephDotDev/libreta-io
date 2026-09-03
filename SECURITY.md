@@ -75,10 +75,23 @@ YouTube; `object-src 'none'`; `base-uri 'self'`.
   accounts.
 - **Server-side access control** — there is no server.
 - **Third-party runtime dependencies** — fonts, KaTeX and the app code are all
-  bundled into the binary; nothing is loaded from a CDN. The only network traffic
-  is optional and user-initiated: YouTube embeds/oEmbed, link previews (through
-  public CORS proxies) and image-from-URL fetches.
+  bundled into the binary; nothing is loaded from a CDN.
 - **SQL injection** — there is no SQL and no query surface.
+
+## Network activity
+
+Libreta works with no connection at all. Everything it can send is listed here.
+
+| Request | When | Carries |
+|---|---|---|
+| `api.github.com` — latest release | At most once a day, desktop only, and only while Settings → About has automatic checks on. Also on demand from "Check for updates" | Nothing. An unauthenticated GET; GitHub sees an IP and user-agent as it would for any page |
+| YouTube oEmbed / embeds | Only when the user adds a YouTube block | The video ID |
+| Link previews (public CORS proxies) | Only when the user pastes a link and asks for a preview | The URL being previewed — note this means a third-party proxy sees that URL |
+| Image-from-URL | Only when the user adds an image by URL | The image URL |
+
+The update check is the only one Libreta starts by itself, it never downloads or
+installs anything, and it can be switched off permanently in Settings → About
+(`js/core/updates.js`). Every other request is a direct result of a user action.
 
 ## Reporting
 

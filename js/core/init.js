@@ -16,4 +16,7 @@
   // Idle: gzip-compress documents that have been cold for >30 days (shrinks on-disk
   // size; they inflate transparently on next load and decompress when reopened).
   try{ if(typeof compactColdDocs==='function') setTimeout(()=>compactColdDocs(30),5000); }catch(e){}
+  // Idle: ask GitHub once a day whether a newer release exists (desktop only, and
+  // only while Settings → About has automatic checks switched on).
+  try{ if(typeof maybeCheckForUpdates==='function') setTimeout(maybeCheckForUpdates,4000); }catch(e){}
 })();

@@ -306,3 +306,10 @@ and hosting are retired.
 - **The actual requirement on macOS** is `xattr -cr /Applications/Libreta.app`, run once before
   first launch. The download page, landing note and release notes now lead with this instead of
   describing it as a rare fallback.
+
+### Unreleased
+- **In-app update check.** The desktop app asks GitHub once a day whether a newer
+  release exists and offers a link to the download page if so; it never downloads or
+  installs anything itself. Settings → About shows the running version, a manual
+  "Check for updates", and an off switch. Dismissing a version with "Not now" stops
+  that version being offered again.

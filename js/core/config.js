@@ -156,6 +156,7 @@ function openCfg(tab){
   document.getElementById('cfg-panel').classList.add('open');
   document.getElementById('cfg-ovl').classList.add('open');
   updCfgUI();renderStorageStatus();renderAccountStatus();
+  if(typeof renderAbout==='function') renderAbout();
   if(typeof updateTrashBadge==='function')updateTrashBadge();
   cfgInitCollapsible();
   // Two scopes share this panel: "This page" (per-page formatting) and
