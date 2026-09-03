@@ -297,9 +297,12 @@ and hosting are retired.
 - "Delete all my data" only cleared localStorage on a local-only workspace; it now
   also clears the IndexedDB document/table store and the media blob store.
 
-### 1.0.1 — macOS launch fix
+### 1.0.1 — macOS signing (did not fix the launch problem)
 - The macOS bundle is now ad-hoc signed by the release build (`bundle.macOS.signingIdentity: "-"`).
-  1.0.0 shipped with no signature at all, which Apple Silicon Macs report as "damaged" and
-  refuse to open. Ad-hoc signing turns that into the standard unidentified-developer prompt.
-- Download page, landing note and release notes document the `xattr -cr` fallback for the
-  quarantine flag.
+  This is worth keeping — arm64 binaries need at least an ad-hoc signature to execute — but it
+  does **not** change what a user sees. Gatekeeper only accepts a Developer ID signature plus
+  Apple notarisation; an ad-hoc signature counts as unsigned, so a downloaded copy is still
+  reported as "damaged and can't be opened", with no "Open Anyway" path.
+- **The actual requirement on macOS** is `xattr -cr /Applications/Libreta.app`, run once before
+  first launch. The download page, landing note and release notes now lead with this instead of
+  describing it as a rare fallback.

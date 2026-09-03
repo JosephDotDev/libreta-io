@@ -71,7 +71,15 @@ jobs:
           releaseBody: |
             Libreta desktop — free, offline, no account.
 
-            **Installing an unsigned app:** on macOS, open Libreta once, then go to *System Settings → Privacy & Security* and click *Open Anyway*. If macOS says the app is damaged, run `xattr -cr /Applications/Libreta.app` in Terminal once and open it again. On Windows, choose *More info → Run anyway* on the SmartScreen prompt. On Linux, make the AppImage executable or install the .deb / .rpm. Full steps: https://josephdotdev.github.io/libreta-io/download.html#install
+            **macOS:** drag Libreta to Applications, then run this in Terminal once before opening it:
+            `xattr -cr /Applications/Libreta.app`
+            Without it macOS says the app "is damaged" — it isn't; that's what macOS shows for any app Apple hasn't notarised, which needs a paid developer account.
+
+            **Windows:** choose *More info → Run anyway* on the SmartScreen prompt.
+
+            **Linux:** make the AppImage executable, or install the .deb / .rpm.
+
+            Full steps: https://josephdotdev.github.io/libreta-io/download.html#install
 
             See CHANGELOG.md for what changed.
           releaseDraft: true
