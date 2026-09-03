@@ -4,11 +4,16 @@
 /* #3 — transient toast + a shake-and-dim animation for rejected actions.
    Back-compat: toast(msg) and toast(msg, ms) still work. Pass an options object
    to get a meaning-tinted variant: toast(msg, {type:'success'|'info'|'warn'|'error'|'celebrate', ms}). */
+/* The one place the toast container is created. Every toast flavour mounts here. */
+function _toastWrap(){
+  let w=document.getElementById('toast-wrap');
+  if(!w){ w=document.createElement('div'); w.id='toast-wrap'; w.className='toast-wrap'; document.body.appendChild(w); }
+  return w;
+}
 const TOAST_ICON={success:'✓',info:'ℹ',warn:'!',error:'✕',celebrate:'🔥'};
 function toast(msg,opt){
   const o=(typeof opt==='number')?{ms:opt}:(opt||{});
-  let wrap=document.getElementById('toast-wrap');
-  if(!wrap){wrap=document.createElement('div');wrap.id='toast-wrap';wrap.className='toast-wrap';document.body.appendChild(wrap)}
+  const wrap=_toastWrap();
   const t=document.createElement('div'); t.className='toast'+(o.type?(' toast-'+o.type):'');
   if(o.type&&TOAST_ICON[o.type]){ const ic=document.createElement('span'); ic.className='toast-ic'; ic.textContent=TOAST_ICON[o.type]; t.appendChild(ic); }
   const tx=document.createElement('span'); tx.textContent=msg; t.appendChild(tx);
@@ -17,8 +22,7 @@ function toast(msg,opt){
 }
 /* Sticky toast with a spinner that stays up until .done()/.fail() is called. */
 function progressToast(msg){
-  let wrap=document.getElementById('toast-wrap');
-  if(!wrap){wrap=document.createElement('div');wrap.id='toast-wrap';wrap.className='toast-wrap';document.body.appendChild(wrap)}
+  const wrap=_toastWrap();
   const t=document.createElement('div'); t.className='toast';
   const ic=document.createElement('span'); ic.className='toast-spin';
   const tx=document.createElement('span'); tx.textContent=msg;
@@ -36,6 +40,23 @@ function progressToast(msg){
     done:(m)=>finish(m,true),
     fail:(m)=>finish(m,false,2600),
   };
+}
+/* Sticky toast that carries buttons and waits for one of them. `actions` is a list
+   of {label, ghost?, onClick?}; clicking any button closes the toast and runs its
+   handler. Returns a handle so a caller can close it itself. */
+function actionToast(msg,actions){
+  const t=document.createElement('div'); t.className='toast toast-sticky';
+  const tx=document.createElement('span'); tx.textContent=msg; t.appendChild(tx);
+  const close=()=>t.remove();
+  (actions||[]).forEach(a=>{
+    const b=document.createElement('button');
+    b.className='toast-act'+(a.ghost?' ghost':'');
+    b.textContent=a.label;
+    b.onclick=()=>{ close(); if(a.onClick) a.onClick(); };
+    t.appendChild(b);
+  });
+  _toastWrap().appendChild(t);
+  return { remove:close };
 }
 function shakeEl(el){
   if(!el) return;

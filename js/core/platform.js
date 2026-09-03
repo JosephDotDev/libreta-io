@@ -12,9 +12,20 @@
 
    Desktop detection is `window.__TAURI__`, injected by the shell
    (tauri.conf.json → app.withGlobalTauri). The plugin namespaces used here are
-   dialog, fs, opener and path; each is granted in src-tauri/capabilities/.
+   dialog, fs, opener, path and app; each is granted in src-tauri/capabilities/.
 ═══════════════════════════════════════════════ */
 const IS_DESKTOP = typeof window !== 'undefined' && !!window.__TAURI__;
+
+/* The running app version, read from the bundle itself (tauri.conf.json and
+   Cargo.toml keep it in step). Memoised as a promise so concurrent callers share
+   one IPC round-trip. Resolves to '' in a browser, where there is no install. */
+let _appVer;
+function appVersion(){
+  if(_appVer) return _appVer;
+  try{ _appVer = IS_DESKTOP ? window.__TAURI__.app.getVersion().catch(()=>'') : Promise.resolve(''); }
+  catch(e){ _appVer = Promise.resolve(''); }
+  return _appVer;
+}
 
 /* Save a Blob under `filename`.
    Desktop: native Save dialog (defaulting to the Downloads folder) → write bytes.

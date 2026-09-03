@@ -14,10 +14,16 @@
 const UPD_REPO     = 'JosephDotDev/libreta-io';
 const UPD_PAGE     = 'https://josephdotdev.github.io/libreta-io/download.html';
 const UPD_INTERVAL = 864e5;   // 24 h between automatic checks
-/* Device-local keys (never exported, never part of a backup). */
-const UPD_LAST = 'libreta_update_lastcheck';   // ms timestamp of the last completed check
-const UPD_SKIP = 'libreta_update_skipped';     // a version the user chose to ignore
-const UPD_OFF  = 'libreta_update_off';         // '1' when automatic checks are switched off
+/* Device-local keys — deliberately outside folio_cfg so they never ride a backup:
+   when you last checked and what you dismissed are facts about THIS machine. */
+const UPD_LAST = 'libreta_update_lastcheck';
+const UPD_SKIP = 'libreta_update_skipped';
+const UPD_OFF  = 'libreta_update_off';
+/* One try/catch for the whole module, the same shape as _calPrefs/_saveCalPrefs
+   in views/calendar.js — call sites below read and write plainly. */
+function _updGet(k){ try{ return localStorage.getItem(k)||''; }catch(e){ return ''; } }
+function _updSet(k,v){ try{ v==null ? localStorage.removeItem(k) : localStorage.setItem(k,v); }catch(e){} }
+function _updLast(){ return parseInt(_updGet(UPD_LAST),10)||0; }
 
 /* Compare two version strings numerically, part by part. Handles a leading "v"
    and ignores any pre-release suffix ("1.2.0-beta.1" compares as "1.2.0"). */
@@ -28,35 +34,27 @@ function verNewer(a,b){
   return false;
 }
 
-let _appVer=null;
-async function appVersion(){
-  if(_appVer!==null) return _appVer;
-  try{ _appVer = IS_DESKTOP ? await window.__TAURI__.app.getVersion() : ''; }catch(e){ _appVer=''; }
-  return _appVer;
-}
-
-function updateChecksOn(){ try{ return localStorage.getItem(UPD_OFF)!=='1'; }catch(e){ return true; } }
-function setUpdateChecks(on){
-  try{ on ? localStorage.removeItem(UPD_OFF) : localStorage.setItem(UPD_OFF,'1'); }catch(e){}
-  renderAbout();
-}
+function updateChecksOn(){ return _updGet(UPD_OFF)!=='1'; }
+function setUpdateChecks(on){ _updSet(UPD_OFF, on?null:'1'); renderAbout(); }
 
 /* Ask GitHub for the newest release. Throws on network failure, a rate limit
    (60 unauthenticated requests per hour per IP), or a repo with no release yet. */
 async function checkForUpdates(){
-  const r = await fetch('https://api.github.com/repos/'+UPD_REPO+'/releases/latest',
-                        { headers:{ 'Accept':'application/vnd.github+json' }, cache:'no-store' });
+  // Stamp the ATTEMPT, not the success: a machine that can't reach GitHub —
+  // offline, behind a firewall, rate-limited — must still fall under the daily
+  // throttle, or it retries a doomed connection on every single launch.
+  _updSet(UPD_LAST, String(Date.now()));
+  // The version comes from the shell and the tag from the network; nothing links
+  // them, so let them run together.
+  const [r, current] = await Promise.all([
+    fetch('https://api.github.com/repos/'+UPD_REPO+'/releases/latest',
+          { headers:{ 'Accept':'application/vnd.github+json' }, cache:'no-store' }),
+    appVersion(),
+  ]);
   if(!r.ok) throw new Error('GitHub returned '+r.status);
   const rel = await r.json();
   if(!rel || !rel.tag_name) throw new Error('no release found');
-  try{ localStorage.setItem(UPD_LAST, String(Date.now())); }catch(e){}
-  const current = await appVersion();
-  return {
-    current,
-    latest: String(rel.tag_name).replace(/^v/i,''),
-    newer:  !!current && verNewer(rel.tag_name, current),
-    notes:  rel.html_url || '',
-  };
+  return { latest: String(rel.tag_name).replace(/^v/i,''), newer: !!current && verNewer(rel.tag_name, current) };
 }
 
 /* Boot check: quiet, throttled, and never interrupts. Any failure (offline, rate
@@ -64,46 +62,35 @@ async function checkForUpdates(){
    something worth showing an error about. */
 async function maybeCheckForUpdates(){
   if(!IS_DESKTOP || !updateChecksOn()) return;
-  let last=0; try{ last=parseInt(localStorage.getItem(UPD_LAST)||'0',10)||0; }catch(e){}
-  if(Date.now()-last < UPD_INTERVAL) return;
+  if(Date.now()-_updLast() < UPD_INTERVAL) return;
   let info; try{ info=await checkForUpdates(); }catch(e){ return; }
-  if(!info.newer) return;
-  let skipped=''; try{ skipped=localStorage.getItem(UPD_SKIP)||''; }catch(e){}
-  if(skipped===info.latest) return;          // the user already said "not now" to this one
-  showUpdateToast(info);
+  if(info.newer && _updGet(UPD_SKIP)!==info.latest) showUpdateToast(info);
 }
 
-/* Sticky toast: "Get it" opens the download page in the browser, "Not now"
-   remembers this version so the same notice doesn't reappear tomorrow. */
+/* "Get it" opens the download page in the browser; "Not now" remembers this
+   version so the same notice doesn't come back tomorrow. */
 function showUpdateToast(info){
-  let wrap=document.getElementById('toast-wrap');
-  if(!wrap){ wrap=document.createElement('div'); wrap.id='toast-wrap'; wrap.className='toast-wrap'; document.body.appendChild(wrap); }
-  const t=document.createElement('div'); t.className='toast toast-sticky';
-  const tx=document.createElement('span'); tx.textContent='Libreta '+info.latest+' is available.';
-  const get=document.createElement('button'); get.className='toast-act'; get.textContent='Get it';
-  get.onclick=()=>{ openExternal(UPD_PAGE); t.remove(); };
-  const no=document.createElement('button'); no.className='toast-act'; no.textContent='Not now';
-  no.style.background='transparent'; no.style.color='var(--mu)';
-  no.onclick=()=>{ try{ localStorage.setItem(UPD_SKIP, info.latest); }catch(e){} t.remove(); };
-  t.appendChild(tx); t.appendChild(get); t.appendChild(no);
-  wrap.appendChild(t);
+  actionToast('Libreta '+info.latest+' is available.', [
+    { label:'Get it',                onClick:()=>openExternal(UPD_PAGE) },
+    { label:'Not now', ghost:true,   onClick:()=>_updSet(UPD_SKIP, info.latest) },
+  ]);
 }
 
 /* Settings → About → "Check for updates". Unlike the boot check this one always
    reports back, including failures, because the user explicitly asked. */
 async function checkForUpdatesNow(){
-  const p=(typeof progressToast==='function')?progressToast('Checking for updates…'):null;
+  const p=progressToast('Checking for updates…');
   try{
     const info=await checkForUpdates();
     if(info.newer){
-      try{ localStorage.removeItem(UPD_SKIP); }catch(e){}   // an explicit check un-skips
-      if(p) p.done('Libreta '+info.latest+' is available');
+      _updSet(UPD_SKIP, null);   // an explicit check un-dismisses
+      p.done();                  // the sticky toast below carries the version
       showUpdateToast(info);
     }else{
-      if(p) p.done('You’re on the latest version');
+      p.done('You’re on the latest version');
     }
   }catch(e){
-    if(p) p.fail('Could not reach GitHub — try again later');
+    p.fail('Could not reach GitHub — try again later');
   }
   renderAbout();
 }
@@ -116,12 +103,13 @@ function renderAbout(){
     return;
   }
   appVersion().then(v=>{
-    let last=0; try{ last=parseInt(localStorage.getItem(UPD_LAST)||'0',10)||0; }catch(e){}
-    const on=updateChecksOn();
-    const when=last?('Last checked '+new Date(last).toLocaleDateString(undefined,{month:'short',day:'numeric'})+' at '+new Date(last).toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'})):'Not checked yet';
+    const on=updateChecksOn(), last=_updLast();
+    const sub = !on   ? 'Automatic checks are off'
+              : last  ? 'Last checked '+fmtVersionTime(last)
+              :         'Not checked yet';
     el.innerHTML=`
       <div style="font-size:12px;color:var(--tx);margin-bottom:2px">Libreta ${escHtml(v||'—')}</div>
-      <div style="font-size:10px;color:var(--mu);margin-bottom:10px">${escHtml(on?when:'Automatic checks are off')}</div>
+      <div style="font-size:10px;color:var(--mu);margin-bottom:10px">${escHtml(sub)}</div>
       <button class="cfg-opt" onclick="checkForUpdatesNow()">Check for updates</button>
       <div class="cfg-opt-row" style="margin-top:8px">
         <button class="cfg-opt${on?' on':''}" onclick="setUpdateChecks(true)">Check automatically</button>

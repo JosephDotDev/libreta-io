@@ -35,6 +35,8 @@ td .mention{font-size:11px}
 .toast-sticky{pointer-events:auto}
 .toast-act{background:var(--ac);color:#fff;border:none;border-radius:var(--r-md);padding:4px 11px;font-size:11px;font-weight:600;font-family:var(--fm);cursor:pointer}
 .toast-act:hover{filter:brightness(1.08)}
+.toast-act.ghost{background:transparent;color:var(--mu)}
+.toast-act.ghost:hover{filter:none;color:var(--tx)}
 @keyframes toastSpin{to{transform:rotate(360deg)}}
 .tip{position:fixed;z-index:3000;background:var(--sur);border:1px solid var(--bd2);color:var(--tx);font-size:11px;font-family:var(--fm);padding:5px 9px;border-radius:var(--r-md);box-shadow:var(--elev-1);pointer-events:none;opacity:0;transition:opacity .13s ease;max-width:240px;line-height:1.4;display:none;white-space:normal}
 .tip.show{opacity:1}
