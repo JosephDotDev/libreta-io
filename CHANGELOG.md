@@ -307,7 +307,7 @@ and hosting are retired.
   first launch. The download page, landing note and release notes now lead with this instead of
   describing it as a rare fallback.
 
-### Unreleased
+### 1.0.3
 - **Google sign-in now works in the desktop app.** It opens the system browser and
   comes back through a `libreta://auth-callback` deep link, so an account created with
   Google on the web — which has no password at all — can finally be used on the
