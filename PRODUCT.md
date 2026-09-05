@@ -292,10 +292,10 @@ js/
 | Phase | What | Status |
 |---|---|---|
 | **1 — Desktop shell** | Tauri v2 wrapper; cloud, hosting and service worker removed; native save dialogs + external links; CSP and navigation guard | ✅ Done |
-| **3 — Distribution** | GitHub Actions builds macOS (arm64 + x64), Windows and Linux installers on a `v*` tag; `landing.html` becomes the download page on GitHub Pages | ✅ Done (first tag still to be pushed) |
+| **3 — Distribution** | GitHub Actions builds macOS (arm64 + x64), Windows, Linux and a sideloadable Android APK on a `v*` tag; `landing.html` + `download.html` on GitHub Pages | ✅ Done |
 | **Web sunset** | Deploy one last web build with sign-up hidden, a banner pointing at the desktop download and Export, and the service-worker kill switch; after a grace period delete the Supabase project and the Vercel deployment | ⏳ Next — see below |
 | **2 — Folder workspace** | Filesystem persistence adapter behind `setPersistenceAdapter()`: one JSON file per document/table, media by content hash, one settings file, in a user-chosen folder. One-click migration from IndexedDB. Gives desktop↔desktop sync for free through any cloud-drive folder | Planned |
-| **4 — Bring your own cloud + mobile** | Storage adapter that talks straight to the user's Dropbox (later Google Drive) with client-side OAuth, reusing the per-record model; a mobile PWA served from GitHub Pages so phones can join | Planned |
+| **4 — Bring your own cloud** | Storage adapter that talks straight to the user's Dropbox (later Google Drive) with client-side OAuth, so the phone and the desktop share one workspace. iPhone would come via a PWA on GitHub Pages (no App Store) | Planned |
 | **Later — LAN sync** | Desktop hosts a local service; phone pairs by scanning one QR code (address + one-time key) and reconciles directly | Idea |
 
 ### Web sunset checklist

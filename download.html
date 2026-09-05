@@ -69,7 +69,7 @@
     .reco .reco-txt span{color:var(--mu); font-size:13.5px; font-family:var(--fm)}
     .reco[hidden]{display:none}
     section{padding:52px 0 0}
-    .plat{display:grid; grid-template-columns:repeat(3,1fr); gap:16px}
+    .plat{display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:16px}
     .pcard{background:var(--sur); border:1px solid var(--bd); border-radius:14px; padding:22px 22px 14px; position:relative}
     .pcard.is-you{border-color:var(--bl); box-shadow:0 0 0 1px rgba(77,136,232,.35), 0 18px 40px -30px rgba(77,136,232,.6)}
     .pcard .you{position:absolute; top:-11px; right:16px; font-family:var(--fm); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:#06122a; background:var(--bl); padding:4px 9px; border-radius:100px; display:none}
@@ -83,7 +83,7 @@
     .file .fn span{font-family:var(--fm); font-size:11.5px; color:var(--mu)}
     .file .btn{padding:8px 14px; font-size:13px; border-radius:8px; flex-shrink:0}
     .file .btn.pending{opacity:.55; pointer-events:none}
-    .steps{display:grid; grid-template-columns:repeat(3,1fr); gap:16px}
+    .steps{display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:16px}
     .step{background:var(--sur); border:1px solid var(--bd); border-radius:14px; padding:22px}
     .step h3{font-size:16.5px; font-weight:600; margin-bottom:12px}
     .step ol{padding-left:20px; display:flex; flex-direction:column; gap:9px; color:#cbc3d2; font-size:14.5px}
@@ -123,7 +123,7 @@
     <div class="wrap">
       <div class="kicker">Download</div>
       <h1>Get <em>Libreta</em></h1>
-      <p class="lead">A free, open-source personal workspace that lives entirely on your computer. Pick the file for your system below — the whole install is one download.</p>
+      <p class="lead">A free, open-source personal workspace that lives entirely on your device. Pick the file for your system below — the whole install is one download.</p>
       <div class="meta" id="dl-meta">Checking the latest version…</div>
 
       <div class="reco" id="dl-reco" hidden>
@@ -152,6 +152,10 @@
         <div class="file"><div class="fn"><b>AppImage</b><span data-size="appimage">Runs on any distribution</span></div><a class="btn btn-primary pending" data-asset="appimage" href="https://github.com/JosephDotDev/libreta-io/releases/latest">Download</a></div>
         <div class="file"><div class="fn"><b>Debian / Ubuntu</b><span data-size="deb">.deb package</span></div><a class="btn btn-primary pending" data-asset="deb" href="https://github.com/JosephDotDev/libreta-io/releases/latest">Download</a></div>
         <div class="file"><div class="fn"><b>Fedora / openSUSE</b><span data-size="rpm">.rpm package</span></div><a class="btn btn-primary pending" data-asset="rpm" href="https://github.com/JosephDotDev/libreta-io/releases/latest">Download</a></div>
+          <div class="pcard" data-os="android"><span class="you">Your system</span>
+            <h3><svg class="ic-svg" viewBox="0 0 24 24"><path d="M6 10a6 6 0 0 1 12 0v7a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1z"/><path d="M8 7l-1.5-2.5M16 7l1.5-2.5M9.5 11h.01M14.5 11h.01M9 18v3M15 18v3M3 11v5M21 11v5"/></svg>Android</h3>
+            <div class="req">Android 7.0 or later · installs from the file, not the Play Store</div>
+        <div class="file"><div class="fn"><b>APK</b><span data-size="apk">Phones and tablets · .apk</span></div><a class="btn btn-primary pending" data-asset="apk" href="https://github.com/JosephDotDev/libreta-io/releases/latest">Download</a></div>
           </div>
         </div>
       </section>
@@ -186,6 +190,15 @@
               <li><b>Fedora:</b> <code>sudo dnf install ./Libreta*.rpm</code></li>
             </ol>
             <p>The .deb and .rpm pull in WebKitGTK 4.1 automatically; for the AppImage, install <code>libwebkit2gtk-4.1</code> from your distribution if it doesn't start.</p>
+          </div>
+          <div class="step">
+            <h3>Android</h3>
+            <ol>
+              <li>Download the <code>.apk</code> on the phone and open it from the download notification or your Files app.</li>
+              <li>Android asks to allow installs from that app (Chrome, Files…). Allow it — once is enough.</li>
+              <li>Tap <b>Install</b>. If Play Protect warns about an unknown developer, choose <b>More details → Install anyway</b>.</li>
+            </ol>
+            <p>Updates: download the newer .apk and install it over the top — your notes stay. Libreta isn't on the Play Store, so it never updates by itself.</p>
           </div>
         </div>
         <div class="why"><b>Why the warnings?</b> Libreta is free and isn't signed with a paid Apple or Microsoft developer certificate. Windows shows a warning you can click past; macOS is stricter and refuses outright until you run the command above. Every installer here is built in public by GitHub Actions from the open source in this repository — you can read exactly what went into the file you're downloading.</div>
@@ -228,13 +241,14 @@
     (function(){
       var REPO='JosephDotDev/libreta-io';
       var RELEASES='https://github.com/'+REPO+'/releases';
-      var MATCH={ macArm:/aarch64.*\.dmg$/i, macX64:/x64.*\.dmg$/i, winExe:/-setup\.exe$/i, winMsi:/\.msi$/i, appimage:/\.AppImage$/i, deb:/\.deb$/i, rpm:/\.rpm$/i };
+      var MATCH={ macArm:/aarch64.*\.dmg$/i, macX64:/x64.*\.dmg$/i, winExe:/-setup\.exe$/i, winMsi:/\.msi$/i, appimage:/\.AppImage$/i, deb:/\.deb$/i, rpm:/\.rpm$/i, apk:/\.apk$/i };
       var meta=document.getElementById('dl-meta');
       function esc(t){ return String(t).replace(/[&<>"]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
       function mb(n){ return n?(Math.round(n/1048576*10)/10)+' MB':''; }
       function detectOS(){
         var ua=navigator.userAgent||'';
-        if(/iPhone|iPad|iPod|Android/i.test(ua)) return 'mobile';
+        if(/Android/i.test(ua)) return 'android';
+        if(/iPhone|iPad|iPod/i.test(ua)) return 'ios';
         if(/Macintosh|Mac OS X/i.test(ua)) return 'mac';
         if(/Windows/i.test(ua)) return 'win';
         if(/Linux|X11|CrOS/i.test(ua)) return 'linux';
@@ -255,7 +269,7 @@
         }
       }
       var os=detectOS();
-      if(os==='mac'||os==='win'||os==='linux'){ var card=document.querySelector('.pcard[data-os="'+os+'"]'); if(card) card.classList.add('is-you'); }
+      if(os==='mac'||os==='win'||os==='linux'||os==='android'){ var card=document.querySelector('.pcard[data-os="'+os+'"]'); if(card) card.classList.add('is-you'); }
 
       fetch('https://api.github.com/repos/'+REPO+'/releases/latest',{headers:{'Accept':'application/vnd.github+json'}})
         .then(function(r){ return r.ok?r.json():null; })
@@ -283,6 +297,7 @@
             macArch().then(function(arch){ var f=(arch==='x64'?found.macX64:found.macArm)||found.macArm||found.macX64; reco(f,'Recommended for this Mac', f===found.macArm?'Apple Silicon':'Intel'); });
           } else if(os==='win'&&found.winExe){ reco(found.winExe,'Recommended for this PC','Windows installer'); }
           else if(os==='linux'&&found.appimage){ reco(found.appimage,'Recommended for this system','AppImage — runs on any distribution'); }
+          else if(os==='android'&&found.apk){ reco(found.apk,'Recommended for this phone','Android APK'); }
         })
         .catch(offline);
       /* No release yet, or GitHub unreachable: say so, and turn every row into a plain

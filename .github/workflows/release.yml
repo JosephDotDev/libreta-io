@@ -1,7 +1,7 @@
-# Build the Libreta desktop app for every platform and attach the installers to a
-# draft GitHub Release. Triggered by pushing a version tag (v1.2.3); can also be run
+# Build Libreta for every platform — desktop installers plus an Android APK — and
+# attach them to a draft GitHub Release. Triggered by pushing a version tag (v1.2.3); can also be run
 # by hand from the Actions tab. There is no server anywhere in this pipeline.
-name: Release desktop app
+name: Release
 
 on:
   push:
@@ -79,9 +79,105 @@ jobs:
 
             **Linux:** make the AppImage executable, or install the .deb / .rpm.
 
+            **Android:** open the .apk on the phone, allow installs from that app when asked, tap Install. Updates install over the top; your notes stay.
+
             Full steps: https://josephdotdev.github.io/libreta-io/download.html#install
 
             See CHANGELOG.md for what changed.
           releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}
+
+  # ── Android ────────────────────────────────────────────────────────────────
+  # A signed APK for sideloading from the release page (no Play Store, no fee).
+  # Runs after the desktop legs so the draft release exists to attach to. Signing
+  # needs a keystore in the repository secrets (README → Releasing → Android). If
+  # the secrets are missing the APK is still built as a check, but not uploaded —
+  # an unsigned APK cannot be installed, and a keystore generated per build would
+  # stop users from updating in place.
+  android:
+    needs: build
+    if: ${{ startsWith(github.ref, 'refs/tags/') }}
+    runs-on: ubuntu-22.04
+    env:
+      NDK_VERSION: 27.2.12479018
+      BUILD_TOOLS: 34.0.0
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools platforms;android-34 build-tools;${{ env.BUILD_TOOLS }} ndk;${{ env.NDK_VERSION }}
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android,armv7-linux-androideabi
+
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+
+      - name: Install the Tauri CLI
+        run: npm ci
+
+      - name: Generate the Android project
+        run: npx tauri android init --ci --skip-targets-install
+        env:
+          NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/${{ env.NDK_VERSION }}
+
+      # arm64 + 32-bit arm cover every phone in use; skipping the x86 emulator ABIs
+      # roughly halves the build. One universal APK holds both.
+      - name: Build the APK
+        run: npx tauri android build --ci --apk --target aarch64 armv7
+        env:
+          NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/${{ env.NDK_VERSION }}
+
+      - name: Check for the signing keystore
+        id: keys
+        env:
+          KS: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "$KS" ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::ANDROID_KEYSTORE_BASE64 is not set — the APK was built as a check but not signed or uploaded. See README → Releasing → Android."
+          fi
+
+      - name: Sign the APK
+        if: steps.keys.outputs.present == 'true'
+        env:
+          KS_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KS_PASS: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASS: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          BT="$ANDROID_HOME/build-tools/$BUILD_TOOLS"
+          VERSION=$(node -p "require('./package.json').version")
+          IN=$(ls src-tauri/gen/android/app/build/outputs/apk/universal/release/*-unsigned.apk)
+          echo "$KS_B64" | base64 -d > "$RUNNER_TEMP/libreta.jks"
+          "$BT/zipalign" -p -f 4 "$IN" "$RUNNER_TEMP/aligned.apk"
+          "$BT/apksigner" sign --ks "$RUNNER_TEMP/libreta.jks" --ks-pass "pass:$KS_PASS" \
+            --ks-key-alias "$KEY_ALIAS" --key-pass "pass:${KEY_PASS:-$KS_PASS}" \
+            --out "Libreta_${VERSION}_android.apk" "$RUNNER_TEMP/aligned.apk"
+          "$BT/apksigner" verify --print-certs "Libreta_${VERSION}_android.apk"
+          rm -f "$RUNNER_TEMP/libreta.jks"
+
+      - name: Attach to the draft release
+        if: steps.keys.outputs.present == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          draft: true
+          files: Libreta_*_android.apk

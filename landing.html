@@ -335,7 +335,7 @@
           <a class="btn btn-primary btn-lg js-dl js-dl-label" href="download.html">Download for free <svg class="ic-svg"><use href="#i-arrow"/></svg></a>
           <a class="btn btn-ghost btn-lg" href="#features">See what's inside</a>
         </div>
-        <div class="hero-note js-dl-note">No account · Works offline · Free for macOS, Windows &amp; Linux</div>
+        <div class="hero-note js-dl-note">No account · Works offline · Free for macOS, Windows, Linux &amp; Android</div>
 
         <!-- HERO APP MOCKUP -->
         <div class="mock-stage">
@@ -539,12 +539,12 @@
           </svg>
           <div class="kicker" style="justify-content:center">Ready when you are</div>
           <h2>Start your <em>libreta</em> today</h2>
-          <p>Download, open, write. Free forever, yours to shape — for macOS, Windows and Linux.</p>
+          <p>Download, open, write. Free forever, yours to shape — for macOS, Windows, Linux and Android.</p>
           <div class="hero-cta">
             <a class="btn btn-primary btn-lg js-dl js-dl-label" href="download.html">Download — it's free <svg class="ic-svg"><use href="#i-arrow"/></svg></a>
             <a class="btn btn-ghost btn-lg" href="https://github.com/JosephDotDev/libreta-io">View the source</a>
           </div>
-          <div class="hero-note js-dl-note">No account · Works offline · Free for macOS, Windows &amp; Linux</div>
+          <div class="hero-note js-dl-note">No account · Works offline · Free for macOS, Windows, Linux &amp; Android</div>
           <p style="font-size:13px;color:var(--mu);margin-top:18px;line-height:1.6">Libreta is free and unsigned, so each system asks once. On Windows choose <b>More info → Run anyway</b>. On macOS there's one Terminal command to run first — macOS calls unnotarised apps "damaged" until you do. <a href="download.html#install">Step-by-step →</a></p>
         </div>
       </div>
@@ -589,7 +589,8 @@
 
       function detectOS(){
         var ua=navigator.userAgent||'';
-        if(/iPhone|iPad|iPod|Android/i.test(ua)) return 'mobile';
+        if(/Android/i.test(ua)) return 'android';
+        if(/iPhone|iPad|iPod/i.test(ua)) return 'mobile';
         if(/Macintosh|Mac OS X/i.test(ua)) return 'mac';
         if(/Windows/i.test(ua)) return 'win';
         if(/Linux|X11|CrOS/i.test(ua)) return 'linux';
@@ -640,7 +641,8 @@
           var f={
             macArm: pick(A,/aarch64.*\.dmg$/i), macX64: pick(A,/x64.*\.dmg$/i),
             win: pick(A,/-setup\.exe$/i)||pick(A,/\.msi$/i),
-            appimage: pick(A,/\.AppImage$/i), deb: pick(A,/\.deb$/i), rpm: pick(A,/\.rpm$/i)
+            appimage: pick(A,/\.AppImage$/i), deb: pick(A,/\.deb$/i), rpm: pick(A,/\.rpm$/i),
+            apk: pick(A,/\.apk$/i)
           };
           var all=' · <a href="'+ALL+'">All downloads</a>';
           var os=detectOS();
@@ -667,8 +669,13 @@
               +(alts.length?' · also '+alts.join(' / '):'')+all);
             return;
           }
-          // Phone, tablet or unknown OS: keep the Releases page, just say what exists.
-          setNotes(esc(ver)+' for macOS, Windows &amp; Linux — a desktop app'+all);
+          if(os==='android'&&f.apk){
+            setButtons(f.apk.browser_download_url,'Download for Android');
+            setNotes('Android · '+esc(ver)+' · '+mb(f.apk.size)+all);
+            return;
+          }
+          // iPhone, iPad or unknown OS: keep the downloads page, just say what exists.
+          setNotes(esc(ver)+' for macOS, Windows, Linux &amp; Android'+all);
         })
         .catch(function(){ /* keep the default links */ });
     })();

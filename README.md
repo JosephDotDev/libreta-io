@@ -190,6 +190,29 @@ Releases are built by GitHub Actions (`.github/workflows/release.yml`) — there
 2. Add a CHANGELOG entry, commit, and push a tag: `git tag v1.0.1 && git push origin v1.0.1`.
 3. The workflow builds macOS (Apple Silicon + Intel), Windows and Linux installers and attaches them to a **draft** GitHub Release. Review the notes, then publish.
 
+### Android
+
+The same tag also builds a **signed APK** for sideloading (`Libreta_<version>_android.apk`) — no Play Store, no fee. It needs a signing keystore in the repository secrets, created **once** and kept forever: Android only lets a newer APK install over an older one when both are signed with the same key, so losing it means every user has to uninstall and reinstall.
+
+```bash
+# one time, on your own machine — keep the .jks and the password somewhere safe (a password manager)
+keytool -genkeypair -v -keystore libreta-android.jks -alias libreta -keyalg RSA -keysize 2048 -validity 10000
+base64 -w0 libreta-android.jks     # macOS: base64 -i libreta-android.jks
+```
+
+Repository → Settings → Secrets and variables → Actions:
+
+| Secret | Value |
+|---|---|
+| `ANDROID_KEYSTORE_BASE64` | the base64 output above |
+| `ANDROID_KEYSTORE_PASSWORD` | the keystore password you chose |
+| `ANDROID_KEY_ALIAS` | `libreta` |
+| `ANDROID_KEY_PASSWORD` | the key password (same as the keystore password unless you set a different one) |
+
+Until those exist the Android job still builds the APK as a check but skips signing and upload, with a warning in the run.
+
+### Unsigned desktop installers
+
 The installers are not signed with a paid Apple / Windows developer certificate.
 
 - **Windows** shows a SmartScreen prompt; "More info → Run anyway" gets past it.

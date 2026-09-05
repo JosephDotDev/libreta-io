@@ -308,6 +308,11 @@ and hosting are retired.
   describing it as a rare fallback.
 
 ### Unreleased
+- **Android release.** Every tag now also builds a signed, sideloadable APK (arm64 + arm32)
+  and attaches it to the release; the download page and landing page recognise Android and
+  link to it directly, with install steps. Signing uses a keystore kept in the repository
+  secrets (README → Releasing → Android). The app itself is unchanged — the same web app in
+  a Tauri Android shell, using the existing mobile layout.
 - **App icon fixed.** 1.0.0 and 1.0.1 shipped a blank dark square: `tauri icon` rasterised
   `favicon.svg` without the Cormorant font, so the "L." never rendered. The mark is now
   rendered from the vendored font by `scripts/make-branding.js` into
