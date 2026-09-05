@@ -61,7 +61,7 @@ async function checkForUpdates(){
    limited, no release yet) is swallowed — an update notice is a convenience, not
    something worth showing an error about. */
 async function maybeCheckForUpdates(){
-  if(!IS_DESKTOP || !updateChecksOn()) return;
+  if(!IS_NATIVE || !updateChecksOn()) return;
   if(Date.now()-_updLast() < UPD_INTERVAL) return;
   let info; try{ info=await checkForUpdates(); }catch(e){ return; }
   if(info.newer && _updGet(UPD_SKIP)!==info.latest) showUpdateToast(info);
@@ -98,8 +98,8 @@ async function checkForUpdatesNow(){
 /* The About block in Settings. Called whenever the panel opens. */
 function renderAbout(){
   const el=document.getElementById('cfg-about'); if(!el) return;
-  if(!IS_DESKTOP){
-    el.innerHTML='<div style="font-size:11px;color:var(--mu);line-height:1.7">Running in a browser. Update checks apply to the desktop app.</div>';
+  if(!IS_NATIVE){
+    el.innerHTML='<div style="font-size:11px;color:var(--mu);line-height:1.7">Running in a browser. Update checks apply to the installed app.</div>';
     return;
   }
   appVersion().then(v=>{

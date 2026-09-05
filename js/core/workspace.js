@@ -186,7 +186,7 @@ const Workspace = (()=>{
 
   /* Settings → "Keep my notes in a folder…" / "Change folder…" */
   async function chooseFolder(){
-    if(!IS_DESKTOP){ toast('Available in the desktop app'); return; }
+    if(!IS_DESKTOP){ toast('Folders are a desktop feature'); return; }
     let picked=null;
     try{ picked=await T().dialog.open({ directory:true, recursive:true, multiple:false, title:'Choose a folder for your Libreta notes', defaultPath:dir||undefined }); }
     catch(e){ toast('Could not open the folder picker'); return; }
@@ -243,7 +243,10 @@ const Workspace = (()=>{
   function render(){
     const el=document.getElementById('cfg-workspace'); if(!el) return;
     if(!IS_DESKTOP){
-      el.innerHTML='<div style="font-size:10px;color:var(--mu);line-height:1.6">In the desktop app you can keep your notes in a folder — put it in Dropbox, Google Drive or iCloud and another computer can open the same notes.</div>';
+      // Android has the same __TAURI__ bridge but no folder picker, so don't offer one.
+      const where = IS_MOBILE ? 'On this phone' : 'In this browser';
+      el.innerHTML=`<div style="font-size:12px;color:var(--tx);margin-bottom:2px">${where}</div>
+        <div style="font-size:10px;color:var(--mu);line-height:1.6">Your notes are stored in the app itself. Use <b>Data &amp; Backup → Export</b> to move them to or from a computer. Folders are a desktop feature — a phone can’t open one — so syncing with a computer directly is not available yet.</div>`;
       return;
     }
     if(dir){

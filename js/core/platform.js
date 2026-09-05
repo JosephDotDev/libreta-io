@@ -14,7 +14,16 @@
    (tauri.conf.json → app.withGlobalTauri). The plugin namespaces used here are
    dialog, fs, opener, path and app; each is granted in src-tauri/capabilities/.
 ═══════════════════════════════════════════════ */
-const IS_DESKTOP = typeof window !== 'undefined' && !!window.__TAURI__;
+/* Three different questions, three answers:
+     IS_NATIVE  — running inside the Tauri shell at all (desktop or Android).
+     IS_MOBILE  — that shell is a phone/tablet build.
+     IS_DESKTOP — a real computer, i.e. native and not mobile.
+   The distinction matters: Android has the same __TAURI__ bridge but no folder
+   picker (tauri-plugin-dialog returns FolderPickerNotImplemented on mobile), so
+   anything folder-shaped must check IS_DESKTOP, not IS_NATIVE. */
+const IS_NATIVE  = typeof window !== 'undefined' && !!window.__TAURI__;
+const IS_MOBILE  = IS_NATIVE && /Android|iPhone|iPad|iPod/i.test((typeof navigator!=='undefined'&&navigator.userAgent)||'');
+const IS_DESKTOP = IS_NATIVE && !IS_MOBILE;
 
 /* The running app version, read from the bundle itself (tauri.conf.json and
    Cargo.toml keep it in step). Memoised as a promise so concurrent callers share
@@ -22,7 +31,7 @@ const IS_DESKTOP = typeof window !== 'undefined' && !!window.__TAURI__;
 let _appVer;
 function appVersion(){
   if(_appVer) return _appVer;
-  try{ _appVer = IS_DESKTOP ? window.__TAURI__.app.getVersion().catch(()=>'') : Promise.resolve(''); }
+  try{ _appVer = IS_NATIVE ? window.__TAURI__.app.getVersion().catch(()=>'') : Promise.resolve(''); }
   catch(e){ _appVer = Promise.resolve(''); }
   return _appVer;
 }
@@ -34,7 +43,7 @@ function appVersion(){
    the user cancelled the dialog. Rejects only on a real write error. */
 async function saveFileToDisk(blob, filename){
   filename = String(filename || 'download').replace(/[\\/:*?"<>|]+/g, '-').trim() || 'download';
-  if(!IS_DESKTOP){
+  if(!IS_NATIVE){
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); a.href = url; a.download = filename;
     document.body.appendChild(a); a.click(); a.remove();
@@ -58,11 +67,11 @@ async function saveFileToDisk(blob, filename){
 function openExternal(url){
   url = String(url || '');
   if(!/^(https?:|mailto:|tel:)/i.test(url)) return;
-  if(IS_DESKTOP){ window.__TAURI__.opener.openUrl(url).catch(e=>console.warn('[platform] openUrl failed', e)); return; }
+  if(IS_NATIVE){ window.__TAURI__.opener.openUrl(url).catch(e=>console.warn('[platform] openUrl failed', e)); return; }
   window.open(url, '_blank', 'noopener');
 }
 
-if(IS_DESKTOP){
+if(IS_NATIVE){
   /* Any anchor that points off the app — a mention, a bookmark, a link typed into a
      page, a property URL — must not navigate the app window. Capture phase so it
      runs before per-element onclick handlers (which themselves call openExternal)

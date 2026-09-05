@@ -155,6 +155,9 @@ Standalone per-document properties (`properties.js`), property editor popover (`
 ### `js/core/platform.js` — browser vs. desktop bridge
 Loads first. `saveFileToDisk(blob, name)` and `openExternal(url)` are the only two places that know whether the page is in a browser tab or inside the Tauri shell (`window.__TAURI__`). In the shell, saving opens a native Save dialog and writes the bytes through the `dialog` + `fs` plugins; links go to the system browser through `opener`; a capture-phase click handler makes sure no external link can navigate the app window. Every download / new-tab call site in the app goes through these two functions.
 
+### `js/core/platform.js` — platform detection
+`IS_NATIVE` (running in the Tauri shell at all), `IS_MOBILE` (that shell is Android/iOS) and `IS_DESKTOP` (native and not mobile). Folder features must gate on `IS_DESKTOP`: Android has the same `__TAURI__` bridge but `tauri-plugin-dialog` returns `FolderPickerNotImplemented` there.
+
 ### `js/core/updates.js` — update check
 Desktop only. Asks GitHub's public releases API for the latest tag at most once a day, compares it with `getVersion()`, and offers a link to the download page if there is a newer one. It never downloads or installs anything. Settings → About shows the running version, a manual "Check for updates", and a switch to turn automatic checks off. This is the only request Libreta makes on its own initiative — see SECURITY.md → Network activity.
 

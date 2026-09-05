@@ -307,6 +307,15 @@ and hosting are retired.
   first launch. The download page, landing note and release notes now lead with this instead of
   describing it as a rare fallback.
 
+### Unreleased
+- **Fixed: the Android build offered a folder picker it cannot open.** `IS_DESKTOP` was
+  true for any Tauri shell, Android included, but `tauri-plugin-dialog` has no folder
+  picker on mobile, so "Keep my notes in a folder…" appeared on the phone and failed.
+  Platform detection is now three separate answers — `IS_NATIVE` (any shell),
+  `IS_MOBILE`, `IS_DESKTOP` — and the phone shows an honest explanation plus the
+  Export route instead of a dead button. The update check still runs on Android, where
+  it matters more (a sideloaded APK never updates itself).
+
 ### 1.0.2
 - **Keep your notes in a folder (desktop).** Settings → Where your notes live → "Keep my
   notes in a folder…" moves the workspace into a folder you choose: one readable JSON file
