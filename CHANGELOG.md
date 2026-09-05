@@ -307,7 +307,7 @@ and hosting are retired.
   first launch. The download page, landing note and release notes now lead with this instead of
   describing it as a rare fallback.
 
-### Unreleased
+### 1.0.2
 - **Keep your notes in a folder (desktop).** Settings → Where your notes live → "Keep my
   notes in a folder…" moves the workspace into a folder you choose: one readable JSON file
   per page and per database, images and attachments in `media/`, settings alongside. Put

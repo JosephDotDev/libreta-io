@@ -1,6 +1,6 @@
 [package]
 name = "libreta"
-version = "1.0.1"
+version = "1.0.2"
 description = "Libreta — a local-first personal workspace"
 authors = ["Libreta contributors"]
 license = "MIT"
