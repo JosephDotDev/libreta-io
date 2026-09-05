@@ -157,6 +157,7 @@ function openCfg(tab){
   document.getElementById('cfg-ovl').classList.add('open');
   updCfgUI();renderStorageStatus();renderAccountStatus();
   if(typeof renderAbout==='function') renderAbout();
+  if(typeof Workspace!=='undefined') Workspace.render();
   if(typeof updateTrashBadge==='function')updateTrashBadge();
   cfgInitCollapsible();
   // Two scopes share this panel: "This page" (per-page formatting) and
@@ -214,11 +215,16 @@ function renderAccountStatus(){
       </div>
     </div>`;
 }
-/* Danger Zone — wipe every trace of the workspace on this device: the small
-   localStorage singletons, the docs/tables store and the media blob store, then
-   reload into a fresh workspace. Double-confirm because it can't be undone. */
+/* Danger Zone — wipe every trace of the workspace on THIS DEVICE: the small
+   localStorage singletons, the IndexedDB docs/tables store and the media blob
+   store, then reload into a fresh workspace. If the notes live in a folder, the
+   folder is left untouched — clearing the libreta_* keys simply disconnects it.
+   Double-confirm because it can't be undone. */
 function confirmDeleteAllData(){
-  showConfirm('Delete ALL your data — every page, database, image and setting on this device? This cannot be undone.',
+  const inFolder=(typeof Workspace!=='undefined'&&Workspace.active);
+  showConfirm(inFolder
+    ? 'Stop using your workspace folder and erase everything Libreta keeps on this device? The folder and its files are left exactly as they are.'
+    : 'Delete ALL your data — every page, database, image and setting on this device? This cannot be undone.',
     ()=>{ showConfirm('Are you absolutely sure? There is no way to recover this.',
       ()=>{ wipeLocalWorkspace().finally(()=>location.reload()); },
       'Delete everything','Final confirmation'); },
@@ -229,7 +235,7 @@ async function wipeLocalWorkspace(){
   DB._suppress=true;   // nothing that runs during the wipe should try to re-persist
   try{ const ks=[]; for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(k&&(k.indexOf('folio_')===0||k.indexOf('libreta_')===0)) ks.push(k); } ks.forEach(k=>localStorage.removeItem(k)); }catch(e){}
   try{ await IDBData.clear('docs'); await IDBData.clear('tables'); }catch(e){}   // structured data store
-  try{ const keys=await IDB.keys(); for(const id of keys) await IDB.del(id); }catch(e){}   // media blobs
+  try{ const keys=await IdbMediaStore.keys(); for(const id of keys) await IdbMediaStore.del(id); }catch(e){}   // this device's media blobs (never the folder's)
 }
 function closeCfg(){document.getElementById('cfg-panel').classList.remove('open');document.getElementById('cfg-ovl').classList.remove('open')}
 /* WCAG relative-luminance contrast ratio between two #rgb/#rrggbb colours, used to

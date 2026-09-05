@@ -2,10 +2,11 @@
 //!
 //! The whole app is the plain HTML/CSS/JS in `dist/` (assembled by
 //! `scripts/build-dist.js`). This crate only wraps it in a native window and
-//! grants the page three narrowly-scoped capabilities (see
-//! `capabilities/default.json`): a native Save dialog, writing the file picked in
-//! that dialog, and opening links in the system browser. The JavaScript side of
-//! that bridge is `js/core/platform.js`.
+//! grants the page a few narrowly-scoped capabilities (see
+//! `capabilities/default.json`): native Save/Open dialogs, file access limited to
+//! what the user picked in those dialogs (a save target, or the workspace folder),
+//! and opening links in the system browser. The JavaScript side of that bridge is
+//! `js/core/platform.js`; the folder workspace lives in `js/core/workspace.js`.
 
 use tauri::{
     plugin::{Builder as PluginBuilder, TauriPlugin},
@@ -56,6 +57,10 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_opener::init())
+        // The user picks a workspace folder in a native dialog; that grants the page
+        // access to it for this session. persisted-scope saves that grant so the folder
+        // is readable again on the next launch without asking twice.
+        .plugin(tauri_plugin_persisted_scope::init())
         .plugin(navigation_guard())
         .run(tauri::generate_context!())
         .expect("error while running Libreta");

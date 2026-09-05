@@ -110,7 +110,7 @@ The block editor is the core of Libreta. A document is an ordered array of block
 
 Everything is on the device, inside the app's webview storage: documents and tables as one IndexedDB record each (`folio_data`), media blobs content-addressed in a second IndexedDB store (`folio_media`), and small singletons (theme, sidebar state, trash, version history) in localStorage. **Export** writes all of it to one portable JSON file; **Import** restores it — that is how a workspace moves between machines today.
 
-Planned next: a folder-based workspace on disk behind the existing persistence-adapter seam (`setPersistenceAdapter()` in `js/core/storage.js`), so the data is visible, backupable, and can sit in any cloud-drive folder for device-to-device sync with no server involved. See §10.
+On desktop the user can instead keep the workspace in a folder (`js/core/workspace.js`): pages and databases as one JSON file each, media as files, settings mirrored to json. That folder can sit in any cloud drive for device-to-device sync with no server involved. Phones will reach the same files through the cloud provider's API (§10, Phase 4).
 
 ### Navigation
 
@@ -294,7 +294,7 @@ js/
 | **1 — Desktop shell** | Tauri v2 wrapper; cloud, hosting and service worker removed; native save dialogs + external links; CSP and navigation guard | ✅ Done |
 | **3 — Distribution** | GitHub Actions builds macOS (arm64 + x64), Windows, Linux and a sideloadable Android APK on a `v*` tag; `landing.html` + `download.html` on GitHub Pages | ✅ Done |
 | **Web sunset** | Deploy one last web build with sign-up hidden, a banner pointing at the desktop download and Export, and the service-worker kill switch; after a grace period delete the Supabase project and the Vercel deployment | ⏳ Next — see below |
-| **2 — Folder workspace** | Filesystem persistence adapter behind `setPersistenceAdapter()`: one JSON file per document/table, media by content hash, one settings file, in a user-chosen folder. One-click migration from IndexedDB. Gives desktop↔desktop sync for free through any cloud-drive folder | Planned |
+| **2 — Folder workspace** | Filesystem adapters behind `setPersistenceAdapter()` / `setMediaStore()`: one JSON file per page/database, media by content hash, settings mirrored to json, in a user-chosen folder. One-click move in either direction. Desktop↔desktop sync for free through any cloud-drive folder | ✅ Done (`js/core/workspace.js`) |
 | **4 — Bring your own cloud** | Storage adapter that talks straight to the user's Dropbox (later Google Drive) with client-side OAuth, so the phone and the desktop share one workspace. iPhone would come via a PWA on GitHub Pages (no App Store) | Planned |
 | **Later — LAN sync** | Desktop hosts a local service; phone pairs by scanning one QR code (address + one-time key) and reconciles directly | Idea |
 

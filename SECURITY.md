@@ -34,16 +34,26 @@ exposes to the page, which is why that surface is kept tiny (next section).
 ## What the page is allowed to do on the machine
 
 Tauri's capability system ([`src-tauri/capabilities/default.json`](src-tauri/capabilities/default.json))
-grants the main window exactly three things beyond the core window API:
+grants the main window the following beyond the core window API:
 
 | Permission | Why |
 |---|---|
 | `dialog:allow-save` | Native Save dialog for Export, Publish and attachment downloads |
-| `fs:allow-write-file` | Write the bytes to the path the user just picked in that dialog. The dialog adds only that path to the file-system scope — the page has **no** read access and cannot write anywhere else |
+| `dialog:allow-open` | Native folder picker for "Keep my notes in a folder" |
+| `fs:allow-read-file`, `read-text-file`, `read-dir`, `exists` | Read the workspace folder |
+| `fs:allow-write-file`, `write-text-file`, `mkdir`, `rename`, `remove` | Write pages, media and settings into it (write-then-rename), and delete files for pages the user deleted |
 | `opener:default` | Open `http(s):` / `mailto:` / `tel:` links in the system browser |
 
-No shell, no arbitrary file reads, no process spawning. All of it is used from one
-file, `js/core/platform.js`.
+**None of the `fs` permissions carry a path scope of their own.** A path becomes
+accessible only when the user picks it in a native dialog: a Save dialog grants
+that one file; the folder picker grants that folder recursively. The
+`persisted-scope` plugin remembers those grants across launches so the workspace
+folder opens again without asking. The page can never read or write anywhere the
+user did not explicitly choose. No shell, no process spawning. Everything above is
+used from two files, `js/core/platform.js` and `js/core/workspace.js`.
+
+Within the workspace folder, file names are derived from record ids that must
+match `^[A-Za-z0-9_-]+$` — an imported backup cannot smuggle `../` into a path.
 
 ## The app window stays the app
 

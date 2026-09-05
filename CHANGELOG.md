@@ -308,6 +308,14 @@ and hosting are retired.
   describing it as a rare fallback.
 
 ### Unreleased
+- **Keep your notes in a folder (desktop).** Settings → Where your notes live → "Keep my
+  notes in a folder…" moves the workspace into a folder you choose: one readable JSON file
+  per page and per database, images and attachments in `media/`, settings alongside. Put
+  that folder in Dropbox, Google Drive, iCloud or OneDrive and another computer running
+  Libreta opens the same notes (last writer wins per file — close Libreta on one machine
+  before opening it on another). "Change folder…" and "Use this device instead" move
+  everything either way; nothing is ever deleted from a folder. If the folder can't be
+  found at launch, Libreta asks instead of silently showing stale data.
 - **Android release.** Every tag now also builds a signed, sideloadable APK (arm64 + arm32)
   and attaches it to the release; the download page and landing page recognise Android and
   link to it directly, with install steps. Signing uses a keystore kept in the repository

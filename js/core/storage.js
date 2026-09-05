@@ -69,6 +69,7 @@ async function _inflateDoc(rec){ return _isCold(rec) ? JSON.parse(await _gunzip(
    full doc); it only shrinks what's on disk. Returns how many it compressed. */
 async function compactColdDocs(days){
   if(!_hasCompression) return 0;
+  if(Persist!==IdbDataAdapter) return 0;   // folder workspaces keep every page as plain, readable JSON
   const cutoff=Date.now()-((days||30)*864e5);
   let recs; try{ recs=await IDBData.getAll('docs'); }catch(e){ return 0; }
   let n=0;
@@ -160,12 +161,13 @@ const mkId = p => p+'_'+uuid();
 const mkBlock = (t,c) => ({id:mkId('b'),type:t||'paragraph',content:c||''});
 
 /* ═══════════════════════════════════════════════
-   BINARY MEDIA STORE (IndexedDB)
-   Heavy bytes (images, files) live here as Blobs keyed by an `img_<uuid>` ref.
-   localStorage only ever holds the short ref. This sidesteps the ~5MB cap and
-   keeps the data model server-friendly (ref now → object-storage URL later).
+   BINARY MEDIA STORE
+   Heavy bytes (images, files) live as Blobs keyed by an `img_<hash>` ref; documents
+   only ever hold the short ref. IndexedDB is the default store; when the user keeps
+   their workspace in a folder (js/core/workspace.js) the same five calls write files
+   into <folder>/media/ instead. `IDB` below is the facade the rest of the app uses.
 ═══════════════════════════════════════════════ */
-const IDB = {
+const IdbMediaStore = {
   _db:null,
   open(){
     if(this._db) return Promise.resolve(this._db);
@@ -181,6 +183,12 @@ const IDB = {
   async del(id){const db=await this.open();return new Promise(res=>{const tx=db.transaction('blobs','readwrite');tx.objectStore('blobs').delete(id);tx.oncomplete=()=>res(true);tx.onerror=()=>res(false)})},
   async keys(){const db=await this.open();return new Promise(res=>{const tx=db.transaction('blobs','readonly');const rq=tx.objectStore('blobs').getAllKeys();rq.onsuccess=()=>res(rq.result||[]);rq.onerror=()=>res([])})},
   async all(){const db=await this.open();return new Promise(res=>{const tx=db.transaction('blobs','readonly');const s=tx.objectStore('blobs');const ks=s.getAllKeys(),vs=s.getAll();tx.oncomplete=()=>res((ks.result||[]).map((k,i)=>({id:k,blob:vs.result[i]})));tx.onerror=()=>res([])})},
+};
+let MediaStore = IdbMediaStore;
+function setMediaStore(store){ MediaStore = store; }   // swapped by Workspace.boot() in folder mode
+const IDB = {
+  put:(id,blob)=>MediaStore.put(id,blob), get:id=>MediaStore.get(id), del:id=>MediaStore.del(id),
+  keys:()=>MediaStore.keys(), all:()=>MediaStore.all(),
 };
 const imgCache=new Map();  // imageId → object URL (rebuilt each session)
 function isBlobRef(v){return typeof v==='string'&&v.startsWith('img_')}

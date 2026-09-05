@@ -376,6 +376,7 @@
 <script src="js/core/state.js"></script>
 <script src="js/core/security.js"></script>
 <script src="js/core/storage.js"></script>
+<script src="js/core/workspace.js"></script>
 <script src="js/core/router.js"></script>
 <script src="js/ui/feedback.js"></script>
 <script src="js/core/history.js"></script>
@@ -546,6 +547,10 @@
       <div style="font-size:10px;color:var(--mu);margin-top:8px;line-height:1.6">A whole-app display effect, just for fun. Purely visual — your content is unchanged.</div>
     </div>
     <div class="cfg-sec">
+      <div class="cfg-sl">Where your notes live</div>
+      <div id="cfg-workspace"></div>
+    </div>
+    <div class="cfg-sec">
       <div class="cfg-sl">Data &amp; Backup</div>
       <div class="cfg-opt-row">
         <button class="cfg-opt" onclick="exportData()">&#8595; Export backup</button>
@@ -564,7 +569,7 @@
       <div class="cfg-sl">Danger Zone</div>
       <button class="cfg-opt" onclick="resetCfg()" style="color:var(--re);border-color:rgba(196,84,84,.4)">Reset to defaults</button>
       <button class="cfg-opt" id="cfg-delete-data" onclick="confirmDeleteAllData()" style="color:var(--re);border-color:rgba(196,84,84,.4);margin-top:8px">Delete all my data</button>
-      <div style="font-size:10px;color:var(--mu);margin-top:6px;line-height:1.6">Permanently erases every page, database, image and setting on this device. This cannot be undone — export a backup first if you might want anything back.</div>
+      <div style="font-size:10px;color:var(--mu);margin-top:6px;line-height:1.6">Permanently erases every page, database, image and setting kept on this device. If your notes live in a folder, that folder is left untouched and Libreta just stops using it. Export a backup first if you might want anything back.</div>
     </div>
   </div>
 </div>

@@ -1,6 +1,10 @@
 
 /* ── INIT (async: load media, migrate legacy inline images, then render) ── */
 (async()=>{
+  // If the notes live in a folder, point the data + media stores at it and pull its
+  // settings into localStorage BEFORE anything reads either. Falls back to this
+  // device's storage (with a notice) if the folder can't be reached.
+  try{ if(typeof Workspace!=='undefined') await Workspace.boot(); }catch(e){ console.warn('[workspace] boot failed — using device storage',e); }
   applyCfg();        // apply the cached theme up front so the boot cover isn't the default theme
   await DB.load();   // hydrate the in-memory docs/tables cache (+ one-time legacy migration)
   try{ if(typeof migrateDecoupleDefaultDb==='function') migrateDecoupleDefaultDb(); }catch(e){ console.warn('[migrate] decouple default DB failed',e); }

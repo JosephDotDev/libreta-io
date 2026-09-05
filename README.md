@@ -82,8 +82,9 @@ Libreta is a **personal content-planning workspace** — a place to write, organ
 - Mobile: off-canvas drawer below 860 px; topbar hamburger
 
 ### Data & backup
-- No accounts and no cloud: the workspace lives entirely on this device
-- **Settings → Data & Backup → Export / Import** — portable JSON backup of everything (documents, tables, settings, images and files); accepts legacy `folio` backups too. This is the way to move a workspace between machines today
+- No accounts and no cloud service. By default the workspace lives inside the app's own storage on this device
+- **Settings → Where your notes live → Keep my notes in a folder…** (desktop) — moves the whole workspace into a folder you choose: one JSON file per page and per database, images in `media/`, settings alongside. Put that folder in Dropbox, Google Drive, iCloud or OneDrive and another computer running Libreta opens the same notes. Last writer wins per file, so close Libreta on one machine before opening it on another. "Use this device instead" copies everything back
+- **Settings → Data & Backup → Export / Import** — portable single-file JSON backup of everything; accepts legacy `folio` backups too
 - **Publish** — save any page as a self-contained HTML file
 - **Settings → Danger Zone → Delete all my data** — wipes the device's workspace (double-confirmed)
 
@@ -158,7 +159,7 @@ Loads first. `saveFileToDisk(blob, name)` and `openExternal(url)` are the only t
 Desktop only. Asks GitHub's public releases API for the latest tag at most once a day, compares it with `getVersion()`, and offers a link to the download page if there is a newer one. It never downloads or installs anything. Settings → About shows the running version, a manual "Check for updates", and a switch to turn automatic checks off. This is the only request Libreta makes on its own initiative — see SECURITY.md → Network activity.
 
 ### `src-tauri/` — the desktop shell
-`tauri.conf.json` (window, CSP, bundle metadata; `frontendDist` points at `dist/`), `capabilities/default.json` (the three permissions the page gets: `dialog:allow-save`, `fs:allow-write-file`, `opener:default`), `src/lib.rs` (plugin registration + a navigation guard that refuses to let the main window leave the app), `icons/` (generated from `favicon.svg` with `npx tauri icon`).
+`tauri.conf.json` (window, CSP, bundle metadata; `frontendDist` points at `dist/`), `capabilities/default.json` (Save/Open dialogs, file access limited to paths picked in those dialogs, opening links), `src/lib.rs` (plugin registration + a navigation guard that refuses to let the main window leave the app), `icons/` and `branding/` (generated — see `scripts/make-branding.js`).
 
 ---
 
@@ -170,7 +171,9 @@ Desktop only. Asks GitHub's public releases API for the latest tag at most once 
 - **The persistence adapter** (`Persist`, default `LocalStorageAdapter`) is the single place that knows the storage medium. It implements four methods: `loadDocs / loadTbls / persistDocs / persistTbls`.
 - **Boot:** `await DB.load()` in `core/init.js` hydrates the cache from the adapter before the first render.
 
-To add a different backend: implement those four methods against your API and call `setPersistenceAdapter(yourAdapter)` at startup. Nothing else in the app changes.
+Media blobs go through the `IDB` facade the same way: five methods (`put / get / del / keys / all`) forwarded to whichever store `setMediaStore()` installed.
+
+**Folder workspaces** (`js/core/workspace.js`, desktop only) are exactly that swap: `FsDataAdapter` writes `pages/<id>.json` and `databases/<id>.json`, `FsMediaStore` writes `media/<ref>.<ext>`, and a patched `Storage.setItem` mirrors the `folio_*` localStorage singletons into `settings.json` / `versions.json` / `trash.json` (debounced, write-then-rename so a crash never leaves a half-written file). `Workspace.boot()` runs first in `init.js`; if the remembered folder isn't reachable it stops at a dialog rather than booting from stale device data. Folder access comes from the native picker (recursive fs scope) and is remembered across launches by `tauri-plugin-persisted-scope`.
 
 ---
 
