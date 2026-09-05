@@ -47,6 +47,7 @@ grants the main window the following beyond the core window API:
 | `fs:allow-read-file`, `read-text-file`, `read-dir`, `exists` | Read the workspace folder |
 | `fs:allow-write-file`, `write-text-file`, `mkdir`, `rename`, `remove` | Write pages, media and settings into it (write-then-rename), and delete files for pages the user deleted |
 | `opener:default` | Open `http(s):` / `mailto:` / `tel:` links in the system browser |
+| `deep-link:default` | Receive the `libreta://auth-callback` URL a provider redirects to after sign-in. Sign-in itself happens in the real browser — the webview never hosts a provider's login form |
 
 **None of the `fs` permissions carry a path scope of their own.** A path becomes
 accessible only when the user picks it in a native dialog: a Save dialog grants
@@ -97,8 +98,12 @@ dashboard, not in shipped code — an attacker can call the API directly:
    safe. Verify with two accounts that neither can read the other's files.
 2. **Auth rate limits** — cap sign-in / sign-up / OTP / recovery per hour.
 3. **Bot protection (CAPTCHA)** — so credential stuffing can't hit auth headlessly.
-4. **Redirect URL allow-list** — only the real site origins, so OAuth / magic-link /
-   recovery tokens cannot be redirected to an attacker's page.
+4. **Redirect URL allow-list** — only the real site origins plus the app's own
+   `libreta://auth-callback`, so OAuth / magic-link / recovery tokens cannot be
+   redirected to an attacker's page. Note a custom scheme is claimed by whichever
+   app registers it, so it is not a secret channel — which is why the flow carries
+   only what a redirect normally would, and the session is established by the
+   client from that callback rather than trusted from it.
 5. **Leaked-password protection** — the HaveIBeenPwned check on sign-up.
 
 In the client, `js/cloud/sync.js` also locks the sign-in form for an escalating

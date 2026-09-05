@@ -642,14 +642,70 @@ const Cloud = (()=>{
       /* Toggle in place. The old build navigated to index.html?signup=1, which only
          works on the web — the desktop and Android shells have no such URL. */
       $('#ag-toggle').onclick=()=> setMode(mode==='signin' ? 'signup' : 'signin');
-      /* One-tap OAuth. signInWithOAuth redirects the whole page to the provider;
-         on return the session is in the URL and boot() picks it up automatically. */
+      /* In a packaged app there is no web origin for a provider to return to, so
+         emailed links must point at the hosted app instead of this window. */
+      const NATIVE = (typeof IS_NATIVE!=='undefined' && IS_NATIVE);
+      const emailReturnUrl = ()=> NATIVE ? LIBRETA_WEB_URL : window.location.origin;
+
+      /* One-tap OAuth. On the web, signInWithOAuth redirects the whole page and
+         boot() picks the session out of the URL on the way back. */
       async function oauth(provider){
         err('');
         try{
+          if(NATIVE) return await oauthNative(provider);
           const { error } = await sb.auth.signInWithOAuth({ provider, options:{ redirectTo: window.location.origin } });
           if(error) err(error.message);   // e.g. provider not yet enabled in Supabase
         }catch(e){ err('Could not start sign-in. Try again.'); }
+      }
+
+      /* Native: ask Supabase for the provider URL rather than being redirected,
+         open it in the real browser (the webview must never host a login form),
+         and wait for the OS to hand back libreta://auth-callback. */
+      async function oauthNative(provider){
+        if(typeof onDeepLink!=='function'){ err('This build can’t receive the sign-in callback. Use email and password below.'); return; }
+        let data, error;
+        try{ ({ data, error } = await sb.auth.signInWithOAuth({ provider, options:{ redirectTo: NATIVE_REDIRECT, skipBrowserRedirect:true } })); }
+        catch(e){ err('Could not start sign-in. Try again.'); return; }
+        if(error || !data || !data.url){ err(error ? error.message : 'Could not start sign-in.'); return; }
+        let settled=false, unlisten=null;
+        const onCallback=async urls=>{
+          if(settled) return;
+          const raw=(urls||[]).map(String).find(u=>u.indexOf(NATIVE_SCHEME)===0);
+          if(!raw) return;                       // some other deep link — not ours
+          settled=true;
+          if(unlisten) try{ unlisten(); }catch(e){}
+          const session=await sessionFromCallback(raw);
+          if(!session){ err('Sign-in didn’t complete. Try again, or use email and password.'); return; }
+          showLoadingGate();
+          resolve(session.user);
+        };
+        unlisten = await onDeepLink(onCallback);
+        if(!unlisten){ err('This build can’t receive the sign-in callback. Use email and password below.'); return; }
+        ok('Finish signing in in your browser — this window will pick it up.');
+        openExternal(data.url);
+      }
+
+      /* Turn the callback URL into a session. Supabase's implicit flow returns
+         tokens in the fragment and PKCE returns a code in the query; handle both so
+         a flowType change upstream can't silently break sign-in. */
+      async function sessionFromCallback(raw){
+        try{
+          const u=new URL(raw);
+          const frag=new URLSearchParams((u.hash||'').replace(/^#/,''));
+          const access_token=frag.get('access_token'), refresh_token=frag.get('refresh_token');
+          if(access_token && refresh_token){
+            const { data, error }=await sb.auth.setSession({ access_token, refresh_token });
+            return error?null:data.session;
+          }
+          const code=u.searchParams.get('code');
+          if(code){
+            const { data, error }=await sb.auth.exchangeCodeForSession(code);
+            return error?null:data.session;
+          }
+          const desc=frag.get('error_description')||u.searchParams.get('error_description');
+          if(desc) console.warn('[cloud] the provider returned an error:', desc);
+        }catch(e){ console.warn('[cloud] could not read the sign-in callback', e); }
+        return null;
       }
       $('#ag-google').onclick=()=> oauth('google');
       /* Cancel. Nothing is remembered — the app carries on exactly as it was. */
@@ -664,7 +720,7 @@ const Cloud = (()=>{
         if(!EMAIL_RE.test(email)){ err('Enter your email above first, then tap “Email me a magic link”.'); $('#ag-email').focus(); return; }
         err('');
         try{
-          const { error } = await sb.auth.signInWithOtp({ email, options:{ emailRedirectTo: window.location.origin } });
+          const { error } = await sb.auth.signInWithOtp({ email, options:{ emailRedirectTo: emailReturnUrl() } });
           if(error){ err(error.message); return; }
           ok('Magic link sent — check your inbox to finish signing in.');
         }catch(e){ err('Could not send the link. Try again.'); }
@@ -674,9 +730,9 @@ const Cloud = (()=>{
         if(!EMAIL_RE.test(email)){ err('Enter a valid email above first, then tap “Forgot your password?”'); $('#ag-email').focus(); return; }
         err('');
         try{
-          const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin });
+          const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: emailReturnUrl() });
           if(error){ err(error.message); return; }
-          ok('Reset link sent — check your inbox.');
+          ok(NATIVE ? 'Reset link sent. Set a new password in your browser, then sign in here with it.' : 'Reset link sent — check your inbox.');
         }catch(e){ err('Could not send the reset email. Try again.'); }
       };
       $('#ag-form').onsubmit=async ev=>{
@@ -715,13 +771,13 @@ const Cloud = (()=>{
           resolve(session.user);
         }catch(e){ err('Something went wrong. Try again.'); $('#ag-submit').disabled=false; }
       };
-      /* Google, magic links and password resets all hand off to a browser and come
-         back to a URL. A packaged app has no such URL (its origin is the shell's own
-         scheme), so those routes are web-only; email + password works everywhere. */
-      if(typeof IS_NATIVE!=='undefined' && IS_NATIVE){
-        ['#ag-google','#ag-magic','#ag-forgot'].forEach(sel=>{ const el=$(sel); if(el) el.style.display='none'; });
-        const or=wrap.querySelector('.ag-or'); if(or) or.style.display='none';
-        const soc=wrap.querySelector('.ag-social'); if(soc) soc.style.display='none';
+      /* A magic link is opened by whatever handles the user's mail, which lands in a
+         browser — it can sign you in there, never in this window — so it stays
+         web-only. Google returns through libreta:// and password resets send the
+         user to the hosted app to set a new one, so both work here. */
+      if(NATIVE){
+        const magic=$('#ag-magic'); if(magic) magic.style.display='none';
+        const forgot=$('#ag-forgot'); if(forgot) forgot.title='Opens your browser to set a new password, then sign in here with it.';
       }
       if(_wantSignup) setMode('signup');
       $('#ag-email').focus();

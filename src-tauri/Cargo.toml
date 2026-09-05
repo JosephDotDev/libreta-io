@@ -18,10 +18,19 @@ tauri-build = { version = "2", features = [] }
 
 [dependencies]
 tauri = { version = "2", features = [] }
+# generate_context! expands the `plugins` block in tauri.conf.json into serde_json
+# values, so the crate has to be in scope even though no code here names it.
+serde_json = "1"
 tauri-plugin-dialog = "2"   # native Save dialog for Export / Publish / attachment downloads
 tauri-plugin-fs = "2"       # writes the file the user picked in that dialog
 tauri-plugin-opener = "2"   # opens external links in the system browser
 tauri-plugin-persisted-scope = "2"   # remembers the workspace folder the user picked across launches
+tauri-plugin-deep-link = "2"         # catches libreta://auth-callback when Google sends the user back
+
+# Deep links arrive as a CLI argument on Windows and Linux, which would otherwise
+# start a second copy of the app. single-instance hands them to the running one.
+[target.'cfg(any(target_os = "windows", target_os = "linux"))'.dependencies]
+tauri-plugin-single-instance = { version = "2", features = ["deep-link"] }
 
 [profile.release]
 panic = "abort"

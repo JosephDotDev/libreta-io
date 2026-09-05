@@ -308,6 +308,12 @@ and hosting are retired.
   describing it as a rare fallback.
 
 ### Unreleased
+- **Google sign-in now works in the desktop app.** It opens the system browser and
+  comes back through a `libreta://auth-callback` deep link, so an account created with
+  Google on the web — which has no password at all — can finally be used on the
+  desktop. Both callback shapes are handled (implicit tokens in the fragment, PKCE
+  code in the query). Password resets from the app email a link to the web version;
+  magic links remain web-only, since a mail client can only open them in a browser.
 - **Optional account sync is back, and the web app with it.** Signing in (Settings →
   "Sign in to sync across devices") mirrors the workspace to the user's own Supabase
   account so the browser, desktop and Android apps share one set of notes. Unlike the

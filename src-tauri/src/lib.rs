@@ -5,7 +5,8 @@
 //! grants the page a few narrowly-scoped capabilities (see
 //! `capabilities/default.json`): native Save/Open dialogs, file access limited to
 //! what the user picked in those dialogs (a save target, or the workspace folder),
-//! and opening links in the system browser. The JavaScript side of that bridge is
+//! opening links in the system browser, and receiving the `libreta://` callback
+//! Google redirects to after sign-in. The JavaScript side of that bridge is
 //! `js/core/platform.js`; the folder workspace lives in `js/core/workspace.js`.
 
 use tauri::{
@@ -51,9 +52,33 @@ fn navigation_guard<R: Runtime>() -> TauriPlugin<R> {
         .build()
 }
 
+/// `libreta://…` is how Google hands the user back after signing in through their
+/// browser. Sign-in opens the system browser, the provider redirects to this
+/// scheme, the OS wakes Libreta, and `platform.js` passes the URL to the sync
+/// layer, which turns it into a session.
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
+    let builder = tauri::Builder::default();
+
+    // Windows and Linux deliver a deep link by launching the binary again with the
+    // URL as an argument. single-instance forwards it to the window already open
+    // instead — and must be registered before anything else.
+    #[cfg(any(target_os = "windows", target_os = "linux"))]
+    let builder = builder.plugin(tauri_plugin_single_instance::init(|_app, _argv, _cwd| {}));
+
+    builder
+        .plugin(tauri_plugin_deep_link::init())
+        .setup(|_app| {
+            // Installers register the scheme system-wide; a dev build has never been
+            // installed, so claim it at runtime to make sign-in testable with
+            // `npm run desktop:dev`.
+            #[cfg(all(desktop, debug_assertions))]
+            {
+                use tauri_plugin_deep_link::DeepLinkExt;
+                let _ = _app.deep_link().register_all();
+            }
+            Ok(())
+        })
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_opener::init())

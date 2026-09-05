@@ -62,6 +62,22 @@ async function saveFileToDisk(blob, filename){
   return true;
 }
 
+/* Deep links: the OS hands the app a `libreta://…` URL. Today that is only the
+   callback a provider redirects to after sign-in. Resolves to an unlisten
+   function, or null when this shell can't deliver them (a browser, or a build
+   without the plugin) so callers can fall back rather than hang forever.
+   getCurrent() covers the case where the link is what launched the app, before
+   any listener could exist. */
+async function onDeepLink(handler){
+  if(!IS_NATIVE || !window.__TAURI__.deepLink) return null;
+  try{
+    const launchedWith = await window.__TAURI__.deepLink.getCurrent();
+    if(launchedWith && launchedWith.length) setTimeout(()=>handler(launchedWith), 0);
+  }catch(e){ /* nothing pending */ }
+  try{ return await window.__TAURI__.deepLink.onOpenUrl(handler); }
+  catch(e){ console.warn('[platform] deep links unavailable', e); return null; }
+}
+
 /* Open a URL outside the app: system browser on desktop, new tab in a browser.
    Only web/mail/tel schemes leave the app — anything else is dropped. */
 function openExternal(url){

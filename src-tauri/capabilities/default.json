@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Libreta's main window. Beyond the core API the page gets: native Save and Open dialogs; file access ONLY inside paths the user picked in those dialogs (a save target, or the workspace folder \u2014 remembered across launches by persisted-scope); and opening web links in the system browser. No shell, no arbitrary paths.",
+  "description": "Libreta's main window. Beyond the core API the page gets: native Save and Open dialogs; file access ONLY inside paths the user picked in those dialogs (a save target, or the workspace folder \u2014 remembered across launches by persisted-scope); opening web links in the system browser, and receiving the libreta:// sign-in callback. No shell, no arbitrary paths.",
   "windows": [
     "main"
   ],
@@ -19,6 +19,7 @@
     "fs:allow-remove",
     "fs:allow-exists",
     "fs:allow-rename",
+    "deep-link:default",
     "opener:default"
   ]
 }
