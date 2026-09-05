@@ -30,6 +30,8 @@ npm run desktop:build  # produces installers under src-tauri/target/release/bund
 
 `scripts/build-dist.js` copies exactly the shipped files into `dist/`; Tauri embeds that folder into the binary. Edit the source files, not `dist/`.
 
+**Icon and installer artwork** live in `src-tauri/branding/` (see its README). They are rendered from the app's own fonts by `scripts/make-branding.js`; `src-tauri/icons/` is generated from `branding/icon-1024.png` with `npx tauri icon`. Don't feed `favicon.svg` to `tauri icon` — it sets the mark in Cormorant and the rasteriser has no fonts, which is how 1.0.x shipped a blank square.
+
 > `index_3.html` is a frozen pre-split snapshot of the original single-file build. Keep it as a reference only — all active development happens in `index.html` + `css/` + `js/`.
 
 ---

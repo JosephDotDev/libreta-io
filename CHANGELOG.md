@@ -308,6 +308,15 @@ and hosting are retired.
   describing it as a rare fallback.
 
 ### Unreleased
+- **App icon fixed.** 1.0.0 and 1.0.1 shipped a blank dark square: `tauri icon` rasterised
+  `favicon.svg` without the Cormorant font, so the "L." never rendered. The mark is now
+  rendered from the vendored font by `scripts/make-branding.js` into
+  `src-tauri/branding/icon-1024.png` (with a transparent margin, so it sits at the same size
+  as neighbouring icons), and the whole icon set is regenerated from that.
+- **Branded installers.** The Windows `.exe` gets a header image, a welcome/finish sidebar
+  and the app icon; the `.msi` gets a banner and dialog image; the macOS `.dmg` gets a
+  background with a drag-to-Applications arrow and the first-launch Terminal step printed
+  right on it. The `.exe` installs per-user (no administrator prompt).
 - **In-app update check.** The desktop app asks GitHub once a day whether a newer
   release exists and offers a link to the download page if so; it never downloads or
   installs anything itself. Settings → About shows the running version, a manual

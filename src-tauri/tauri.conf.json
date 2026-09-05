@@ -26,14 +26,44 @@
     ],
     "security": {
       "csp": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https:; media-src 'self' blob: data:; connect-src 'self' ipc: http://ipc.localhost https://ipc.localhost https://api.github.com https://api.allorigins.win https://corsproxy.io https://api.codetabs.com https://www.youtube.com; frame-src https://www.youtube.com https://www.youtube-nocookie.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'",
-      "dangerousDisableAssetCspModification": ["script-src", "style-src"]
+      "dangerousDisableAssetCspModification": [
+        "script-src",
+        "style-src"
+      ]
     }
   },
   "bundle": {
     "active": true,
     "targets": "all",
     "macOS": {
-      "signingIdentity": "-"
+      "signingIdentity": "-",
+      "dmg": {
+        "background": "branding/dmg-background.png",
+        "windowSize": {
+          "width": 660,
+          "height": 400
+        },
+        "appPosition": {
+          "x": 180,
+          "y": 170
+        },
+        "applicationFolderPosition": {
+          "x": 480,
+          "y": 170
+        }
+      }
+    },
+    "windows": {
+      "nsis": {
+        "installerIcon": "icons/icon.ico",
+        "headerImage": "branding/installer-header.bmp",
+        "sidebarImage": "branding/installer-sidebar.bmp",
+        "installMode": "currentUser"
+      },
+      "wix": {
+        "bannerPath": "branding/wix-banner.bmp",
+        "dialogImagePath": "branding/wix-dialog.bmp"
+      }
     },
     "category": "Productivity",
     "publisher": "Libreta",
