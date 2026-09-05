@@ -1,12 +1,16 @@
 # Security
 
-Libreta is a **desktop application**: plain HTML/CSS/JS running inside a Tauri
-webview, with no server, no accounts and no network service of our own. Everything
-the user writes stays on their machine. That shapes the threat model: there is no
-account to take over and no shared backend to attack — what matters is that content
-which reaches the page from outside (pasted links, imported backups, fetched link
-previews) cannot run code, and that the page cannot do more on the machine than the
-few things it needs.
+Libreta is one plain HTML/CSS/JS app shipped three ways — in a browser, in a Tauri
+desktop window, and in a Tauri Android shell. It is **local-first**: every feature
+works with no account and no connection, and the user's notes live on their device.
+
+**Sync is optional.** A user may sign in to keep a copy in their own Supabase
+account so their other devices can catch up. Signed out, the app makes no network
+calls of its own beyond the daily update check.
+
+That gives three areas to defend: content arriving from outside must not run code;
+the desktop/Android shells must not expose more of the machine than they need; and
+for users who do sign in, the account boundary must hold.
 
 ---
 
@@ -79,13 +83,37 @@ YouTube; `object-src 'none'`; `base-uri 'self'`.
 > into `addEventListener` wiring is the highest-value follow-up to make the CSP a
 > real second line of defense against XSS.
 
-## What is *not* in scope any more
+## Accounts and sync (only for users who opt in)
 
-- **Authentication, session tokens, rate limiting, password policy** — there are no
-  accounts.
-- **Server-side access control** — there is no server.
-- **Third-party runtime dependencies** — fonts, KaTeX and the app code are all
-  bundled into the binary; nothing is loaded from a CDN.
+Auth and storage are Supabase. The client code holds only the project URL and the
+**anon key**, which is public by design — it can do nothing a Row-Level-Security
+policy doesn't allow. The `service_role` key must never appear in this repository.
+
+These are the controls that actually matter, and they live in the Supabase
+dashboard, not in shipped code — an attacker can call the API directly:
+
+1. **Row-Level Security on Storage** — a signed-in user may read/write only the
+   folder named after their own `auth.uid()`. This is what makes the public anon key
+   safe. Verify with two accounts that neither can read the other's files.
+2. **Auth rate limits** — cap sign-in / sign-up / OTP / recovery per hour.
+3. **Bot protection (CAPTCHA)** — so credential stuffing can't hit auth headlessly.
+4. **Redirect URL allow-list** — only the real site origins, so OAuth / magic-link /
+   recovery tokens cannot be redirected to an attacker's page.
+5. **Leaked-password protection** — the HaveIBeenPwned check on sign-up.
+
+In the client, `js/cloud/sync.js` also locks the sign-in form for an escalating
+cooldown after repeated failures. That only slows guessing through our own UI; items
+2 and 3 above are the authoritative controls.
+
+**Signing out leaves the notes on the device.** Deleting the account's copy is a
+separate, double-confirmed action (Danger Zone), which wipes both sides.
+
+## What is *not* in scope
+
+- **A server we run** — there is no application server and no database we query from
+  code; Supabase is reached directly from the client through RLS-scoped APIs.
+- **Third-party runtime dependencies** — fonts, KaTeX and supabase-js are vendored
+  and bundled; nothing is loaded from a CDN.
 - **SQL injection** — there is no SQL and no query surface.
 
 ## Network activity
@@ -94,14 +122,15 @@ Libreta works with no connection at all. Everything it can send is listed here.
 
 | Request | When | Carries |
 |---|---|---|
-| `api.github.com` — latest release | At most once a day, desktop only, and only while Settings → About has automatic checks on. Also on demand from "Check for updates" | Nothing. An unauthenticated GET; GitHub sees an IP and user-agent as it would for any page |
+| `api.github.com` — latest release | At most once a day in the installed app, and only while Settings → About has automatic checks on. Also on demand | Nothing. An unauthenticated GET; GitHub sees an IP and user-agent as it would for any page |
+| `*.supabase.co` — auth + storage | **Only when the user has signed in.** On boot, on every change (debounced), and on a slow poll | The user's own notes and media, and their session token. Nothing else, and nothing at all while signed out |
 | YouTube oEmbed / embeds | Only when the user adds a YouTube block | The video ID |
 | Link previews (public CORS proxies) | Only when the user pastes a link and asks for a preview | The URL being previewed — note this means a third-party proxy sees that URL |
 | Image-from-URL | Only when the user adds an image by URL | The image URL |
 
-The update check is the only one Libreta starts by itself, it never downloads or
-installs anything, and it can be switched off permanently in Settings → About
-(`js/core/updates.js`). Every other request is a direct result of a user action.
+Signed out, the update check is the only request Libreta starts by itself; it never
+downloads or installs anything and can be switched off in Settings → About. Signing
+in is what turns on the Supabase traffic, and signing out turns it off again.
 
 ## Reporting
 

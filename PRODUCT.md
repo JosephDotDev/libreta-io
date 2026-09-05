@@ -25,14 +25,14 @@
 
 **Mission:** Give solo creators a Notion-grade writing and organizing workspace that they personally own — no subscription required to think.
 
-**Vision:** A local-first workspace where your data lives on your device, full stop. One-and-done software: free for everyone, nothing to subscribe to, no server that has to stay up for it to keep working. No team overhead, no lock-in, no proprietary format trapping your notes.
+**Vision:** A local-first workspace where your data lives on your device and keeps working whatever happens to us. Free for everyone, nothing to subscribe to, no account required to use any feature — sync is a convenience you switch on, not a wall you climb. No team overhead, no lock-in, no proprietary format trapping your notes.
 
 **Core principles — every decision runs through these:**
 
 | Principle | What it means in practice |
 |---|---|
 | **Local-first** | The app works fully offline, with no account. All data lives on the device. |
-| **No server, ever** | Nothing Libreta does may depend on infrastructure the author has to run, secure or pay for. Sync, if it comes, uses the user's own cloud drive or a direct device-to-device link. |
+| **Signed out must always work** | Every feature is available with no account. Sync mirrors the workspace; it never owns it. If the backend vanished, users would keep their notes and lose only cross-device sync. |
 | **No build step** | Plain HTML/CSS/JS. The desktop shell wraps the very same files; only the Tauri CLI is needed to package it. |
 | **Personally owned** | Users control their data. Export is always available. No lock-in by design. |
 | **Zero cost to run** | GitHub Releases host the installers, GitHub Actions build them, GitHub Pages hosts the download page. The project can outlive its maintainer. |
@@ -73,17 +73,21 @@
 
 ## 4. Business Model
 
-There isn't one, on purpose. Libreta is **free for everyone, forever**, and is built so that it costs nothing to keep alive:
+Still none, and still free for everyone. The difference from the pure-serverless
+phase is that optional sync needs a backend, so there is now one bill that *could*
+appear:
 
 | Concern | How it's handled |
 |---|---|
-| Hosting the app | Not needed — it's a desktop app. Installers live on GitHub Releases |
-| Building releases | GitHub Actions (free for public repos) |
-| Download page | `landing.html` on GitHub Pages |
-| User data | On the user's machine only; no storage bill, no breach surface |
+| The app, the site, the downloads | GitHub Pages + Releases + Actions — free |
+| Sync backend | Supabase. Free tier covers a personal-scale user base; ~$25/month only if it grows |
+| User data | On the user's device. The account copy is a mirror, not the original |
 | Payments, billing, taxes | None |
 
-**Guardrail:** never add a feature that needs a server the author runs. If it can't run on the device or on infrastructure the *user* already owns (their cloud drive, their local network), it doesn't ship.
+**Guardrails:** the app must stay fully usable signed out, forever — sync is a
+convenience, never a gate. Nothing may require per-user server compute. If the
+backend ever went away, every existing user would keep their notes and lose only
+the mirroring.
 
 ---
 
@@ -110,7 +114,7 @@ The block editor is the core of Libreta. A document is an ordered array of block
 
 Everything is on the device, inside the app's webview storage: documents and tables as one IndexedDB record each (`folio_data`), media blobs content-addressed in a second IndexedDB store (`folio_media`), and small singletons (theme, sidebar state, trash, version history) in localStorage. **Export** writes all of it to one portable JSON file; **Import** restores it — that is how a workspace moves between machines today.
 
-On desktop the user can instead keep the workspace in a folder (`js/core/workspace.js`): pages and databases as one JSON file each, media as files, settings mirrored to json. That folder can sit in any cloud drive for device-to-device sync with no server involved. Phones will reach the same files through the cloud provider's API (§10, Phase 4).
+On desktop the user can instead keep the workspace in a folder (`js/core/workspace.js`): pages and databases as one JSON file each, media as files, settings mirrored to json. That folder can sit in any cloud drive for desktop-to-desktop sync with no account at all. For phones — which cannot see such a folder — the answer is optional account sync (`js/cloud/sync.js`); the two are mutually exclusive.
 
 ### Navigation
 
@@ -162,10 +166,15 @@ All navigation goes through `nav(view, id)` in `js/core/router.js`. There are no
 - Rolling 40 snapshots per document
 - Browse, preview, and restore any snapshot
 
-#### Desktop app (Phase 5)
-- **Native window** on macOS, Windows and Linux via Tauri v2; the whole app is bundled into the binary, so it boots with no connection at all
+#### Desktop & mobile apps
+- **Native window** on macOS, Windows and Linux via Tauri v2, plus a sideloadable Android APK; the whole app is bundled in, so it boots with no connection at all
 - **Native Save dialogs** for Export, Publish and attachment downloads; links open in the system browser
-- **No accounts, no sync service** — the workspace lives on the device
+- **Folder workspace** (desktop) — the notes as plain files in a folder you choose
+
+#### Sync (optional)
+- Sign in and the workspace is mirrored to the user's own Supabase account; browser, desktop and phone share one set of notes
+- Never a gate: signed out, every feature works and no network calls are made
+- Mutually exclusive with the folder workspace — that folder is already a sync
 
 #### Data management
 - **Export / Import** — portable JSON backup (accepts legacy `folio` format)
@@ -287,7 +296,7 @@ js/
 
 ## 10. Roadmap
 
-**Decision (Sep 2026):** Libreta is a one-and-done desktop app. No servers, no accounts, no billing — it must keep working with zero involvement from its author.
+**Decision (Sep 2026, revised):** Libreta is local-first and free, shipped as a browser app, a desktop app and an Android app. Optional account sync exists because it is the only thing that makes phone-and-desktop work, and one backend costs less — in money and in effort — than an adapter per cloud provider. The app must remain fully usable signed out.
 
 | Phase | What | Status |
 |---|---|---|
@@ -295,7 +304,9 @@ js/
 | **3 — Distribution** | GitHub Actions builds macOS (arm64 + x64), Windows, Linux and a sideloadable Android APK on a `v*` tag; `landing.html` + `download.html` on GitHub Pages | ✅ Done |
 | **Web sunset** | Deploy one last web build with sign-up hidden, a banner pointing at the desktop download and Export, and the service-worker kill switch; after a grace period delete the Supabase project and the Vercel deployment | ⏳ Next — see below |
 | **2 — Folder workspace** | Filesystem adapters behind `setPersistenceAdapter()` / `setMediaStore()`: one JSON file per page/database, media by content hash, settings mirrored to json, in a user-chosen folder. One-click move in either direction. Desktop↔desktop sync for free through any cloud-drive folder | ✅ Done (`js/core/workspace.js`) |
-| **4 — Bring your own cloud** | Storage adapter that talks straight to the user's Dropbox (later Google Drive) with client-side OAuth, so the phone and the desktop share one workspace. iPhone would come via a PWA on GitHub Pages (no App Store) | Planned |
+| **4 — Optional account sync** | The Supabase layer restored as an *opt-in* mirror (no login gate), so browser, desktop and Android share one workspace. Mutually exclusive with the folder workspace | ✅ Done (`js/cloud/sync.js`) |
+| **5 — Web app back online** | The same bundle published to GitHub Pages at `/app`, so there is a zero-install way in | ✅ Done |
+| **Later — Dropbox / Drive adapters** | Only if account sync proves unwanted; the folder workspace already covers desktop-to-desktop | Idea |
 | **Later — LAN sync** | Desktop hosts a local service; phone pairs by scanning one QR code (address + one-time key) and reconciles directly | Idea |
 
 ### Web sunset checklist
@@ -310,7 +321,7 @@ js/
 
 1. **Keep heavy lifting in the browser.** No per-user server compute. If it can run client-side, it must.
 2. **Free means complete.** There is one tier. Never gate a feature, a limit or a setting behind anything.
-3. **No server, ever.** Nothing may depend on infrastructure the author runs. Device-to-device sync goes through the user's own cloud drive or a direct connection.
+3. **Signed out must always work.** Every feature is available with no account; sync is a mirror, never a gate. A user who never signs in must lose nothing but cross-device sync.
 4. **XSS safety.** All user-controlled URLs go through `safeUrl()`; all user HTML through `sanitizeHtml()`. Do not bypass these. (`js/core/security.js`)
 5. **Blob GC contract.** Any new block type that stores image/file references must register those refs in `collectRefs()` in `js/media/blob-gc.js`, or GC will silently delete the blobs.
 6. **Platform differences live in `js/core/platform.js` only.** Anything that saves a file or opens a link must go through `saveFileToDisk()` / `openExternal()`. Never add `<a download>`, `window.open` or `target="_blank"`-only behaviour elsewhere.

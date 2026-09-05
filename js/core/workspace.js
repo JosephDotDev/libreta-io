@@ -187,6 +187,13 @@ const Workspace = (()=>{
   /* Settings → "Keep my notes in a folder…" / "Change folder…" */
   async function chooseFolder(){
     if(!IS_DESKTOP){ toast('Folders are a desktop feature'); return; }
+    // A folder and an account are two things syncing the same notes. Only one at a
+    // time, or they overwrite each other's work.
+    if(typeof Cloud!=='undefined' && Cloud.on){
+      showConfirm('You’re signed in, and your account is already syncing these notes. A folder would be a second copy syncing the same pages, so Libreta keeps them separate.\n\nLog out first if you’d rather use a folder — your notes stay on this device either way.',
+        ()=>{ if(Cloud.signOut) Cloud.signOut(); }, 'Log out', 'Already syncing');
+      return;
+    }
     let picked=null;
     try{ picked=await T().dialog.open({ directory:true, recursive:true, multiple:false, title:'Choose a folder for your Libreta notes', defaultPath:dir||undefined }); }
     catch(e){ toast('Could not open the folder picker'); return; }

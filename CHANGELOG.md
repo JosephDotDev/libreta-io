@@ -308,6 +308,22 @@ and hosting are retired.
   describing it as a rare fallback.
 
 ### Unreleased
+- **Optional account sync is back, and the web app with it.** Signing in (Settings →
+  "Sign in to sync across devices") mirrors the workspace to the user's own Supabase
+  account so the browser, desktop and Android apps share one set of notes. Unlike the
+  pre-1.0 build this never gates the app: signed out, Libreta behaves exactly as it
+  did and makes no network calls of its own. Restored from the pre-desktop history —
+  including the per-record reconcile engine, tombstones and media sync — with the
+  login gate removed and the account card reframed as opt-in.
+- The web app is published again, at `/app` on the project site, from the same bundle
+  the desktop and Android builds embed. The landing and download pages link to it.
+- **A folder workspace and an account are mutually exclusive**, in both directions: a
+  folder is already the user's sync, so signing in is refused while one is active and
+  the folder picker is refused while an account is syncing. Each explains why.
+- Inside the packaged apps, sign-in is email + password only — Google, magic links and
+  password resets return to a URL a native shell doesn't have, so they stay web-only.
+- Danger Zone now wipes the account copy too when signed in, so the next sync can't
+  pull everything back.
 - **Fixed: the Android build offered a folder picker it cannot open.** `IS_DESKTOP` was
   true for any Tauri shell, Android included, but `tauri-plugin-dialog` has no folder
   picker on mobile, so "Keep my notes in a folder…" appeared on the phone and failed.

@@ -42,6 +42,7 @@
 <link rel="stylesheet" href="css/17-versions.css">
 <link rel="stylesheet" href="css/18-sidebar-tree.css">
 <link rel="stylesheet" href="css/19-page-settings.css">
+<link rel="stylesheet" href="css/20-cloud.css">
 <link rel="stylesheet" href="css/21-trash.css">
 <link rel="stylesheet" href="css/22-filters.css">
 <link rel="stylesheet" href="css/23-phase1.css">
@@ -58,6 +59,7 @@
 <link rel="stylesheet" href="css/34-calendar.css">
 <link rel="stylesheet" href="css/35-cover-gallery.css">
 <link rel="stylesheet" href="css/36-motion.css">
+<link rel="stylesheet" href="css/37-auth.css">
 <link rel="stylesheet" href="css/38-settings.css">
 <link rel="stylesheet" href="css/39-mobile-sheet.css">
 <link rel="stylesheet" href="css/40-mobile-fixes.css">
@@ -444,6 +446,11 @@
 <script src="js/core/versions.js"></script>
 <script src="js/media/blob-gc.js"></script>
 <script src="js/core/trash.js"></script>
+<!-- supabase-js is vendored (pinned) so the cloud layer loads offline and
+     script-src stays 'self'. Sync is optional: signed out, none of this runs. -->
+<script src="js/vendor/supabase.js"></script>
+<script src="js/cloud/config.js"></script>
+<script src="js/cloud/sync.js"></script>
 <script src="js/core/updates.js"></script>
 <script src="js/ui/onboarding.js"></script>
 <script src="js/core/init.js"></script>

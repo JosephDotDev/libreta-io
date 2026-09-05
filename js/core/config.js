@@ -198,23 +198,53 @@ function cfgInitCollapsible(){
     sec.classList.toggle('collapsed', !!s[sl.dataset.seckey]);
   });
 }
-/* Workspace card at the top of Settings — the identity header for the panel.
-   Libreta has no accounts: everything lives on this device, so the card just
-   says so and points at the backup tools. */
+/* Account card at the top of Settings. Three states: signed in and syncing, a
+   folder workspace (which is its own sync, so an account would fight it), or
+   plain local with an invitation to sync. Signing in is always optional. */
 function renderAccountStatus(){
   const el=document.getElementById('cfg-account'), sec=document.getElementById('cfg-account-sec');
   if(!el||!sec) return;
   sec.style.display='';
+  const plan=`<div class="acct-plan">
+      <div><div class="acct-plan-eyebrow">Current plan</div><div class="acct-plan-name">Free — forever</div><div class="acct-plan-sub">Every feature · unlimited · yours</div></div>
+    </div>`;
+  let user=null; try{ if(typeof Cloud!=='undefined') user=Cloud.user; }catch(e){}
+  if(user){
+    const email=user.email||'';
+    const m=user.user_metadata||{};
+    const name=(m.full_name||m.name||m.display_name||(email?email.split('@')[0]:'')||'You').toString();
+    const initial=(name.trim()[0]||email[0]||'U').toUpperCase();
+    el.innerHTML=`<div class="acct-home">
+      <div class="acct-id">
+        <span class="acct-av">${escHtml(initial)}</span>
+        <div class="acct-meta"><div class="acct-name">${escHtml(name)}</div><div class="acct-email" title="${escAttr(email)}">${escHtml(email)}</div></div>
+      </div>
+      <div class="acct-sync acct-sync-on"><span class="acct-dot"></span>Synced across your devices</div>
+      ${plan}
+      <div class="cfg-opt-row" style="margin-top:10px">
+        <button class="cfg-opt" onclick="cloudSyncNow()">Sync now</button>
+        <button class="cfg-opt acct-signout" onclick="cloudSignOut()">Log out</button>
+      </div>
+      <div style="font-size:10px;color:var(--mu);margin-top:8px;line-height:1.6">Your notes are still on this device and still work offline. Logging out leaves them here.</div>
+    </div>`;
+    return;
+  }
+  const inFolder=(typeof Workspace!=='undefined'&&Workspace.active);
   el.innerHTML=`<div class="acct-home">
       <div class="acct-id">
         <span class="acct-av acct-av-local"><svg viewBox="0 0 16 16"><rect x="1.5" y="2.5" width="13" height="9" rx="1.2"/><path d="M5 13.5h6"/></svg></span>
-        <div class="acct-meta"><div class="acct-name">Local workspace</div><div class="acct-email">No account — everything lives on this device</div></div>
+        <div class="acct-meta"><div class="acct-name">${inFolder?'Folder workspace':'Local workspace'}</div><div class="acct-email">${inFolder?'Your folder is your sync':'No account — everything lives on this device'}</div></div>
       </div>
-      <div class="acct-plan">
-        <div><div class="acct-plan-eyebrow">Current plan</div><div class="acct-plan-name">Free — forever</div><div class="acct-plan-sub">Every feature · unlimited · yours</div></div>
-      </div>
+      ${plan}
+      ${inFolder
+        ? `<div style="font-size:10px;color:var(--mu);margin-top:10px;line-height:1.6">Signing in isn’t available while your notes live in a folder — whatever syncs that folder is already doing the job. Switch to this device below if you’d rather use an account.</div>`
+        : `<button class="cfg-opt" style="margin-top:10px" onclick="cloudSignIn()">Sign in to sync across devices</button>
+           <div style="font-size:10px;color:var(--mu);margin-top:8px;line-height:1.6">Optional. Libreta works fully offline without an account; signing in just keeps a copy in your account so your other devices can catch up.</div>`}
     </div>`;
 }
+function cloudSignIn(){ if(typeof Cloud!=='undefined'&&Cloud.signIn) Cloud.signIn().then(()=>renderAccountStatus()); }
+function cloudSyncNow(){ if(typeof Cloud!=='undefined'&&Cloud.syncNow) Cloud.syncNow(); }
+function cloudSignOut(){ if(typeof Cloud!=='undefined'&&Cloud.signOut) Cloud.signOut(); }
 /* Danger Zone — wipe every trace of the workspace on THIS DEVICE: the small
    localStorage singletons, the IndexedDB docs/tables store and the media blob
    store, then reload into a fresh workspace. If the notes live in a folder, the
@@ -226,7 +256,12 @@ function confirmDeleteAllData(){
     ? 'Stop using your workspace folder and erase everything Libreta keeps on this device? The folder and its files are left exactly as they are.'
     : 'Delete ALL your data — every page, database, image and setting on this device? This cannot be undone.',
     ()=>{ showConfirm('Are you absolutely sure? There is no way to recover this.',
-      ()=>{ wipeLocalWorkspace().finally(()=>location.reload()); },
+      ()=>{
+        // Signed in, the account copy has to go too, or the next sync would pull
+        // everything straight back. Cloud.deleteEverything() wipes both and reloads.
+        if(typeof Cloud!=='undefined' && Cloud.user && Cloud.deleteEverything){ Cloud.deleteEverything(); return; }
+        wipeLocalWorkspace().finally(()=>location.reload());
+      },
       'Delete everything','Final confirmation'); },
     'Continue','Delete all data');
 }

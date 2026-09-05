@@ -1,11 +1,28 @@
-# Publish landing.html (the download page) to GitHub Pages as the site's index.
-# Requires Pages to be enabled once in the repo settings with source = "GitHub Actions".
-name: Publish download page
+# Publish the site to GitHub Pages: the marketing page at /, the downloads page at
+# /download.html, and the app itself at /app/. Requires Pages to be enabled once in
+# the repo settings with source = "GitHub Actions".
+#
+# The app is the very same bundle the desktop and Android builds embed — built by
+# scripts/build-dist.js — so the browser, the desktop app and the phone all run
+# identical code and can share one account.
+name: Publish site
 
 on:
   push:
     branches: [main]
-    paths: ['landing.html', 'download.html', 'css/00-fonts.css', 'fonts/**', 'favicon.svg', 'libreta-banner.png', '.github/workflows/pages.yml']
+    paths:
+      - 'landing.html'
+      - 'download.html'
+      - 'index.html'
+      - 'css/**'
+      - 'js/**'
+      - 'fonts/**'
+      - 'vendor/**'
+      - 'scripts/build-dist.js'
+      - 'manifest.webmanifest'
+      - 'favicon.svg'
+      - 'libreta-banner.png'
+      - '.github/workflows/pages.yml'
   workflow_dispatch:
 
 permissions:
@@ -25,6 +42,9 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
       - name: Assemble the static site
         run: |
           mkdir -p _site/css
@@ -33,6 +53,11 @@ jobs:
           cp favicon.svg libreta-banner.png _site/
           cp css/00-fonts.css _site/css/
           cp -R fonts _site/fonts
+          # The app, exactly as the desktop and Android builds bundle it.
+          node scripts/build-dist.js
+          mkdir -p _site/app
+          cp -R dist/. _site/app/
+          echo "published $(find _site -type f | wc -l) files"    
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
       - id: deployment

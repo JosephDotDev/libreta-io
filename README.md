@@ -1,8 +1,10 @@
 # Libreta
 
-A local-first personal workspace that runs as a desktop app. No account, no server, no subscription: documents, databases, images and settings live on your computer (IndexedDB + localStorage inside the app's webview). The app itself is plain HTML/CSS/JS with no build step, wrapped in a native window by [Tauri](https://v2.tauri.app).
+A local-first personal workspace. One plain HTML/CSS/JS app, shipped three ways: **in a browser**, as a **desktop app** for macOS / Windows / Linux, and as an **Android** APK — the last two being the same files wrapped in a native window by [Tauri](https://v2.tauri.app).
 
-Downloads for macOS, Windows and Linux are published on the **GitHub Releases** page of this repository.
+Every feature works with no account and no connection; your notes live on your device. **Sync is optional**: sign in and a copy is kept in your own Supabase account so your other devices catch up. On desktop you can instead keep the workspace in a folder and let Dropbox / Google Drive / iCloud carry it.
+
+Downloads are on the **GitHub Releases** page; the browser version is at `/app` on the project site.
 
 Libreta is open source under the [MIT License](LICENSE); bundled fonts and KaTeX carry their own licenses, listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Contributions and forks are welcome.
 
@@ -82,7 +84,8 @@ Libreta is a **personal content-planning workspace** — a place to write, organ
 - Mobile: off-canvas drawer below 860 px; topbar hamburger
 
 ### Data & backup
-- No accounts and no cloud service. By default the workspace lives inside the app's own storage on this device
+- **Sync (optional)** — Settings → sign in, and the workspace is mirrored to your own Supabase account so the browser, desktop and phone stay in step. Signed out, nothing leaves the device; signing out later leaves your notes where they are
+- By default the workspace lives inside the app's own storage on this device
 - **Settings → Where your notes live → Keep my notes in a folder…** (desktop) — moves the whole workspace into a folder you choose: one JSON file per page and per database, images in `media/`, settings alongside. Put that folder in Dropbox, Google Drive, iCloud or OneDrive and another computer running Libreta opens the same notes. Last writer wins per file, so close Libreta on one machine before opening it on another. "Use this device instead" copies everything back
 - **Settings → Data & Backup → Export / Import** — portable single-file JSON backup of everything; accepts legacy `folio` backups too
 - **Publish** — save any page as a self-contained HTML file
@@ -161,6 +164,11 @@ Loads first. `saveFileToDisk(blob, name)` and `openExternal(url)` are the only t
 ### `js/core/updates.js` — update check
 Desktop only. Asks GitHub's public releases API for the latest tag at most once a day, compares it with `getVersion()`, and offers a link to the download page if there is a newer one. It never downloads or installs anything. Settings → About shows the running version, a manual "Check for updates", and a switch to turn automatic checks off. This is the only request Libreta makes on its own initiative — see SECURITY.md → Network activity.
 
+### `js/cloud/` — optional sync
+`config.js` (Supabase project URL + public anon key), `sync.js` (the account card, pull-on-boot, debounced push, per-record reconcile with tombstones, media sync, the status chip). It never gates the app: `Cloud.boot()` returns immediately when there is no session, and stands down entirely while a folder workspace is active — a folder is already the user's sync, and two systems writing the same pages would fight. `Cloud.signIn()` opens the account card on demand from Settings.
+
+Inside the packaged apps, email + password is the only route: Google, magic links and password resets all hand off to a browser and return to a URL, which a native shell doesn't have. Those stay web-only.
+
 ### `src-tauri/` — the desktop shell
 `tauri.conf.json` (window, CSP, bundle metadata; `frontendDist` points at `dist/`), `capabilities/default.json` (Save/Open dialogs, file access limited to paths picked in those dialogs, opening links), `src/lib.rs` (plugin registration + a navigation guard that refuses to let the main window leave the app), `icons/` and `branding/` (generated — see `scripts/make-branding.js`).
 
@@ -190,7 +198,7 @@ Media blobs go through the `IDB` facade the same way: five methods (`put / get /
 
 ## Releasing
 
-Releases are built by GitHub Actions (`.github/workflows/release.yml`) — there is no server anywhere in the pipeline.
+Releases are built by GitHub Actions (`.github/workflows/release.yml`); the site and the browser app are published by `pages.yml`. Nothing in either pipeline needs a server of ours.
 
 1. Bump the version in **three** places so they agree: `package.json`, `src-tauri/tauri.conf.json`, `src-tauri/Cargo.toml` (then run `cargo generate-lockfile` in `src-tauri/` so `Cargo.lock` follows).
 2. Add a CHANGELOG entry, commit, and push a tag: `git tag v1.0.1 && git push origin v1.0.1`.
