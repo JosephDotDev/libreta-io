@@ -7,7 +7,7 @@
    the hit lands (title-start > title > body), so typing stays snappy even
    with hundreds of pages.
 ═══════════════════════════════════════════════ */
-let _searchIdx=null;          // [{id,title,icon,titleLow,bodyLow}]
+let _searchIdx=null;          // [{id,title,icon,titleLow,body,bodyLow}]
 let _searchDirty=true;
 let _searchT=null;
 function searchInvalidate(){ _searchDirty=true; }
@@ -26,13 +26,19 @@ function _docPlainText(doc){
 function buildSearchIndex(){
   if(_searchIdx&&!_searchDirty) return _searchIdx;
   const docs=DB.getDocs().filter(d=>d.id!==HOME_ID);
-  _searchIdx=docs.map(d=>({
-    id:d.id,
-    title:d.title||'Untitled',
-    icon:d.meta&&d.meta.icon||'',
-    titleLow:(d.title||'untitled').toLowerCase(),
-    bodyLow:_docPlainText(d).toLowerCase(),
-  }));
+  _searchIdx=docs.map(d=>{
+    // Keep the body in BOTH cases: bodyLow drives matching, body is what the snippet
+    // is sliced from — reading it out of bodyLow rendered every preview lower-cased.
+    const body=_docPlainText(d);
+    return {
+      id:d.id,
+      title:d.title||'Untitled',
+      icon:d.meta&&d.meta.icon||'',
+      titleLow:(d.title||'untitled').toLowerCase(),
+      body,
+      bodyLow:body.toLowerCase(),
+    };
+  });
   _searchDirty=false;
   return _searchIdx;
 }
@@ -52,9 +58,9 @@ function runSearch(q){
 }
 function _searchSnippet(id,q){
   const e=_searchIdx&&_searchIdx.find(x=>x.id===id); if(!e) return '';
-  const i=e.bodyLow.indexOf(q); if(i<0) return '';
-  const start=Math.max(0,i-24);
-  return (start>0?'…':'')+e.bodyLow.slice(start,i+q.length+40).replace(/\s+/g,' ').trim()+'…';
+  const i=e.bodyLow.indexOf(q); if(i<0) return '';   // same offsets: lower-casing is 1:1 for everything but a few exotic scripts
+  const start=Math.max(0,i-24), end=i+q.length+40;
+  return (start>0?'…':'')+e.body.slice(start,end).replace(/\s+/g,' ').trim()+(end<e.body.length?'…':'');
 }
 function onSearchInput(v){
   document.getElementById('sb-search-x').style.display=v?'block':'none';

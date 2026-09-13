@@ -32,4 +32,3 @@ function idbViewCover(e,docId){
   const doc=docId?DB.getDoc(docId):null; const cv=doc&&doc.meta&&doc.meta.cover; const src=cv?srcFor(cv):'';
   if(src) openImgLightbox(src,{editable:false});
 }
-function idbDocImgUpload(colId){ _idbImgTarget={docMode:true,colId}; const inp=document.getElementById('idb-img-input'); inp.value=''; inp.click(); }

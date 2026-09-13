@@ -205,7 +205,19 @@ body.idb-col-resizing{cursor:col-resize;user-select:none}
 /* Block layout (like the main editor's .props-row) so the full-width text-property
    column actually stretches to the panel edge instead of shrinking to its content. */
 .doc-peek-props{display:block;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--bd);min-height:30px}
-.doc-peek-scroll .blocks-ct{max-width:none;padding:0}
+/* ── Peek alignment ──
+   The title and the properties start at the scroll container's own padding edge,
+   but every block row leads with the drag-handle gutter — so body text used to land
+   a full gutter (56px) to the RIGHT of the title, reading as a centred column inside
+   a left-aligned panel. Pull the block list left by exactly the gutter width so the
+   text lands on the same edge, and slim the gutter to suit the narrow panel: 20px of
+   handle + 2px of separation, still entirely inside the panel and still grabbable. */
+.doc-peek-scroll{ --peek-gut:22px; }
+.doc-peek-scroll .bk-gut{ width:var(--peek-gut); padding-right:2px; }
+.doc-peek-scroll .blocks-ct{max-width:none;padding:0;margin:0 0 0 calc(-1 * var(--peek-gut))}
+/* Match the right inset to the left rather than inheriting the editor's wide 36px. */
+.doc-peek-scroll .bk-wrap{ padding-right:10px; }
+.doc-peek-scroll .bk-wrap::before{ left:-8px; right:4px; }
 /* Peek cover + icon (compact versions of the editor's) */
 .peek-actions-row{display:flex;gap:6px;margin-bottom:6px;opacity:0;transition:opacity var(--t-fast)}
 .doc-peek-scroll:hover .peek-actions-row{opacity:1}

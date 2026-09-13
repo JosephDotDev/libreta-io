@@ -46,6 +46,9 @@ function onTitleInput(){
   // item) — otherwise the host title could be written from, or onto, the wrong doc.
   // The peek has its own handler (peekTitleInput).
   if(S.peekOpen) return;
+  // Naming the page counts as starting it: the invitation hides #blocks-ct while it
+  // stands in for an empty page, so leaving it up would keep the body out of reach.
+  if(typeof inviteUp==='function'&&inviteUp()) dismissInvite();
   autoGrowTitle();
   const val=document.getElementById('ed-title').value;
   document.getElementById('page-title').textContent=val||'Untitled';

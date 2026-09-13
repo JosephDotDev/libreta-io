@@ -4,18 +4,11 @@ async function onIdbImgChange(input){
   const t=_idbImgTarget; _idbImgTarget=null;
   const blob=await compressToBlob(file,1200,1200,0.82)||file;
   const id=await storeBlob(blob);
-  if(t.docMode){
-    const {tbl,row}=idbDocRow(); if(!tbl||!row){freeBlob(id);return;}
-    const prev=row.cells[t.colId]; row.cells[t.colId]=id;
-    if(DB.saveTbl(tbl)===false){freeBlob(id);return;}
-    if(isBlobRef(prev)) freeBlob(prev); renderProps();
-  } else {
-    const blk=findBlock(t.blockId),tbl=idbTbl(blk); if(!tbl){freeBlob(id);return;}
-    const row=tbl.rows.find(r=>r.id===t.rowId); if(!row){freeBlob(id);return;}
-    const prev=row.cells[t.colId]; row.cells[t.colId]=id;
-    if(DB.saveTbl(tbl)===false){freeBlob(id);return;}
-    if(isBlobRef(prev)) freeBlob(prev); idbSync(t.blockId,tbl.id);
-  }
+  const blk=findBlock(t.blockId),tbl=idbTbl(blk); if(!tbl){freeBlob(id);return;}
+  const row=tbl.rows.find(r=>r.id===t.rowId); if(!row){freeBlob(id);return;}
+  const prev=row.cells[t.colId]; row.cells[t.colId]=id;
+  if(DB.saveTbl(tbl)===false){freeBlob(id);return;}
+  if(isBlobRef(prev)) freeBlob(prev); idbSync(t.blockId,tbl.id);
 }
 /* Make naming part of creation: after a new entry renders, drop the caret into its
    title cell so the user types the name immediately (no extra click). Targets the row

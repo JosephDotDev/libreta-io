@@ -34,8 +34,6 @@ npm run desktop:build  # produces installers under src-tauri/target/release/bund
 
 **Icon and installer artwork** live in `src-tauri/branding/` (see its README). They are rendered from the app's own fonts by `scripts/make-branding.js`; `src-tauri/icons/` is generated from `branding/icon-1024.png` with `npx tauri icon`. Don't feed `favicon.svg` to `tauri icon` — it sets the mark in Cormorant and the rasteriser has no fonts, which is how 1.0.x shipped a blank square.
 
-> `index_3.html` is a frozen pre-split snapshot of the original single-file build. Keep it as a reference only — all active development happens in `index.html` + `css/` + `js/`.
-
 ---
 
 ## What Libreta is
@@ -98,7 +96,7 @@ Libreta is a **personal content-planning workspace** — a place to write, organ
 Plain HTML/CSS/JS. JS files are **classic scripts loaded in order** (see the `<script>` block at the bottom of `index.html`): they share one global scope, which is what lets inline `onclick="…"` handlers in generated HTML call across files. Load order is meaningful — top-level code at load time may only use things defined in earlier files. `core/init.js` is the only file that does real work at load and it loads last.
 
 ### `index.html`
-App shell: sidebar, topbar, one `<div class="view">` per page (home / documents / editor / calendar / overview), and every popover/modal (slash menu, block menu, property editors, confirm dialog, version history panel, icon picker, etc.). New popovers → markup here, behavior in a `js/ui/` or feature file.
+App shell: sidebar, topbar, one `<div class="view">` per page (home / documents / editor / calendar / tasks / databases), and every popover/modal (slash menu, block menu, property editors, confirm dialog, version history panel, icon picker, etc.). New popovers → markup here, behavior in a `js/ui/` or feature file.
 
 ### `css/` — numbered, load-order-sensitive
 Later files intentionally override earlier ones (the app grew feature-by-feature). Keep new rules in the file that owns the feature; add a new numbered file only for a genuinely new surface.
@@ -148,18 +146,17 @@ Carousel, grid table, YouTube/bookmark, callout + nested-page + mentions, image 
 Standalone per-document properties (`properties.js`), property editor popover (`prop-editor.js`), select-option editing (`options.js`), quick editing from list surfaces (`quick-edit.js`), cross-view property filters (`filtering.js`).
 
 ### `js/views/` — pages
-`home.js` (configurable home), `all-docs.js` + `databases-page.js` (legacy/table pages), `calendar.js` (global calendar), `overview.js`.
+`home.js` (configurable home), `all-docs.js` + `databases-page.js` (legacy/table pages), `calendar.js` (global calendar), `tasks.js` (the Tasks view).
 
 ### `js/media/` — binary data
-`compress.js` (canvas downscaling), `blob-gc.js` (reference collection, GC of orphaned blobs, legacy migration, export/import).
+`blob-gc.js` (reference collection, GC of orphaned blobs, legacy migration, export/import). Canvas downscaling and the blob store itself live in `core/storage.js` (`compressToBlob`, `storeBlob`, `IDB`).
 
 > **Important:** if you add any new place that stores an image reference, add it to `collectRefs()` in `blob-gc.js` — otherwise GC will silently delete those blobs.
 
 ### `js/core/platform.js` — browser vs. desktop bridge
 Loads first. `saveFileToDisk(blob, name)` and `openExternal(url)` are the only two places that know whether the page is in a browser tab or inside the Tauri shell (`window.__TAURI__`). In the shell, saving opens a native Save dialog and writes the bytes through the `dialog` + `fs` plugins; links go to the system browser through `opener`; a capture-phase click handler makes sure no external link can navigate the app window. Every download / new-tab call site in the app goes through these two functions.
 
-### `js/core/platform.js` — platform detection
-`IS_NATIVE` (running in the Tauri shell at all), `IS_MOBILE` (that shell is Android/iOS) and `IS_DESKTOP` (native and not mobile). Folder features must gate on `IS_DESKTOP`: Android has the same `__TAURI__` bridge but `tauri-plugin-dialog` returns `FolderPickerNotImplemented` there.
+It also owns platform detection: `IS_NATIVE` (running in the Tauri shell at all), `IS_MOBILE` (that shell is Android/iOS) and `IS_DESKTOP` (native and not mobile). Folder features must gate on `IS_DESKTOP`: Android has the same `__TAURI__` bridge but `tauri-plugin-dialog` returns `FolderPickerNotImplemented` there.
 
 ### `js/core/updates.js` — update check
 Desktop only. Asks GitHub's public releases API for the latest tag at most once a day, compares it with `getVersion()`, and offers a link to the download page if there is a newer one. It never downloads or installs anything. Settings → About shows the running version, a manual "Check for updates", and a switch to turn automatic checks off. This is the only request Libreta makes on its own initiative — see SECURITY.md → Network activity.

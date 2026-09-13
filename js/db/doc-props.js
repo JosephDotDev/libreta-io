@@ -130,6 +130,7 @@ function idbDocImgUpload(colId){
   const inp=document.createElement('input'); inp.type='file'; inp.accept='image/*';
   inp.onchange=()=>{
     const file=inp.files&&inp.files[0]; if(!file) return;
+    if(!withinUploadLimit(file,'Image')) return;   // same 25 MB ceiling every other upload path enforces
     compressToBlob(file,1600,1200,0.85).then(async blob=>{
       if(!blob) return;
       const id=await storeBlob(blob); const prev=row.cells[colId];

@@ -5,14 +5,37 @@
    heading hierarchy so an H1 reads as a heading, not just bold body text.
 ═══════════════════════════════════════════════ */
 @media(max-width:860px){
-  /* Reclaim the width: smaller side padding, slimmer gutter. */
-  .ed-title-row{ padding-left:16px; padding-right:16px; padding-top:22px; }
-  .blocks-ct{ padding-left:6px; padding-right:10px; }
-  .bk-gut{ width:22px; padding-right:2px; }
+  /* ── ONE LEFT EDGE FOR THE WHOLE PAGE ──
+     --ed-pad is where the title, the properties and the block TEXT all begin.
+     --bk-gut is the drag-handle gutter that precedes every block's text, so the
+     block list is pulled left by exactly that much and its text lands on --ed-pad
+     like everything else. The handle keeps its own reserved room inside the
+     viewport — it never overlaps the text and never drifts off the screen edge.
+     Re-inset the entire page by changing --ed-pad alone. */
+  :root{ --ed-pad:24px; --bk-gut:22px; }
+
+  .ed-title-row{ padding-left:var(--ed-pad); padding-right:var(--ed-pad); padding-top:22px; }
+  /* The properties bar kept its desktop 60px here, which is what left properties
+     sitting well to the right of the title and the writing area. */
+  .props-bar{ padding-left:var(--ed-pad); padding-right:var(--ed-pad); }
+  .blocks-ct{ padding-left:calc(var(--ed-pad) - var(--bk-gut)); padding-right:10px; }
+
+  /* The handle is 20px wide; the gutter is 20px of content box + 2px of separation
+     from the text. Never narrower than the handle, or it would overflow its own box
+     and slide under the screen edge. */
+  .bk-gut{ width:var(--bk-gut); padding-right:2px; }
   .bk-toggle-body .bk-gut{ width:16px; }
-  /* Full-width pages: don't double the title's gutter indent on mobile. */
-  #view-editor.pw-full:not(.has-pagebg) .ed-title-row{ padding-left:16px; padding-right:16px; }
-  #view-editor.pw-full:not(.has-pagebg) .blocks-ct.w-full{ padding-left:6px; padding-right:10px; }
+
+  /* Desktop reserves 36px to the right of the text for hover affordances; on a phone
+     that is a sixth of the screen. 14px here + the list's 10px = the same 24px inset
+     as the left, so the writing column sits evenly between both edges. */
+  .bk-wrap{ padding-right:14px; }
+  .bk-wrap::before{ left:-8px; right:8px; }
+
+  /* Full-width pages: the same single edge — no extra gutter indent on title/props. */
+  #view-editor.pw-full:not(.has-pagebg) .ed-title-row,
+  #view-editor.pw-full:not(.has-pagebg) .props-bar{ padding-left:var(--ed-pad); padding-right:var(--ed-pad); }
+  #view-editor.pw-full:not(.has-pagebg) .blocks-ct.w-full{ padding-left:calc(var(--ed-pad) - var(--bk-gut)); padding-right:10px; }
 
   /* Stronger heading scale on the narrow layout (was 2.3/1.8/1.45em of a 15px base
      — too close to the 18px reading size to register as a heading). */
