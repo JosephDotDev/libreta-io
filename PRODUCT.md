@@ -179,7 +179,7 @@ All navigation goes through `nav(view, id)` in `js/core/router.js`. There are no
 #### Data management
 - **Export / Import** — portable JSON backup (accepts legacy `folio` format)
 - **Publish** — save any page as a self-contained HTML file
-- **Trash** — soft-delete, restore, 30-day auto-purge
+- **Trash** — soft-delete, restore, 30-day auto-purge. Deleting a database entry (calendar, board, table, Tasks) asks for confirmation, then trashes its page with the row stashed, so Restore / ⌘Z puts it back in its original slot. All entry deletes go through `trashDbRow()` in `js/core/trash.js` — never filter a row out of `tbl.rows` directly, or its page is orphaned in Recents. A boot-time sweep (`sweepOrphanEntryPages`) moves pages orphaned that way before this fix into Trash.
 - **Danger Zone** — wipe all data on this device (double-confirmed)
 
 ---
