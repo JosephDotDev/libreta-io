@@ -88,12 +88,10 @@ function idbColMenu(e,blockId,colId){
   });
 }
 function idbRename(blockId,name){const blk=findBlock(blockId),tbl=idbTbl(blk);if(tbl){tbl.name=name.trim()||'Untitled';DB.saveTbl(tbl);idbRerenderSiblings(tbl.id,blockId);}}
-function idbDelRow(blockId,rowId){const blk=findBlock(blockId),tbl=idbTbl(blk);if(tbl){tbl.rows=tbl.rows.filter(r=>r.id!==rowId);DB.saveTbl(tbl);idbSync(blockId,tbl.id);}}
-/* Delete a row given only its table (no block context) — for the Tasks page,
-   calendar, and other non-block surfaces. Re-renders every inline view of the table. */
-function idbDeleteRow(tableId,rowId){
-  const tbl=DB.getTbl(tableId); if(!tbl) return;
-  tbl.rows=(tbl.rows||[]).filter(r=>r.id!==rowId);
-  DB.saveTbl(tbl);
-  if(typeof idbRerenderSiblings==='function') idbRerenderSiblings(tableId,null);
-}
+/* Deleting an entry confirms, then moves its page to Trash (see trashDbRow) —
+   never just drops the row, which used to orphan the page in Recents. */
+function idbDelRow(blockId,rowId){const blk=findBlock(blockId),tbl=idbTbl(blk);if(tbl)confirmTrashDbRow(tbl.id,rowId);}
+/* Same, given only its table (no block context) — for the Tasks page, calendar, and
+   other non-block surfaces. `after` runs once the delete is confirmed (e.g. a
+   view-specific re-render), since the confirm dialog is asynchronous. */
+function idbDeleteRow(tableId,rowId,after){ confirmTrashDbRow(tableId,rowId,after); }

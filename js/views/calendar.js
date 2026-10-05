@@ -69,7 +69,7 @@ function calEvChip(ev,color,full){
   const drag=`draggable="true" ondragstart="calEvDragStart(event,'${encodeURIComponent(JSON.stringify(ev))}')" ondragend="calDrag=null;clearCalDrop()"`;
   const open=ev.kind==='row'?`calOpenRow('${ev.tblId}','${ev.rowId}')`:`nav('editor','${ev.id}')`;
   const del=ev.kind==='row'
-    ? `<button class="cal-ev-del" onclick="event.stopPropagation();idbDeleteRow('${ev.tblId}','${ev.rowId}');renderCal()" data-tip="Delete">&#10005;</button>`
+    ? `<button class="cal-ev-del" onclick="event.stopPropagation();idbDeleteRow('${ev.tblId}','${ev.rowId}',renderCal)" data-tip="Delete">&#10005;</button>`
     : `<button class="cal-ev-del" onclick="event.stopPropagation();calUnschedule('${ev.id}','${ev.propId}')" data-tip="Remove from calendar">&#10005;</button>`;
   if(!full)
     return `<span class="cal-ev ${ev.cls}" style="${tint}" ${drag} onclick="event.stopPropagation();${open}" title="${escAttr(ev.title)}">${del}${escHtml(ev.title)}</span>`;

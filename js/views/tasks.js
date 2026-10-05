@@ -245,8 +245,7 @@ function tkCreateTask(status,title,dest){
   },0);
 }
 function tkDeleteTask(tblId,rowId){
-  if(typeof idbDeleteRow==='function') idbDeleteRow(tblId,rowId);
-  renderTasks();
+  if(typeof idbDeleteRow==='function') idbDeleteRow(tblId,rowId,renderTasks);
 }
 function tkDeleteStandalone(id){
   _saveStdTasks(_loadStdTasks().filter(t=>t.id!==id));

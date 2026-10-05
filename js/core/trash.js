@@ -39,7 +39,7 @@ function trashDoc(rootId){
     // so a restore can re-attach it.
     if(d.dbId){ const t=DB.getTbl(d.dbId);
       if(t){ const row=(t.rows||[]).find(r=>r.docId===id);
-        if(row){ entry._trash.row={tableId:d.dbId, row:JSON.parse(JSON.stringify(row))};
+        if(row){ entry._trash.row={tableId:d.dbId, idx:t.rows.indexOf(row), row:JSON.parse(JSON.stringify(row))};
           t.rows=t.rows.filter(r=>r.docId!==id); DB.saveTbl(t); } } }
     trash.unshift(entry);
     // Drop from the live set: remove from the in-memory cache AND the per-record IDB
@@ -64,6 +64,58 @@ function trashDoc(rootId){
   return {batch, count:ids.length, rootTitle, ids};
 }
 
+/* ── Move a database ENTRY to Trash. Every entry-delete surface (calendar, board,
+   table row menu, Tasks page, full Calendar) routes through here, so an entry's
+   page can never outlive its row and float around in Recents. Rows that were never
+   opened have no page yet — give them one first so they land in Trash, restorable. */
+function trashDbRow(tableId,rowId){
+  const tbl=DB.getTbl(tableId); if(!tbl) return null;
+  const row=(tbl.rows||[]).find(r=>r.id===rowId); if(!row) return null;
+  const docId=idbEnsureRowDoc(tbl,row);
+  // trashDoc finds the row via the page's dbId — heal pages that lost the link.
+  const d=DB.getDoc(docId);
+  if(d&&(d.dbId!==tableId||d.rowId!==rowId)){ d.dbId=tableId; d.rowId=rowId; DB.saveDoc(d); }
+  if(S.peekOpen&&S.docId===docId&&typeof closeDocPeek==='function') closeDocPeek();
+  const res=trashDoc(docId);
+  if(typeof idbRerenderSiblings==='function') idbRerenderSiblings(tableId,null);
+  return res;
+}
+/* ── Boot repair: before trashDbRow existed, deleting an entry dropped its row but
+   left its page live — reachable from Recents, absent from Trash. Such a page still
+   points (dbId) at a database that exists but has no row for it; nothing else in
+   the app produces that state (moves re-point dbId, the default-DB migration clears
+   it, whole-database deletes remove the pages). Give each orphan a minimal row
+   (title only — the old delete discarded the cells) and send it through trashDbRow,
+   so it lands in Trash and Restore puts it back in its database. Idempotent. */
+function sweepOrphanEntryPages(){
+  let n=0;
+  DB.getDocs().forEach(d=>{
+    if(!d||!d.dbId) return;
+    const t=DB.getTbl(d.dbId); if(!t) return;                  // whole DB gone — not this bug
+    t.rows=t.rows||[];
+    if(t.rows.some(r=>r.docId===d.id)) return;                 // healthy entry
+    const cells={}; (t.columns||[]).forEach(c=>cells[c.id]='');
+    const tc=typeof idbTitleColId==='function'?idbTitleColId(t):null;
+    if(tc) cells[tc]=d.title||'';
+    const rid=(d.rowId&&!t.rows.some(r=>r.id===d.rowId))?d.rowId:mkId('r');
+    t.rows.push({id:rid,cells,docId:d.id}); DB.saveTbl(t);
+    if(trashDbRow(t.id,rid)) n++;
+  });
+  if(n){ _pendingUndo=null;                                    // ⌘Z must not resurrect boot-time repairs
+    if(typeof toast==='function') toast(`Moved ${n} deleted entr${n===1?'y':'ies'} to Trash`,{type:'info',ms:4000}); }
+  return n;
+}
+/* Confirm first — the ✕ on calendar events / board cards is easy to hit by accident. */
+function confirmTrashDbRow(tableId,rowId,after){
+  const tbl=DB.getTbl(tableId); const row=tbl&&(tbl.rows||[]).find(r=>r.id===rowId); if(!row) return;
+  const title=(typeof idbRowTitle==='function'&&idbRowTitle(tbl,row))||'Untitled';
+  showConfirm(`Move “${title}” to Trash? You can restore it from Trash for ${TRASH_TTL_DAYS} days.`,()=>{
+    const res=trashDbRow(tableId,rowId);
+    if(typeof after==='function') after();
+    if(res&&typeof toast==='function') toast(`Moved to Trash · ${undoHint()} to undo`);
+  },'Move to Trash','Delete entry');
+}
+
 /* ── Restore every entry in a batch back into the live DB. */
 function restoreTrash(batch){
   const trash=_loadTrash(); const keep=[], restored=[];
@@ -74,7 +126,11 @@ function restoreTrash(batch){
     const clean=JSON.parse(JSON.stringify(e)); delete clean._trash;
     DB.saveDoc(clean);
     if(stash){ const t=DB.getTbl(stash.tableId);
-      if(t && !(t.rows||[]).some(r=>r.docId===clean.id)){ t.rows=t.rows||[]; t.rows.push(stash.row); DB.saveTbl(t); } }
+      if(t && !(t.rows||[]).some(r=>r.docId===clean.id)){ t.rows=t.rows||[];
+        // Back into its original slot (older trash entries have no idx → append).
+        const at=Number.isInteger(stash.idx)?Math.min(stash.idx,t.rows.length):t.rows.length;
+        t.rows.splice(at,0,stash.row); DB.saveTbl(t);
+        if(typeof idbRerenderSiblings==='function') idbRerenderSiblings(stash.tableId,null); } }
   });
   _saveTrash(keep);
   if(_pendingUndo===batch) _pendingUndo=null;

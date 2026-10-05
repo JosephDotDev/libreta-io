@@ -11,6 +11,7 @@
                      // sees this device's real data. A pull refreshes the cache.
   try{ if(typeof Cloud!=='undefined') await Cloud.boot(); }catch(e){ console.warn('[cloud] boot failed — carrying on without sync',e); }
   try{ if(typeof migrateDecoupleDefaultDb==='function') migrateDecoupleDefaultDb(); }catch(e){ console.warn('[migrate] decouple default DB failed',e); }
+  try{ if(typeof sweepOrphanEntryPages==='function') sweepOrphanEntryPages(); }catch(e){ console.warn('[trash] orphan sweep failed',e); }   // entries deleted before they went to Trash
   try{ if(typeof purgeExpiredTrash==='function') purgeExpiredTrash(); }catch(e){}   // drop anything past its 30-day window
   try{ await preloadBlobs(); await migrateInlineImages(); await preloadBlobs(); gcBlobs(); }catch(e){}
   applyCfg();        // re-apply after migrations in case they touched theme/colors
