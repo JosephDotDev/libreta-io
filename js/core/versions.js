@@ -18,9 +18,55 @@
 const VERSION_KEY='folio_versions';
 const MAX_VERSIONS=40;                 // per document
 const VERSION_MIN_GAP_MS=3*60*1000;    // ≥3 min between automatic snapshots
+/* History is best-effort and shares localStorage's ~5 MB cap with Trash and settings
+   (see LS_QUOTA_BYTES), and it also rides in the sync kv bundle. Cap it at ~1M chars
+   (≈2 MB as UTF-16) so it can never crowd those out: past the budget, the globally
+   oldest snapshots go first, but every page always keeps its newest one. */
+const VERSION_BUDGET_CHARS=1000000;
+let _versionsFullWarned=false;
 
 function _allVersions(){ try{return JSON.parse(localStorage.getItem(VERSION_KEY)||'{}')}catch{return{}} }
-function _saveAllVersions(o){ try{localStorage.setItem(VERSION_KEY,JSON.stringify(o));return true}catch(e){ if(typeof toast==='function')toast('Storage is full — version not saved.'); return false; } }
+/* Drop the globally-oldest snapshots (never a page's newest) until `o` serializes
+   under `budget` chars. Mutates `o`. Returns false once nothing more can go. */
+function _pruneVersions(o,budget){
+  let size=JSON.stringify(o).length;
+  while(size>budget){
+    let oldId=null;
+    for(const id in o){ const l=o[id]; if(Array.isArray(l)&&l.length>1&&(!oldId||l[0].ts<o[oldId][0].ts)) oldId=id; }
+    if(!oldId) return false;
+    size-=JSON.stringify(o[oldId].shift()).length+1;
+  }
+  return true;
+}
+function _saveAllVersions(o){
+  let budget=VERSION_BUDGET_CHARS;
+  for(;;){
+    const canShrink=_pruneVersions(o,budget);
+    const s=JSON.stringify(o);
+    try{ localStorage.setItem(VERSION_KEY,s); return true; }
+    catch(e){
+      if(!isQuotaError(e)){ console.warn('[versions] couldn’t save page history',e); return false; }
+      // Something else filled the quota — keep trimming history (silently) and retry.
+      if(!canShrink||budget<20000){
+        if(!_versionsFullWarned&&typeof toast==='function'){ _versionsFullWarned=true;
+          toast('Page history paused — this device’s settings storage (~5 MB) is full. See Settings → Data & Backup.',{type:'warn',ms:6000}); }
+        console.warn('[versions] localStorage quota reached even after trimming history',lsUsage());
+        return false;
+      }
+      budget=Math.floor(Math.min(budget,s.length)/2);
+    }
+  }
+}
+/* Free roughly `chars` of localStorage by trimming old history (used by Trash before
+   it gives up). Returns true if anything was freed. */
+function trimVersionsToFree(chars){
+  const o=_allVersions(), before=JSON.stringify(o).length;
+  if(!before||before<=2) return false;
+  _pruneVersions(o,Math.max(0,before-chars));
+  const after=JSON.stringify(o).length;
+  if(after>=before) return false;
+  try{ localStorage.setItem(VERSION_KEY,JSON.stringify(o)); return true; }catch(e){ return false; }
+}
 function getVersions(docId){ const a=_allVersions()[docId]; return Array.isArray(a)?a:[]; }
 function saveVersions(docId,list){ const all=_allVersions(); all[docId]=list; _saveAllVersions(all); }
 function deleteVersions(docId){ const all=_allVersions(); if(docId in all){ delete all[docId]; _saveAllVersions(all); } }

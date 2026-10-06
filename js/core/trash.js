@@ -16,8 +16,22 @@ const TRASH_KEY='folio_trash';
 const TRASH_TTL_DAYS=30;
 
 function _loadTrash(){ try{return JSON.parse(localStorage.getItem(TRASH_KEY)||'[]')}catch{return[]} }
-function _saveTrash(arr){ try{ localStorage.setItem(TRASH_KEY,JSON.stringify(arr)); return true; }
-  catch(e){ if(typeof toast==='function')toast('Storage is full — couldn’t move to Trash.'); return false; } }
+/* Trash shares localStorage's ~5 MB cap with page history. On a genuine quota error,
+   trim old history (best-effort data) to make room and retry once before giving up. */
+function _saveTrash(arr){
+  const s=JSON.stringify(arr);
+  for(let attempt=0;attempt<2;attempt++){
+    try{ localStorage.setItem(TRASH_KEY,s); return true; }
+    catch(e){
+      if(!isQuotaError(e)){ console.warn('[trash] couldn’t save Trash',e); return false; }
+      const need=s.length-(localStorage.getItem(TRASH_KEY)||'').length+50000;
+      if(attempt===0&&typeof trimVersionsToFree==='function'&&trimVersionsToFree(need)) continue;
+      console.warn('[trash] localStorage quota reached',lsUsage());
+      return false;
+    }
+  }
+  return false;
+}
 function trashCount(){ return _loadTrash().length; }
 
 /* The page + every descendant (via meta.parent), depth-first. */
@@ -31,17 +45,28 @@ function trashDoc(rootId){
   const rootTitle=(DB.getDoc(rootId)||{}).title||'Untitled';
   const batch=mkId('trash'), now=new Date().toISOString();
   const trash=_loadTrash();
+  // Build every Trash entry FIRST and persist the Trash list BEFORE touching the live
+  // data: if Trash can't be saved (storage full), nothing gets deleted — the old order
+  // removed the pages first, so a failed save lost them from both places.
+  const lifts=[];   // [{id, tableId}] database rows to lift out once Trash is safe
   ids.forEach(id=>{
     const d=DB.getDoc(id); if(!d) return;
     const entry=JSON.parse(JSON.stringify(d));
     entry._trash={batch, at:now, root:id===rootId};
-    // If this page is a database row, lift the row out of its table and stash it
-    // so a restore can re-attach it.
+    // If this page is a database row, stash the row so a restore can re-attach it.
     if(d.dbId){ const t=DB.getTbl(d.dbId);
       if(t){ const row=(t.rows||[]).find(r=>r.docId===id);
         if(row){ entry._trash.row={tableId:d.dbId, idx:t.rows.indexOf(row), row:JSON.parse(JSON.stringify(row))};
-          t.rows=t.rows.filter(r=>r.docId!==id); DB.saveTbl(t); } } }
+          lifts.push({id,tableId:d.dbId}); } } }
     trash.unshift(entry);
+  });
+  if(!_saveTrash(trash)){
+    if(typeof toast==='function') toast('Couldn’t move to Trash — this device’s settings storage (~5 MB) is full. Nothing was deleted.',{type:'error',ms:6000});
+    return null;
+  }
+  lifts.forEach(({id,tableId})=>{ const t=DB.getTbl(tableId);
+    if(t){ t.rows=(t.rows||[]).filter(r=>r.docId!==id); DB.saveTbl(t); } });
+  ids.forEach(id=>{
     // Drop from the live set: remove from the in-memory cache AND the per-record IDB
     // store (Phase-1 storage has no whole-array flush). Keep versions + media blobs so
     // Restore works — that's why we don't call DB.delDoc (which would delete versions).
@@ -50,7 +75,6 @@ function trashDoc(rootId){
   });
   if(typeof searchInvalidate==='function') searchInvalidate();
   if(typeof _emitContentChanged==='function') _emitContentChanged();   // notify the sync layer the live set changed
-  _saveTrash(trash);
   _pendingUndo=batch;
   // If the page currently open got trashed (e.g. you deleted one of its ancestors),
   // close it — otherwise its pending autosave resurrects it and the breadcrumbs go stale.
