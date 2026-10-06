@@ -70,12 +70,19 @@ async function renderStorageStatus(){
   let persisted=false, usage=0, quota=0;
   try{ if(navigator.storage.persisted) persisted=await navigator.storage.persisted(); const est=await navigator.storage.estimate(); usage=est.usage||0; quota=est.quota||0; }catch(e){}
   const pct=quota?Math.min(100,Math.round(usage/quota*100)):0;
+  // localStorage is a SEPARATE, fixed ~5 MB budget (page history, Trash, settings) —
+  // the one that actually runs out first. Show it on its own line with what's using it.
+  const ls=lsUsage(), lsPct=Math.min(100,Math.round(ls.bytes/LS_QUOTA_BYTES*100));
+  const part=k=>ls.byKey[k]||0;
+  const lsBreak=[['Page history',part('folio_versions')],['Trash',part('folio_trash')],['Everything else',ls.bytes-part('folio_versions')-part('folio_trash')]]
+    .map(([n,b])=>`${n} ${formatFileSize(b)}`).join(' · ');
   el.innerHTML=`
     <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
       <span style="width:8px;height:8px;border-radius:50%;background:${persisted?'var(--gr)':'var(--mu)'};display:inline-block"></span>
       <span style="color:var(--tx)">${persisted?'Persistent — safe from eviction':'Best-effort — may be evicted under disk pressure'}</span>
     </div>
-    <div style="color:var(--mu)">Using ${formatFileSize(usage)} of ~${formatFileSize(quota)} available${quota?` (${pct}%)`:''}.</div>
+    <div style="color:var(--mu)">Pages & media: using ${formatFileSize(usage)} of ~${formatFileSize(quota)} available${quota?` (${pct}%)`:''}.</div>
+    <div style="color:${lsPct>=85?'var(--re)':'var(--mu)'};margin-top:4px">Settings, history & Trash: ${formatFileSize(ls.bytes)} of ~${formatFileSize(LS_QUOTA_BYTES)} (${lsPct}%) — ${lsBreak}.</div>
     ${persisted?'':`<button class="cfg-opt" style="margin-top:8px" onclick="requestPersistentStorage()">Make storage persistent</button>`}`;
 }
 async function requestPersistentStorage(){

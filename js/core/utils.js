@@ -1,3 +1,19 @@
+/* ── localStorage budget ──
+   localStorage has its OWN fixed cap (~5 MB per origin; WebKit — the macOS desktop
+   shell — counts UTF-16 bytes, so ≈2.5M characters), completely separate from the
+   gigabytes navigator.storage.estimate() reports for IndexedDB. Version history and
+   Trash live here, so "full" must mean THIS quota — and only a genuine quota error. */
+const LS_QUOTA_BYTES=5*1024*1024;
+function isQuotaError(e){
+  return !!e&&(e.name==='QuotaExceededError'||e.name==='NS_ERROR_DOM_QUOTA_REACHED'||e.code===22||e.code===1014);
+}
+/* Current usage, in UTF-16 bytes (keys + values), plus the biggest keys. */
+function lsUsage(){
+  let bytes=0; const byKey={};
+  try{ for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); const v=localStorage.getItem(k)||'';
+    const b=(k.length+v.length)*2; bytes+=b; byKey[k]=b; } }catch(e){}
+  return {bytes, byKey};
+}
 function putCursorEnd(el){
   el.focus();
   const r=document.createRange(); r.selectNodeContents(el); r.collapse(false);
