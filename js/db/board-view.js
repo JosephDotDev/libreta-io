@@ -3,9 +3,8 @@
    text, so once a card exists its title is renamed from the page view, not in place. */
 let _idbEditTitleRow=null;
 function idbBoardView(blk,tbl){
-  const selCols=tbl.columns.filter(isSelectish);
-  if(!selCols.length) return `<div class="idb-note">Add a <b>Select</b> or <b>Status</b> property to group entries on a board.</div>`;
-  const groupCol=tbl.columns.find(c=>c.id===blk.groupCol&&isSelectish(c))||selCols[0];
+  const groupCol=idbBoardGroupCol(blk,tbl);
+  if(!groupCol) return `<div class="idb-note">Add a <b>Select</b> or <b>Status</b> property to group entries on a board.</div>`;
   const imgCol=tbl.columns.find(c=>c.type==='image');
   const titleColId=idbTitleColId(tbl);
   const allRows=idbViewRows(blk,tbl);
@@ -31,7 +30,9 @@ function idbBoardView(blk,tbl){
       return `<div class="idb-card" data-rid="${r.id}" style="--lane:${g.color}" draggable="true" ondragstart="idbCardDragStart(event,'${blk.id}','${r.id}')" ondragend="idbCardDragEnd()" onclick="idbOpenRow('${blk.id}','${r.id}')"><button class="idb-card-del" onclick="event.stopPropagation();idbDelRow('${blk.id}','${r.id}')" data-tip="Delete">&#10005;</button>${cover}<div class="idb-card-t">${idbRowIcon(r)}${titleEd}</div>${meta?`<div class="idb-card-m">${meta}</div>`:''}</div>`;
     }).join('');
     const more=idbBoardMore(blk,gk,rows.length,shownRows.length);
-    return `<div class="idb-bcol" style="--lane:${g.color}" ondragover="idbCardDragOverCol(event)" ondragleave="idbBcolDragLeave(event)" ondrop="idbCardDropToCol(event,'${blk.id}','${escAttr(g.key)}')"><div class="idb-bcol-h"><span class="idb-dd-dot" style="background:${g.color}"></span>${escHtml(g.label)}<span class="idb-bcol-ct">${rows.length}</span></div><div class="idb-bcol-b">${cards}${more}<div class="idb-bcard-add" onclick="idbBoardAddRow('${blk.id}','${groupCol.id}','${escAttr(g.key)}')"><span class="np-pill">+ New Page</span></div></div></div>`;
+    return `<div class="idb-bcol" style="--lane:${g.color}" ondragover="idbCardDragOverCol(event)" ondragleave="idbBcolDragLeave(event)" ondrop="idbCardDropToCol(event,'${blk.id}','${escAttr(g.key)}')"><div class="idb-bcol-h"><span class="idb-dd-dot" style="background:${g.color}"></span>${g.key
+        ? `<span class="idb-bcol-name" title="Click to rename" onclick="idbLaneRenameStart(event,this,'${blk.id}','${groupCol.id}','${escAttr(g.key)}')">${escHtml(g.label)}</span>`
+        : `<span class="idb-bcol-name none">${escHtml(g.label)}</span>`}<span class="idb-bcol-ct">${rows.length}</span></div><div class="idb-bcol-b">${cards}${more}<div class="idb-bcard-add" onclick="idbBoardAddRow('${blk.id}','${groupCol.id}','${escAttr(g.key)}')"><span class="np-pill">+ New Page</span></div></div></div>`;
   }).join('');
   return `<div class="idb-board">${colsH}</div>`;
 }
@@ -48,6 +49,35 @@ function idbBoardMore(blk,gk,total,shown){
   if(shown>ps) parts.push(`<button class="idb-bmore-b sec" onclick="idbGrpShowLess('${blk.id}','${escAttr(gk)}')">Show less</button>`);
   if(!parts.length) return '';
   return `<div class="idb-bmore"><span class="idb-bmore-ct">${Math.min(shown,total)} of ${total}</span>${parts.join('')}</div>`;
+}
+/* ── Rename a lane in place: click its name, type, Enter (or click away) saves,
+   Escape cancels. A lane IS an option of the grouped property, so this renames the
+   option for every entry and view (idbRenameOption). The "No <prop>" lane is a
+   placeholder for empty values, so it isn't renamable. */
+function idbLaneRenameStart(e,el,blockId,colId,oldL){
+  e.stopPropagation();
+  if(el.isContentEditable) return;
+  el.contentEditable='true'; el.spellcheck=false; el.classList.add('editing');
+  el.focus();
+  const r=document.createRange(); r.selectNodeContents(el);
+  const s=window.getSelection(); s.removeAllRanges(); s.addRange(r);
+  let done=false;
+  const finish=commit=>{
+    if(done) return; done=true;
+    el.removeEventListener('keydown',onKey); el.removeEventListener('blur',onBlur);
+    el.contentEditable='false'; el.classList.remove('editing');
+    const blk=findBlock(blockId), tbl=idbTbl(blk);
+    const changed=commit&&tbl&&idbRenameOption(tbl.id,colId,oldL,el.innerText);
+    if(!changed) el.textContent=oldL;            // cancelled / empty / duplicate → put it back
+    if(changed) idbSync(blockId,tbl.id);
+  };
+  const onKey=ev=>{
+    ev.stopPropagation();                        // keep editor/global shortcuts out of the lane name
+    if(ev.key==='Enter'){ ev.preventDefault(); finish(true); }
+    else if(ev.key==='Escape'){ ev.preventDefault(); finish(false); }
+  };
+  const onBlur=()=>finish(true);
+  el.addEventListener('keydown',onKey); el.addEventListener('blur',onBlur);
 }
 /* Commit the name-on-creation title, leave edit mode, and re-render the board so the
    title becomes plain (non-editable) text. */
@@ -91,7 +121,7 @@ function idbCardDropToCol(e,blockId,groupKey){
   if(!_idbCardDrag)return;
   const {rowId,tableId:srcTableId}=_idbCardDrag; _idbCardDrag=null;
   const blk=findBlock(blockId),tbl=idbTbl(blk); if(!tbl)return;
-  const groupCol=tbl.columns.find(c=>c.id===blk.groupCol&&isSelectish(c))||tbl.columns.filter(isSelectish)[0];
+  const groupCol=idbBoardGroupCol(blk,tbl);
   if(!groupCol)return;
   // Dropped onto a DIFFERENT database's board → move the entry across tables and
   // pin its group property to the lane it landed in.

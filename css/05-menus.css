@@ -7,6 +7,17 @@
   --mu: color-mix(in srgb, var(--tx) 62%, var(--sur));
 }
 
+/* ── MENU MOTION ── every floating sub-menu fades + lifts in (replays each time it
+   goes from display:none to shown). The fade-OUT is an inert copy that
+   js/ui/menu-motion.js drops in place as the real menu closes. Reduce-motion
+   (36-motion.css) neutralises both. Keep this list in sync with MENUS there. */
+.slash-m,.bk-menu,.pm,.dp,.ptp,.prop-editor,.color-pal,.fmt-color-pop,.grid-hmenu,.idb-pop,.idb-rowmenu,.idb-colpop,.icon-picker,.sb-menu,.link-pop,#tbl-dd{
+  animation:menuIn .14s cubic-bezier(.2,.8,.2,1);
+}
+.menu-ghost{animation:menuOut .11s ease-in forwards !important;pointer-events:none !important}
+@keyframes menuIn{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}
+@keyframes menuOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(-2px)}}
+
 /* ── SLASH MENU ──────────────────────────────── */
 .slash-m{position:fixed;z-index:500;background:var(--sur);border:1px solid var(--bd2);border-radius:var(--r-lg);box-shadow:var(--elev-2);width:260px;display:none}
 .slash-m.open{display:block}

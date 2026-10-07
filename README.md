@@ -121,7 +121,7 @@ Key files: `01-tokens.css` (design tokens — colors, fonts; start here for them
 | `init.js` | boot sequence — loads last |
 
 ### `js/ui/` — shared widgets
-`feedback.js` (toast, progress toast, `data-tip` tooltips), `overlay.js`, `confirm.js` (`showConfirm`), `lightbox.js` (full-screen image viewer), `sidebar.js`, `sidebar-tree.js` (drag-to-nest page hierarchy), `search.js`, `tilt.js`.
+`feedback.js` (toast, progress toast, `data-tip` tooltips), `overlay.js`, `menu-motion.js` (fade-out for floating menus), `confirm.js` (`showConfirm`), `lightbox.js` (full-screen image viewer), `sidebar.js`, `sidebar-tree.js` (drag-to-nest page hierarchy), `search.js`, `tilt.js`.
 
 ### `js/editor/` — the block editor
 Open/render (`editor-open.js`, `blocks-render.js`), nested block model (`block-model.js` — `locate()` handles columns + toggles), typing (`keyboard.js`, markdown triggers), block CRUD (`block-ops.js`), pointer drag-and-drop (`drag.js`), slash + block menus, cover + icon system, undo.
