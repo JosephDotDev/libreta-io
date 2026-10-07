@@ -47,6 +47,42 @@ function idbDefaultStatusOpts(){return [
   {l:'Done',c:PALETTE_COLORS[4]},
 ];}
 function idbSeedOpts(type){return type==='status'?idbDefaultStatusOpts():((type==='select'||type==='multiselect')?idbDefaultSelOpts():undefined);}
+/* A board ALWAYS groups: by the chosen Select/Status property, else the first one.
+   The board, its drop handler and the Group-by menu must agree on this. */
+function idbBoardGroupCol(blk,tbl){ return tbl.columns.find(c=>c.id===blk.groupCol&&isSelectish(c))||tbl.columns.find(isSelectish)||null; }
+/* Rename an option (= a board lane / table group). Cells store the option's LABEL,
+   and views key their per-group state by label too, so everything that holds the old
+   label moves with it: every entry's cell, plus each on-screen view of this table's
+   hidden/collapsed/paged groups, filters and color rules. Views of this table that
+   aren't open right now keep their old-label settings (they just stop matching).
+   Returns false (nothing changed) for an empty or duplicate name. */
+function idbRenameOption(tableId,colId,oldL,newL){
+  const tbl=DB.getTbl(tableId), col=tbl&&tbl.columns.find(c=>c.id===colId);
+  if(!col||!hasOpts(col)) return false;
+  newL=String(newL||'').replace(/\s+/g,' ').trim();
+  if(!newL||newL===oldL) return false;
+  const opt=(col.options||[]).find(o=>o.l===oldL); if(!opt) return false;
+  const clash=col.options.find(o=>o!==opt&&(o.l||'').toLowerCase()===newL.toLowerCase());
+  if(clash){
+    if(typeof toast==='function') toast(`There's already a “${clash.l}” option`,{type:'warn'});
+    return false;
+  }
+  opt.l=newL;
+  const swap=v=>Array.isArray(v)?v.map(x=>x===oldL?newL:x):(v===oldL?newL:v);
+  (tbl.rows||[]).forEach(r=>{ if(r.cells&&colId in r.cells) r.cells[colId]=swap(r.cells[colId]); });
+  DB.saveTbl(tbl);
+  const rekey=o=>{ if(o&&oldL in o){ o[newL]=o[oldL]; delete o[oldL]; } };
+  const blks=[...document.querySelectorAll('.bk-row[data-type="database"]')].map(r=>findBlock(r.dataset.id));
+  if(S.pageDbBlk) blks.push(S.pageDbBlk);
+  blks.forEach(b=>{
+    if(!b||b.tableId!==tableId) return;
+    rekey(b.hiddenGroups); rekey(b.groupCollapsed); rekey(b.groupShown);
+    (b.filters||[]).forEach(f=>{ if(f.colId===colId) f.val=swap(f.val); });
+    (b.colorRules||[]).forEach(cr=>{ if(cr.colId===colId&&cr.value===oldL) cr.value=newL; });
+    idbPersistView(b);
+  });
+  return true;
+}
 /* Re-render every database block (and the full-page DB) bound to a table, so
    sibling views of the same database stay in sync after an edit. exceptId keeps
    the block you're actively editing untouched (preserves caret/focus). */

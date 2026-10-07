@@ -16,6 +16,13 @@
   background:color-mix(in srgb,var(--lane,var(--bd2)) 16%,transparent);
   padding:1px 8px;border-radius:var(--r-pill);min-width:18px;text-align:center}
 
+/* Lane name: click to rename in place (not the "No <prop>" placeholder lane). */
+.idb-bcol-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:1px 5px;margin:-1px -5px;border-radius:var(--r-sm);outline:none;cursor:text;transition:background var(--t-fast),box-shadow var(--t-fast)}
+.idb-bcol-name:hover{background:color-mix(in srgb,var(--lane,var(--bd2)) 16%,transparent)}
+.idb-bcol-name.none{cursor:default}
+.idb-bcol-name.none:hover{background:none}
+.idb-bcol-name.editing{background:var(--sur);box-shadow:0 0 0 1.5px color-mix(in srgb,var(--lane,var(--ac)) 70%,var(--ac));text-overflow:clip;overflow:auto;cursor:text}
+
 /* The drop-target lane echoes its own hue instead of the generic accent. */
 .idb-bcol.idb-bcol-drop .idb-bcol-b{background:color-mix(in srgb,var(--lane,var(--ac)) 12%,transparent)}
 

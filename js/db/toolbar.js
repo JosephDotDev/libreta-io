@@ -5,7 +5,8 @@ function idbSortChip(blk,tbl){
 }
 /* Icon-only toolbar: filter chips + Group / Sort / Filter / Properties / Colors. */
 function idbToolbar(blk,tbl,viewKind){
-  const grp = viewKind==='calendar'?'':`<button class="idb-tb-ic${blk.groupCol?' on':''}" onclick="idbGroupMenu(event,'${blk.id}')" data-tip="Group">${IDB_ICON.group}</button>`;
+  const grouped=viewKind==='board'?!!idbBoardGroupCol(blk,tbl):!!blk.groupCol;
+  const grp = viewKind==='calendar'?'':`<button class="idb-tb-ic${grouped?' on':''}" onclick="idbGroupMenu(event,'${blk.id}')" data-tip="Group">${IDB_ICON.group}</button>`;
   return `<div class="idb-toolbar"><span class="idb-tb-grow"></span>${idbFilterChips(blk,tbl)}${idbSortChip(blk,tbl)}${grp}
     <button class="idb-tb-ic${(blk.sort&&blk.sort.colId)?' on':''}" onclick="idbSortMenu(event,'${blk.id}')" data-tip="Sort">${IDB_ICON.sort}</button>
     <button class="idb-tb-ic${(blk.filters||[]).length?' on':''}" onclick="idbOpenFilter(event,'${blk.id}')" data-tip="Filter">${IDB_ICON.filter}</button>
@@ -126,9 +127,13 @@ function idbGroupMenu(e,blockId){
   const isBoard=blk.view==='board';
   const showLimit=blk.groupCol||isBoard;
   const limitSec=showLimit?`<div class="idb-pop-lbl" style="margin-top:6px">${isBoard?'Cards per lane':'Rows per group'}</div>${[0,5,10,15,20].map(sizeRow).join('')}`:'';
+  // A board can't be ungrouped \u2014 it falls back to the first Select/Status property \u2014
+  // so there's no "None" there, and the tick shows the property actually in use.
+  const activeId=isBoard?(idbBoardGroupCol(blk,tbl)||{}).id:blk.groupCol;
+  const noneIt=isBoard?'':`<div class="idb-pop-it${!blk.groupCol?' on':''}" onclick="idbSetGroup('${blockId}','');idbPopClose()">None</div>`;
   const html=`<div class="idb-pop-lbl">Group by</div>
-    <div class="idb-pop-it${!blk.groupCol?' on':''}" onclick="idbSetGroup('${blockId}','');idbPopClose()">None</div>
-    ${sel.length?sel.map(c=>`<div class="idb-pop-it${blk.groupCol===c.id?' on':''}" onclick="idbSetGroup('${blockId}','${c.id}');idbPopClose()"><span class="idb-pop-ico">${c.type==='status'?'\u25d0':'\u25c9'}</span>${escHtml(c.name)}</div>`).join(''):'<div class="idb-dd-empty">Add a Select or Status property first.</div>'}${limitSec}`;
+    ${noneIt}
+    ${sel.length?sel.map(c=>`<div class="idb-pop-it${activeId===c.id?' on':''}" onclick="idbSetGroup('${blockId}','${c.id}');idbPopClose()"><span class="idb-pop-ico">${c.type==='status'?'\u25d0':'\u25c9'}</span>${escHtml(c.name)}</div>`).join(''):'<div class="idb-dd-empty">Add a Select or Status property first.</div>'}${limitSec}`;
   idbPopOpen(e.currentTarget.getBoundingClientRect(),html);
 }
 /* Per-group pagination. groupPageSize is the increment (0 = unlimited); groupShown
