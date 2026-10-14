@@ -146,7 +146,7 @@ All navigation goes through `nav(view, id)` in `js/core/router.js`. There are no
 
 #### Databases (inline + full-page)
 - **Views:** Table, Board (Kanban), Calendar, Timeline
-- **Board lanes** always group by a Select/Status property (the chosen one, else the first — `idbBoardGroupCol`), so the Group-by menu has no "None" on a board. Click a lane name to rename it in place: that renames the option for every entry and re-keys on-screen views' hidden/collapsed/paged groups, filters and color rules (`idbRenameOption`)
+- **Board lanes** always group by a Select/Status property (the chosen one, else the first — `idbBoardGroupCol`), so the Group-by menu has no "None" on a board. Click a lane name to rename it in place: that renames the option for every entry and re-keys on-screen views' hidden/collapsed/paged groups, filters and color rules (`idbRenameOption`). Drag a lane's header to reorder lanes — the process flow: pointer-driven and live (ghost + placeholder, lanes slide aside, edge auto-scroll, Escape cancels); it reorders the property's options, so table groups and status pickers follow (`idbLaneDown` / `idbReorderLanes`). The "No ‹property›" lane always stays last
 - **Column types:** Text, Select, Multi-select, Date, Number, Checkbox, URL, File/Image
 - Group, sort, filter, column drag/resize, row drag (including cross-group move)
 - Row ↔ document link — every row opens as a full document page

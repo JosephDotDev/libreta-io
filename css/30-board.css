@@ -23,6 +23,19 @@
 .idb-bcol-name.none:hover{background:none}
 .idb-bcol-name.editing{background:var(--sur);box-shadow:0 0 0 1.5px color-mix(in srgb,var(--lane,var(--ac)) 70%,var(--ac));text-overflow:clip;overflow:auto;cursor:text}
 
+/* Lane reorder: grab the header (not the "No <prop>" lane). The lane's slot becomes a
+   dashed placeholder; a tilted, lifted ghost follows the pointer. touch-action:none
+   lets a finger drag the header instead of panning the board. */
+.idb-bcol-h.movable{cursor:grab;touch-action:none}
+.idb-bcol-h.movable .idb-bcol-name{cursor:pointer}
+.idb-bcol.idb-bcol-placeholder{background:color-mix(in srgb,var(--lane,var(--bd2)) 6%,transparent);
+  border:1.5px dashed color-mix(in srgb,var(--lane,var(--bd2)) 55%,var(--bd2));box-shadow:none}
+.idb-bcol.idb-bcol-placeholder>*{visibility:hidden}
+.idb-bcol-ghost{position:fixed;z-index:1500;margin:0;pointer-events:none;opacity:.97;
+  transform:rotate(1.6deg) scale(1.02);box-shadow:var(--elev-3);animation:laneLift .14s cubic-bezier(.2,.8,.2,1)}
+@keyframes laneLift{from{transform:none;box-shadow:none}to{transform:rotate(1.6deg) scale(1.02)}}
+body.idb-lane-dragging,body.idb-lane-dragging *{cursor:grabbing!important;user-select:none!important}
+
 /* The drop-target lane echoes its own hue instead of the generic accent. */
 .idb-bcol.idb-bcol-drop .idb-bcol-b{background:color-mix(in srgb,var(--lane,var(--ac)) 12%,transparent)}
 
