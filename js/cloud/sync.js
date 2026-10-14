@@ -1018,10 +1018,11 @@ const Cloud = (()=>{
   async function _dlJson(path){ const t=await dlText(path); if(!t) return null; try{ return JSON.parse(t); }catch(e){ return null; } }
 
   /* ═══════════════════════════════════════════════════════════════════════
-     MEDIA SYNC (flag-gated, spec: docs/media-sync-spec.md) — per-blob,
-     content-addressed cross-device sync of IndexedDB media blobs (images etc).
-     Device-local flag, default OFF until verified on two real devices:
-       localStorage 'libreta_media_sync' = 'on' | anything else = off.
+     MEDIA SYNC — per-blob, content-addressed cross-device sync of IndexedDB media
+     blobs (images, covers, carousels, files). ON by default: with it off, synced
+     pages arrive referencing images the device never receives (broken images
+     everywhere but the uploading device). Per-device opt-out:
+       localStorage 'libreta_media_sync' = 'off'  (Cloud.setMediaSync(false)).
      Cloud layout (additive to the rec/ layout):
        <uid>/blob/<ref>      — one immutable object per blob (ref = img_<hash>)
        <uid>/rec/blobs.json  — { v, refs:{ "<ref>":uploadedAtISO } }  (union set,
@@ -1032,7 +1033,7 @@ const Cloud = (()=>{
      already holds. Both diffs below (what's missing locally, what's unconfirmed in
      the cloud) are computed from LOCAL state first — blobs.json is only fetched when
      there's real work on either side, so an idle workspace costs zero network here. */
-  function _mediaSyncOn(){ try{ return localStorage.getItem('libreta_media_sync')==='on'; }catch(e){ return false; } }
+  function _mediaSyncOn(){ try{ return localStorage.getItem('libreta_media_sync')!=='off'; }catch(e){ return true; } }
   function setMediaSync(on){ try{ localStorage.setItem('libreta_media_sync', on?'on':'off'); }catch(e){} return _mediaSyncOn(); }
   const BLOBS_PATH = ()=> `${user.id}/rec/blobs.json`;
   const BLOB_PATH = ref => `${user.id}/blob/${ref}`;
@@ -1051,12 +1052,25 @@ const Cloud = (()=>{
     try{ const { data, error } = await sb.storage.from(SUPABASE_BUCKET).download(path); if(error||!data) return null; return data; }
     catch(e){ return null; }
   }
+  /* A refused upload is retried on the next reconcile (the ref stays unconfirmed), so
+     transient failures heal on their own. A PERMISSION refusal never will — the bucket's
+     Row-Level-Security policy must allow `<uid>/blob/…` — so say so once per session
+     instead of failing silently forever. */
+  let _blobDeniedWarned=false;
   async function _uploadBlobObject(ref, blob){
     try{
       const { error } = await sb.storage.from(SUPABASE_BUCKET)
         .upload(BLOB_PATH(ref), blob, { upsert:true, contentType: blob.type||'application/octet-stream', cacheControl:'31536000' });
+      if(error){
+        const msg=String(error.message||''), code=String(error.statusCode||error.status||'');
+        console.warn('[cloud] image upload failed',ref,code,msg);
+        if(!_blobDeniedWarned&&(code==='401'||code==='403'||/row-level security|unauthori[sz]ed|not allowed|permission/i.test(msg))){
+          _blobDeniedWarned=true;
+          if(typeof toast==='function') toast('Images can’t sync — your cloud storage is refusing image uploads (permission). Pages still sync.',{type:'error',ms:7000});
+        }
+      }
       return !error;
-    }catch(e){ return false; }
+    }catch(e){ console.warn('[cloud] image upload failed',ref,e); return false; }
   }
   /* PURE (no IO): "is there any real work for media sync to do?" True the moment a
      referenced blob is either absent from this device's IndexedDB, or present but not
@@ -1078,19 +1092,26 @@ const Cloud = (()=>{
      device's known-synced set, and the cloud's blobs.json refs — exactly the same
      shape of decision as planReconcile, one level simpler (no LWW/tombstones needed;
      content-addressed blobs are immutable, so "exists" is the only fact that matters).
-       download — referenced + missing locally + the cloud actually has it
-       upload   — referenced + held locally + NOT already in the cloud
-       skip     — referenced + held locally + the cloud already has it (dedup: just
-                  mark it known, no redundant re-upload)
-     A ref that's missing locally AND absent from the cloud lands in none of the three
-     — left alone, retried on the next reconcile once the originating device catches up. */
+       download — referenced + missing locally + listed in the cloud index
+       upload   — referenced + held locally + NOT listed in the cloud index — even if
+                  this device thinks it's already synced: blobs.json is read-modify-
+                  write, so two devices writing it at once can drop an entry, and the
+                  device that "knows" it uploaded must re-add it or no one else ever
+                  fetches it. (upsert: re-uploading identical bytes is harmless.)
+       skip     — referenced + held locally + listed in the cloud, not yet known here
+                  (dedup: just mark it known, no redundant re-upload)
+       probe    — referenced + missing locally + NOT listed: usually the originating
+                  device hasn't synced yet, but it may be exactly that lost-index case,
+                  so try the object path directly (bounded to once per session).
+     Takes the same arguments as before; `known` only decides skip vs nothing. */
   function planMedia(refs, idbKeys, known, remoteRefs){
     const idbSet=new Set(idbKeys||[]), knownSet=new Set(known||[]), rrefs=remoteRefs||{};
-    const plan={ download:[], upload:[], skip:[] };
+    const plan={ download:[], upload:[], skip:[], probe:[] };
     for(const ref of (refs||[])){
       const inIdb=idbSet.has(ref), inCloud=!!rrefs[ref];
-      if(!inIdb){ if(inCloud) plan.download.push(ref); continue; }
-      if(!knownSet.has(ref)){ if(inCloud) plan.skip.push(ref); else plan.upload.push(ref); }
+      if(!inIdb){ (inCloud?plan.download:plan.probe).push(ref); continue; }
+      if(!inCloud) plan.upload.push(ref);
+      else if(!knownSet.has(ref)) plan.skip.push(ref);
     }
     return plan;
   }
@@ -1100,19 +1121,28 @@ const Cloud = (()=>{
      changed docs/tables (so a doc we're about to push never points at a blob the cloud
      doesn't have yet — best-effort; a residual race is covered by the missing-blob
      retry on the next reconcile). No-ops instantly if the flag is off. */
+  const _probed = new Set();   // unlisted refs already tried directly this session
   async function reconcileMedia(){
-    if(!_mediaSyncOn()) return;
-    let refs; try{ refs = [...collectRefs()]; }catch(e){ return; }
-    if(!refs.length) return;
+    if(!_mediaSyncOn()) return false;
+    let refs; try{ refs = [...collectRefs()]; }catch(e){ return false; }
+    if(!refs.length) return false;
     const known = _knownBlobs();
     let idbKeys; try{ idbKeys = await IDB.keys(); }catch(e){ idbKeys = []; }
-    if(!needsMediaSync(refs, idbKeys, known)) return;   // steady state — zero network
+    if(!needsMediaSync(refs, idbKeys, known)) return false;   // steady state — zero network
     const remote = (await _dlJson(BLOBS_PATH())) || { v:1, refs:{} };
+    remote.refs = remote.refs || {};
     const plan = planMedia(refs, idbKeys, known, remote.refs);
     let cloudChanged=false, landed=false;
     for(const ref of plan.download){
       const blob = await _dlBlob(BLOB_PATH(ref));
       if(blob){ try{ await IDB.put(ref, blob); known.add(ref); landed=true; }catch(e){} }
+    }
+    // Unlisted but referenced: the object may exist even though its index entry was
+    // lost — try it once per session; if it's there, keep it AND repair the index.
+    for(const ref of plan.probe){
+      if(_probed.has(ref)) continue; _probed.add(ref);
+      const blob = await _dlBlob(BLOB_PATH(ref));
+      if(blob){ try{ await IDB.put(ref, blob); known.add(ref); landed=true; remote.refs[ref]=new Date().toISOString(); cloudChanged=true; }catch(e){} }
     }
     plan.skip.forEach(ref=> known.add(ref));   // already in the cloud — record locally, no re-upload
     for(const ref of plan.upload){
@@ -1123,6 +1153,18 @@ const Cloud = (()=>{
     if(cloudChanged) await _uploadJson(BLOBS_PATH(), remote);
     _saveKnownBlobs(known);
     if(landed){ try{ await preloadBlobs(); }catch(e){} }   // rebuild object URLs for newly-arrived blobs
+    return landed;
+  }
+  /* Images often land a sync AFTER the page that shows them (the uploading device
+     pushes page text first if its image upload is still in flight), so nothing else
+     would redraw them — they'd stay broken until you navigate. Redraw once the user
+     pauses typing (same 4s rule as remote page edits, so a keystroke is never lost). */
+  let _mediaRedrawTimer=null;
+  function _redrawForMedia(){
+    clearTimeout(_mediaRedrawTimer);
+    if(typeof rerenderView!=='function') return;
+    if(activelyEditing()){ _mediaRedrawTimer=setTimeout(_redrawForMedia,1500); return; }
+    rerenderView();
   }
 
   /* Two-way per-record reconcile. Downloads remote-newer records, applies remote
@@ -1144,7 +1186,7 @@ const Cloud = (()=>{
       dataChanged=true;
     }
     if(dataChanged) await DB.load();   // refresh cache before reading it for uploads / re-render
-    await reconcileMedia();            // flag-gated; no-op instantly unless libreta_media_sync==='on'
+    const mediaLanded = await reconcileMedia();   // no-op (zero network) when every image is already in place
     const localNow = localManifest();
     for(const k of plan.upload){
       if(k==='kv'){ await _uploadJson(RECKV(), _kvBundle()); continue; }
@@ -1172,7 +1214,8 @@ const Cloud = (()=>{
     if(dataChanged){
       if(typeof updateTrashBadge==='function') updateTrashBadge();   // trash count may have changed via the kv bundle
       if(typeof rerenderView==='function' && !activelyEditing()){ if(typeof preloadBlobs==='function') await preloadBlobs(); rerenderView(); }
-    }
+      else if(mediaLanded) _redrawForMedia();   // skipped the redraw mid-typing — still show the new images once idle
+    } else if(mediaLanded) _redrawForMedia();
     return plan;
   }
 

@@ -176,6 +176,7 @@ All navigation goes through `nav(view, id)` in `js/core/router.js`. There are no
 - Sign in and the workspace is mirrored to the user's own Supabase account; browser, desktop and phone share one set of notes
 - Never a gate: signed out, every feature works and no network calls are made
 - Mutually exclusive with the folder workspace — that folder is already a sync
+- **Images and files sync too** (on by default since Oct 2026; per-device opt-out `Cloud.setMediaSync(false)`). Content-addressed objects at `<uid>/blob/<ref>` plus an index `<uid>/rec/blobs.json`; a steady-state workspace makes zero media requests (`needsMediaSync`). Because the index is read-modify-write, a device re-adds any image it holds that the index lacks, and a device missing an unlisted image tries its object path directly once per session — so a lost index entry heals instead of stranding the image. Images that land after their page redraw once you pause typing. A permission (RLS) refusal on `blob/` uploads shows one toast; pages keep syncing
 
 #### Data management
 - **Export / Import** — portable JSON backup (accepts legacy `folio` format)
