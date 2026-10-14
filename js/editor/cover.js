@@ -84,7 +84,7 @@ function renderPeekCover(doc){
       <div class="cover-actions">
         <button class="cover-btn" onclick="openCoverGallery()">Covers</button>
         <button class="cover-btn" onclick="triggerCoverUpload()">${isPreset?'Add image':'Change cover'}</button>
-        <button class="cover-btn" onclick="coverFromUrlPrompt(event)">${isBlank?'Add by URL':'Link'}</button>
+        <button class="cover-btn" onclick="coverFromUrlPrompt(event)">${isPreset?'Add by URL':'Link'}</button>
         <button class="cover-btn" onclick="removeCover()">Remove</button>
       </div></div>`;
     if(addBtn) addBtn.style.display='none';
@@ -237,16 +237,14 @@ function triggerCoverUpload(){
 function onCoverFileChange(input){
   const file=input.files[0]; if(!file) return;
   if(!withinUploadLimit(file,'Cover image')){ input.value=''; return; }
+  // Pin the page now: compression is async, and switching pages meanwhile must not
+  // put the cover on (or save over) whatever page is open by then. See _applyCover.
+  const target=_coverTarget(); if(!target) return;
   // Higher res + quality than before so covers keep more of their original detail
   compressToBlob(file,2400,1100,0.90).then(async blob=>{
     if(!blob) return;
-    const doc=getActiveDoc(); if(!doc) return;
-    const prev=doc.meta?.cover;
     const id=await storeBlob(blob);
-    doc.meta=doc.meta||{}; doc.meta.cover=id;
-    if(saveActiveDoc(doc)===false){doc.meta.cover=prev||null;freeBlob(id);return}
-    freeBlob(prev);
-    renderCover(doc);
+    if(!_applyCover(target,id)) freeBlob(id);
   });
 }
 function removeCover(){

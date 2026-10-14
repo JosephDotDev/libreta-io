@@ -295,11 +295,47 @@ function dataURLtoBlob(dataURL){
 function blobToDataURL(blob){return new Promise(res=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=()=>res(null);r.readAsDataURL(blob)})}
 /* Download a remote image to a Blob so it can be cached locally (IndexedDB).
    Tries a direct CORS fetch first, then a CORS proxy for hosts that don't allow it. */
+/* Download an image's bytes from a URL: directly first, then through the public CORS
+   proxies the CSP allows (the desktop CSP blocks arbitrary origins, so there the
+   proxies are the only route). Every attempt has a timeout — a slow proxy must never
+   leave a spinner up indefinitely — and the result must actually decode as an image
+   (proxies may answer with an error page or an untyped body). Null if nothing works. */
 async function fetchImageBlob(url){
   url=normUrl(url);
-  try{ const r=await fetch(url,{mode:'cors'}); if(r.ok){const b=await r.blob(); if(b.size&&/^image\//.test(b.type)) return b;} }catch(e){}
-  try{ const r=await fetch('https://api.allorigins.win/raw?url='+encodeURIComponent(url)); if(r.ok){const b=await r.blob(); if(b.size&&(/^image\//.test(b.type)||b.type==='')) return b;} }catch(e){}
+  const enc=encodeURIComponent(url);
+  const attempts=[
+    {u:url, opt:{mode:'cors'}, ms:6000},
+    {u:'https://corsproxy.io/?url='+enc, ms:8000},
+    {u:'https://api.codetabs.com/v1/proxy/?quest='+enc, ms:8000},
+    {u:'https://api.allorigins.win/raw?url='+enc, ms:8000},
+  ];
+  for(const a of attempts){
+    const ac=new AbortController(), t=setTimeout(()=>ac.abort(),a.ms);
+    try{
+      const r=await fetch(a.u,Object.assign({signal:ac.signal},a.opt||{}));
+      if(!r.ok) continue;
+      const b=await r.blob();
+      if(b.size&&await _decodesAsImage(b)) return b;
+    }catch(e){ /* blocked / timed out / offline → next route */ }
+    finally{ clearTimeout(t); }
+  }
   return null;
+}
+async function _decodesAsImage(blob){
+  if(/^image\/svg/.test(blob.type)) return true;   // createImageBitmap can't take SVG; <img> can
+  try{ const bmp=await createImageBitmap(blob); bmp.close&&bmp.close(); return true; }
+  catch(e){ return false; }
+}
+/* Can the browser display this URL as an image at all? Uses a plain <img> (no CORS,
+   allowed by img-src https:) so it's fast and works where fetch is blocked. */
+function imageUrlLoads(url,ms){
+  return new Promise(res=>{
+    const img=new Image(); let done=false;
+    const fin=ok=>{ if(done) return; done=true; clearTimeout(t); img.onload=img.onerror=null; res(ok); };
+    const t=setTimeout(()=>fin(false),ms||12000);
+    img.onload=()=>fin(img.naturalWidth>0); img.onerror=()=>fin(false);
+    img.src=url;
+  });
 }
 function blankDoc(){
   const now=new Date().toISOString();
