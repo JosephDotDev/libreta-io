@@ -214,7 +214,9 @@ body.idb-col-resizing{cursor:col-resize;user-select:none}
    otherwise the wrap leaves ~120px of empty surface below the cover. */
 .cover-wrap.peek-cover{height:160px}
 .peek-cover .cover-img-el{width:100%;height:100%;object-fit:cover;display:block}
-.peek-cover .cover-actions{position:absolute;top:8px;right:8px;display:flex;gap:4px;opacity:0;transition:opacity var(--t-med)}
+/* bottom:auto — the base .cover-actions pins bottom:10px; with top:8px as well the row
+   stretched the full cover height and the buttons stretched with it. */
+.peek-cover .cover-actions{position:absolute;top:8px;right:8px;bottom:auto;align-items:center;display:flex;gap:4px;opacity:0;transition:opacity var(--t-med)}
 .peek-cover:hover .cover-actions{opacity:1}
 .peek-title-main{display:flex;align-items:center;gap:8px}
 .peek-title-main .doc-peek-title{flex:1;margin-bottom:0}
