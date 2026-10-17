@@ -22,7 +22,10 @@ function coverCss(c){ if(c===BLANK_COVER) return 'var(--ac)'; if(typeof c==='str
    <img> shows a broken image, so callers use this to get a correct background. */
 function coverThumbBg(cover,pos){
   if(isPresetCover(cover)) return 'background:'+coverCss(cover);
-  return `background-image:url('${srcFor(cover)}');background-position:center ${(pos!=null?pos:50)}%`;
+  // A linked cover's URL lands inside url('…') inside a style="…" attribute — percent-encode
+  // the characters that could close either one.
+  const u=srcFor(cover).replace(/["'()\\\s<>]/g,c=>'%'+c.charCodeAt(0).toString(16).toUpperCase().padStart(2,'0'));
+  return `background-image:url('${u}');background-position:center ${(pos!=null?pos:50)}%`;
 }
 function renderCover(doc){
   if(S.peekOpen) return renderPeekCover(doc);
@@ -42,7 +45,7 @@ function renderCover(doc){
     // Preset cover = solid/gradient fill; an image/link can be added from the actions overlay.
     const media=isPreset
       ? `<div class="cover-img-el" id="cover-img-el" style="background:${coverCss(cover)}"></div>`
-      : `<img class="cover-img-el" id="cover-img-el" src="${srcFor(cover)}" alt="Cover" draggable="false" style="object-position:center ${pos}%">`;
+      : `<img class="cover-img-el" id="cover-img-el" src="${escHtml(srcFor(cover))}" alt="Cover" draggable="false" referrerpolicy="no-referrer" decoding="async" style="object-position:center ${pos}%">`;
     wrap.innerHTML=`<div class="cover-wrap" id="cover-wrap">
       ${media}
       <div class="cover-actions" id="cover-actions">
@@ -79,7 +82,7 @@ function renderPeekCover(doc){
     const pos=doc.meta.coverPos!=null?doc.meta.coverPos:50;
     wrap.style.display='block';
     const media=isPreset?`<div class="cover-img-el" style="background:${coverCss(cover)}"></div>`
-      :`<img class="cover-img-el" src="${srcFor(cover)}" alt="Cover" draggable="false" style="object-position:center ${pos}%">`;
+      :`<img class="cover-img-el" src="${escHtml(srcFor(cover))}" alt="Cover" draggable="false" referrerpolicy="no-referrer" decoding="async" style="object-position:center ${pos}%">`;
     wrap.innerHTML=`<div class="cover-wrap peek-cover">${media}
       <div class="cover-actions">
         <button class="cover-btn" onclick="openCoverGallery()">Covers</button>

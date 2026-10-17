@@ -5,7 +5,7 @@ function collectRefs(){
   const refs=new Set();
   const add=v=>{ if(isBlobRef(v)) refs.add(v); };
   const scanDoc=d=>{
-    add(d.meta&&d.meta.cover); add(d.meta&&d.meta.icon);
+    add(d.meta&&d.meta.cover); add(d.meta&&d.meta.icon); add(d.meta&&d.meta.bg);   // bg: uploaded page backgrounds
     flattenBlocks(d.blocks||[]).forEach(b=>{
       add(b.src); add(b.fileId); add(b.icon);
       if(b.images) b.images.forEach(im=>add(im.src));

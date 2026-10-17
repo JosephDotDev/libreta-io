@@ -201,11 +201,12 @@ function coverFromUrlPrompt(e){
   promptUrl(rect,(url)=>{ if(url) setCoverFromUrl(url); });
 }
 /* ── Cover from a link ──
-   Show it as soon as the browser can display it (a plain <img> load — no CORS, works
-   on desktop where fetch() to arbitrary sites is blocked), THEN quietly keep a local
-   copy in the background so it works offline and syncs like an upload; if no copy can
-   be made the cover just stays linked by URL (img-src https: displays it everywhere).
-   The page is pinned when you start and re-read from the store at each step, so
+   A linked cover STAYS a link: the page stores only the URL and every device loads
+   the image straight from it (a plain <img> — no CORS, allowed by img-src https:, so
+   it also works on desktop where fetch() to arbitrary sites is blocked). Nothing is
+   downloaded or stored, so it syncs instantly as part of the page record and never
+   depends on media sync. We only check that the link loads as an image first.
+   The page is pinned when you start and re-read from the store when saving, so
    switching pages mid-load can't paint the cover onto — or save over — another page. */
 function _coverTarget(){
   const id=S.docId; if(!id) return null;
@@ -213,12 +214,10 @@ function _coverTarget(){
     get:()=> id===HOME_ID ? getHomeDoc() : DB.getDoc(id),
     save:doc=>{ if(id===HOME_ID){ saveHomeDoc(doc); return true; } return DB.saveDoc(doc); } };
 }
-/* Set the target page's cover to `val`, but only if it's still `expect` (when given),
-   so a background swap never overrides a cover the user changed meanwhile. */
-function _applyCover(target,val,expect){
+/* Set the target page's cover to `val` (a blob ref or a link) and redraw if it's open. */
+function _applyCover(target,val){
   const doc=target.get(); if(!doc) return false;
   const prev=doc.meta&&doc.meta.cover;
-  if(expect!==undefined&&prev!==expect) return false;
   doc.meta=doc.meta||{}; doc.meta.cover=val;
   if(target.save(doc)===false){ doc.meta.cover=prev||null; return false; }
   if(isBlobRef(prev)&&prev!==val) freeBlob(prev);
@@ -233,13 +232,6 @@ async function setCoverFromUrl(url){
     if(!await imageUrlLoads(url,12000)){ pt.fail('That link didn’t load as an image'); return; }
     if(!_applyCover(target,url)){ pt.fail('Couldn’t save cover'); return; }
     pt.done('Cover added');
-  }catch(e){ console.warn('[cover] link failed',e); pt.fail('Couldn’t add that cover'); return; }
-  // Background: swap the link for a stored copy (same picture, now offline + synced).
-  try{
-    const raw=await fetchImageBlob(url); if(!raw) return;
-    const blob=await compressToBlob(raw,2400,1100,0.90)||raw;
-    const ref=await storeBlob(blob);
-    if(!_applyCover(target,ref,url)) freeBlob(ref);   // cover changed meanwhile → drop the copy
-  }catch(e){ console.warn('[cover] keeping a local copy failed — staying linked',e); }
+  }catch(e){ console.warn('[cover] link failed',e); pt.fail('Couldn’t add that cover'); }
 }
 
