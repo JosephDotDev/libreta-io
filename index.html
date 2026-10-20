@@ -2,6 +2,36 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <!-- Sign-in callback: Supabase returns the session (access + refresh token) in the
+       URL fragment. Capture it and scrub the address IN PLACE before anything else runs
+       or paints — replaceState, so the token-bearing URL never stays in the address bar,
+       the back/forward stack or browser history (supabase-js would clear it by assigning
+       location.hash, which pushes a NEW entry and leaves the token in the old one).
+       js/cloud/sync.js turns the captured values into a session (detectSessionInUrl is
+       off). Fragments are never sent to the server; app routes use "#/…", so an auth
+       fragment ("#access_token=…" / "#error=…") can't be confused with one. -->
+  <script>
+  (function(){
+    function capture(){
+      try{
+        var h=location.hash||'', q=location.search||'';
+        if(!/(^#|&)(access_token|refresh_token|error|error_description|error_code)=/.test(h) && !/[?&](error|error_description|error_code)=/.test(q)) return false;
+        var hp=new URLSearchParams(h.replace(/^#/,'')), qp=new URLSearchParams(q.replace(/^\?/,'')), cb={};
+        ['access_token','refresh_token','type','error','error_code','error_description'].forEach(function(k){ var v=hp.get(k)||qp.get(k); if(v) cb[k]=v; });
+        ['error','error_code','error_description'].forEach(function(k){ qp.delete(k); });
+        var rest=qp.toString();
+        history.replaceState(history.state,'',location.pathname+(rest?'?'+rest:''));
+        window.__libretaAuthCallback=cb;
+        return true;
+      }catch(e){ return false; }
+    }
+    capture();
+    // A callback can also arrive as an in-page fragment change (e.g. a link pasted into
+    // an open app tab) — no reload, so catch it here. Registered before the router's
+    // listener, so the token is scrubbed before routing ever sees it.
+    window.addEventListener('hashchange',function(){ if(capture()) window.dispatchEvent(new Event('libreta:authcallback')); });
+  })();
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Libreta — a personal workspace, built around you</title>
   <meta name="description" content="Libreta is a highly customizable personal workspace for individuals. Write in blocks, build databases, and make it entirely yours. Local-first, private, and refreshingly free of AI.">
