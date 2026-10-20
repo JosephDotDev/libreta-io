@@ -2,6 +2,19 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <!-- Safety net: a sign-in callback that lands HERE (Supabase falls back to its Site URL
+       when the requested return address isn't allow-listed) is forwarded straight into
+       the app, which captures and scrubs it. location.replace swaps out this history
+       entry, so the token-bearing landing URL doesn't linger in back/forward or history. -->
+  <script>
+  (function(){
+    try{
+      var h=location.hash||'', q=location.search||'';
+      if(/(^#|&)(access_token|refresh_token|error|error_description|error_code)=/.test(h) || /[?&](error|error_description|error_code)=/.test(q))
+        location.replace('app/'+q+h);
+    }catch(e){}
+  })();
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Libreta — a personal workspace, built around you</title>
   <meta name="description" content="Libreta is a highly customizable personal workspace for individuals. Write in blocks, build databases, and make it entirely yours. Local-first, private, and refreshingly free of AI.">

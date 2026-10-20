@@ -15,11 +15,17 @@ const SUPABASE_BUCKET = 'libreta';
    Configuration → Redirect URLs, or the provider refuses to redirect:
 
      libreta://auth-callback                       (desktop app)
-     https://josephdotdev.github.io/libreta-io/**  (web app; add your domain too)
+     https://libreta.io/app/**                     (web app — the custom domain)
+     https://josephdotdev.github.io/libreta-io/**  (web app via the github.io address)
+
+   The web app sends sign-ins back to its own address (/app/), never the site root
+   — the root is the landing page. If a return address is NOT on that list,
+   Supabase falls back to the "Site URL"; landing.html forwards any sign-in
+   callback it receives into /app/ so even that case still lands in the app.
 
    LIBRETA_WEB_URL is where emailed links (password resets) should land, since an
    email is opened by a browser, never by the app.
 ─────────────────────────────────────────────────────────────────────────── */
 const NATIVE_SCHEME   = 'libreta://';
 const NATIVE_REDIRECT = 'libreta://auth-callback';
-const LIBRETA_WEB_URL = 'https://josephdotdev.github.io/libreta-io/app/';
+const LIBRETA_WEB_URL = 'https://libreta.io/app/';

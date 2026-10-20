@@ -143,7 +143,9 @@ const Cloud = (()=>{
   function client(){
     if(sb) return sb;
     if(!window.supabase || !window.supabase.createClient) return null;
-    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    // detectSessionInUrl:false — index.html's head script captures and scrubs the
+    // sign-in callback before this loads; boot() adopts it via _adoptAuthCallback().
+    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth:{ detectSessionInUrl:false } });
     return sb;
   }
 
@@ -151,16 +153,15 @@ const Cloud = (()=>{
         blocks on a signed-out user — Libreta is perfectly usable with no account.
         If a session is already stored, adopt it and start syncing. */
   async function boot(){
+    const cb = _takeAuthCallback();   // always consume it, even if we bail below
     if(folderMode() || !client()) return;
-    // getSession() awaits the client's URL processing, so a recovery link's
-    // temporary session is fully established by the time we read it below.
-    const recovery = isRecoveryLink();
+    // A sign-in / magic-link / password-reset return: turn the captured tokens into
+    // the stored session before reading it. (The URL was already scrubbed.)
+    const recovery = !!(cb && cb.type==='recovery');
+    if(cb) await _adoptAuthCallback(cb);
     let session=null;
     try{ ({ data:{ session } } = await sb.auth.getSession()); }
     catch(e){ console.warn('[cloud] could not read the session',e); return; }
-    // The recovery session is loaded by now, so strip the token from the address
-    // bar (a refresh shouldn't replay it) without losing the session.
-    if(recovery) cleanRecoveryUrl();
     if(recovery && session){
       // Password-recovery link: make the user set a new password first, then
       // continue into the app on the same session.
@@ -174,6 +175,20 @@ const Cloud = (()=>{
     }
     if(user) await startSync();
   }
+
+  /* A sign-in callback that arrived after boot, as an in-page fragment change (see
+     index.html's head script). Adopt it; start syncing unless we already are. */
+  window.addEventListener('libreta:authcallback', async ()=>{
+    const cb=_takeAuthCallback();
+    if(!cb || folderMode() || !client()) return;
+    if(!await _adoptAuthCallback(cb)) return;
+    let session=null; try{ ({ data:{ session } } = await sb.auth.getSession()); }catch(e){ return; }
+    if(!session) return;
+    if(cb.type==='recovery'){ const u=await showRecoveryGate(); if(u&&!user){ user=u; await startSync(); } return; }
+    if(user) return;                  // already signed in and syncing — the session was just refreshed
+    user=session.user; showLoadingGate(); await startSync();
+    if(typeof renderAccountStatus==='function') renderAccountStatus();
+  });
 
   /* Turn a live session into a running sync. */
   async function startSync(){
@@ -462,19 +477,32 @@ const Cloud = (()=>{
   }
   function startPoll(){ setInterval(checkRemote, POLL_MS); }
 
+  /* ───────────────────────── Sign-in callbacks ───────────────────────── */
+  /* The values index.html's head script lifted out of the URL fragment (Google
+     sign-in, magic link, password reset). Read once, then forgotten. */
+  function _takeAuthCallback(){
+    const cb = window.__libretaAuthCallback || null;
+    try{ delete window.__libretaAuthCallback; }catch(e){ window.__libretaAuthCallback = null; }
+    return cb;
+  }
+  async function _adoptAuthCallback(cb){
+    if(cb.access_token && cb.refresh_token){
+      try{
+        const { error } = await sb.auth.setSession({ access_token:cb.access_token, refresh_token:cb.refresh_token });
+        if(!error) return true;
+        console.warn('[cloud] the sign-in link could not be used', error);
+      }catch(e){ console.warn('[cloud] the sign-in link could not be used', e); }
+      if(typeof toast==='function') toast('That sign-in link has expired or was already used — please sign in again.',{type:'warn',ms:6000});
+      return false;
+    }
+    const desc = cb.error_description || cb.error;
+    if(desc){
+      console.warn('[cloud] sign-in returned an error:', cb.error_code||'', desc);
+      if(typeof toast==='function') toast('Sign-in didn’t complete: '+String(desc).replace(/\+/g,' '),{type:'warn',ms:7000});
+    }
+    return false;
+  }
   /* ───────────────────────── Password recovery ───────────────────────── */
-  /* Supabase recovery links carry `type=recovery` (in the hash for the implicit
-     flow, occasionally the query string). Detect it before we mistake the
-     resulting session for a normal login. */
-  function isRecoveryLink(){
-    const s = (window.location.hash||'') + '&' + (window.location.search||'');
-    return s.indexOf('type=recovery') !== -1;
-  }
-  /* Remove the recovery token from the address bar so reloading the page can't
-     replay it (and so the app doesn't keep thinking it's mid-recovery). */
-  function cleanRecoveryUrl(){
-    try{ history.replaceState(null, '', window.location.pathname); }catch(e){}
-  }
   /* "Set a new password" page. Reuses the #auth-gate styling. Resolves with the
      user once the password is updated, so boot() can continue straight in. */
   function showRecoveryGate(){
@@ -645,7 +673,12 @@ const Cloud = (()=>{
       /* In a packaged app there is no web origin for a provider to return to, so
          emailed links must point at the hosted app instead of this window. */
       const NATIVE = (typeof IS_NATIVE!=='undefined' && IS_NATIVE);
-      const emailReturnUrl = ()=> NATIVE ? LIBRETA_WEB_URL : window.location.origin;
+      /* Return to THIS app's own address (e.g. https://libreta.io/app/), never the bare
+         origin: the site root is the landing page, which can't use the session — that
+         sent sign-ins into a landing ↔ "Try it online" loop. Query/hash are dropped so a
+         stale route or callback is never echoed back. */
+      const appReturnUrl = ()=> window.location.origin + window.location.pathname.replace(/index\.html$/,'');
+      const emailReturnUrl = ()=> NATIVE ? LIBRETA_WEB_URL : appReturnUrl();
 
       /* One-tap OAuth. On the web, signInWithOAuth redirects the whole page and
          boot() picks the session out of the URL on the way back. */
@@ -653,7 +686,7 @@ const Cloud = (()=>{
         err('');
         try{
           if(NATIVE) return await oauthNative(provider);
-          const { error } = await sb.auth.signInWithOAuth({ provider, options:{ redirectTo: window.location.origin } });
+          const { error } = await sb.auth.signInWithOAuth({ provider, options:{ redirectTo: appReturnUrl() } });
           if(error) err(error.message);   // e.g. provider not yet enabled in Supabase
         }catch(e){ err('Could not start sign-in. Try again.'); }
       }
@@ -748,7 +781,7 @@ const Cloud = (()=>{
         try{
           const fn = mode==='signin'
             ? sb.auth.signInWithPassword({email,password})
-            : sb.auth.signUp({email,password});
+            : sb.auth.signUp({email,password,options:{ emailRedirectTo: emailReturnUrl() }});   // confirmation link lands in the app, not the Site URL
           const { data, error } = await fn;
           if(error){
             // Count failed sign-ins; lock the form for an escalating cooldown so a
